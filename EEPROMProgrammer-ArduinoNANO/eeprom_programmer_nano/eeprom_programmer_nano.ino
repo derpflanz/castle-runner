@@ -122,7 +122,7 @@ byte GetData() {
 
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
 
   sprintf(linebuffer, "EEPROM Programmer v1");
   PRINTLINE;
@@ -146,23 +146,20 @@ void setup() {
   
   SetDataToInput();
 
+  verify();
+
   // Send ENQ to tell our partner we are ready to receive data
   Serial.write(ENQ);
 }
 
 
-void demo() {  
-  Write(0x4010, 'A');
-  Write(0x6020, 'B');
-  
-  int result = Read(0x4010);
-  int result2 = Read(0x6020);
+void verify() {
+  for (int i = 0; i < 0x22; i++) {
+    unsigned char result = Read(i);
 
-  sprintf(linebuffer, "Done: %c (%d)", result, result);  
-  PRINTLINE;
-
-  sprintf(linebuffer, "Done: %c (%d)", result2, result2);  
-  PRINTLINE;
+    sprintf(linebuffer, "Done: %c (DEC %d; HEX: %x)", result, result, result);
+    PRINTLINE;
+  }
 }
 
 // the loop function runs over and over again forever
@@ -170,6 +167,7 @@ void loop() {
   if (Serial.available()) {
     unsigned int size = 0;
     unsigned int counter = 0;
+    
     int b = Serial.read();
     if (b == STX) {
       while ( (b = Serial.read()) != ETX) {
