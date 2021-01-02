@@ -1,0 +1,180 @@
+// Address pins (A0 - A7; A8 - A15 are connected to GND now)
+const char ADDR[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+const char DATA[] = { 8, 9, 10, 11, 12, 13, 14, 15 };
+
+#define OE 21
+#define WE 20
+#define CE 19
+#define PRINTLINE Serial.println(linebuffer)
+
+char linebuffer[80];
+
+/* Future work:
+ * Connect D8-D15 to the flipflop and the Q of the flipflop to
+ * A8-A15 of the memory chip.
+ */
+
+
+void SetDataToInput() {
+  for (int i = 0; i <= 7; i++) {
+    pinMode(DATA[i], INPUT);
+  }
+}
+
+void SetDataToOutput() {
+  for (int i = 0; i <= 7; i++) {
+    pinMode(DATA[i], OUTPUT);
+  }
+  
+  delay(1);
+}
+
+void SetAddress(int address) {
+  // We only support the first 8 bits for now
+  int mask = 0x01;
+  
+  sprintf(linebuffer, "Setting address %d", address);
+  PRINTLINE;
+
+  for (int i = 0; i <= 7; i++) {
+    //sprintf(linebuffer, "Setting address pin %d to %d", ADDR[i], (address & mask)>0?HIGH:LOW);
+    //PRINTLINE;
+    
+    digitalWrite(ADDR[i], (address & mask)>0?HIGH:LOW);
+    mask <<= 1;
+  }
+}
+
+void SetData(int data) {
+  int mask = 0x01;
+  
+  sprintf(linebuffer, "Setting data %d", data);
+  PRINTLINE;
+
+  for (int i = 0; i <= 7; i++) {
+    //sprintf(linebuffer, "Setting data pin %d to %d", DATA[i], (data & mask)>0?HIGH:LOW);
+    //PRINTLINE;
+    
+    digitalWrite(DATA[i], (data & mask)>0?HIGH:LOW);
+    mask <<= 1;
+  }
+}
+
+void WriteROM(int address, int value) {
+  digitalWrite(OE, HIGH);
+  
+  // setup address and data
+  SetAddress(address);
+  SetDataToOutput();
+  SetData(value);
+  
+  delayMicroseconds(1);   // T_oes
+  
+  digitalWrite(CE, LOW);
+  delayMicroseconds(1);   // T_cs
+  
+  digitalWrite(WE, LOW);
+  delayMicroseconds(1);    // T_wp
+  
+  digitalWrite(WE, HIGH);
+  delayMicroseconds(0);    // T_ch
+  digitalWrite(CE, HIGH);
+  
+  delayMicroseconds(100);   // wait until write done
+}
+
+void WriteRAM(int address, int value) {
+  digitalWrite(OE, HIGH);
+  
+  SetAddress(address);
+  SetDataToOutput();
+  SetData(value);
+  
+  // Write the data to the memory by pulling !WE LOW for at least 55ns (haha!)
+  Serial.println("Writing data!");
+  digitalWrite(CE, LOW);
+  delayMicroseconds(1);
+  digitalWrite(WE, LOW);
+  delayMicroseconds(1);
+  digitalWrite(WE, HIGH);
+  digitalWrite(CE, HIGH);
+}
+
+int Read(int address) {
+  SetAddress(address);
+  SetDataToInput();
+  
+  Serial.println("Reading data!");
+  digitalWrite(CE, LOW);
+  delayMicroseconds(1);
+  digitalWrite(OE, LOW);
+  delayMicroseconds(1);
+  int data = GetData();
+  delayMicroseconds(1);
+  digitalWrite(OE, HIGH);
+  digitalWrite(CE, HIGH);
+  
+  return data;
+}
+
+
+int GetData() {
+  int data = 0;
+  for (int i = 7; i >= 0; i--) {
+    int bit = digitalRead(DATA[i]) ? 1 : 0;
+    //sprintf(linebuffer, "Read bit #%d: %d", i, bit);
+    //PRINTLINE;
+    data = (data << 1) + bit;
+  }
+
+  return data;
+}
+
+
+// the setup function runs once when you press reset or power the board
+void setup() {
+  // initialize digital pin LED_BUILTIN as an output.
+  Serial.begin(9600);
+  
+  Serial.println("SRAM test program v1");
+  
+  pinMode(OE, OUTPUT);
+  pinMode(WE, OUTPUT);
+  pinMode(CE, OUTPUT);
+
+  Serial.println("Pulling !CE HIGH");
+  digitalWrite(CE, HIGH);
+  
+  Serial.println("Pulling !WE HIGH, to prevent accidental writes");
+  digitalWrite(WE, HIGH);
+  
+  Serial.println("Pulling !OE HIGH, to put chip in HIGH-Z");
+  digitalWrite(OE, LOW);
+  
+  Serial.println("Setting address lines to OUTPUT");
+  for (int i = 0; i <= 7; i++) {
+    pinMode(ADDR[i], OUTPUT);
+  }
+  
+  // Set to High-Z
+  SetDataToInput();
+  
+  WriteROM(0, 'B');
+  WriteROM(1, 'A');
+  WriteROM(2, 'X');
+  WriteROM(3, 'L');
+
+  sprintf(linebuffer, "Wrote 4 bytes, reading back");  
+  
+  int d1 = Read(0);
+  int d2 = Read(1);
+  int d3 = Read(2);
+  int d4 = Read(3);
+
+  sprintf(linebuffer, "Done: %c %c %c %c", d1, d2, d3, d4);  
+  PRINTLINE;
+}
+
+// the loop function runs over and over again forever
+void loop() {
+}
