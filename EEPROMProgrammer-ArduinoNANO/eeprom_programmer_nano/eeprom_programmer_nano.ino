@@ -2,11 +2,23 @@
 const char ADDR[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
 const char DATA[] = { 8, 9, 10, 11, 12, 13, 14, 15 };
 
+// pins
 #define OE 21
 #define WE 20
 #define CE 19
 #define FF_CLK 18
-#define PRINTLINE Serial.println(linebuffer)
+#define PRINTLINE { Serial.print("[CR-EP1] "); Serial.println(linebuffer); }
+
+// constants
+#define STX 0x02
+#define ETX 0x03
+#define EOT 0x04
+#define ENQ 0x05
+#define ACK 0x06
+
+#define NAK 0x15
+
+#define HEXFILE_MAX_SIZE  32768
 
 char linebuffer[80];
 
@@ -27,49 +39,36 @@ void SetAddress(unsigned int address) {
   byte addr_hi = address >> 8;
   byte mask = 0x01;
   digitalWrite(FF_CLK, LOW);
-  
-  sprintf(linebuffer, "Setting address 0x%04x, LO=0x%02x, HI=0x%02x", address, addr_lo, addr_hi);
-  PRINTLINE;
 
-  sprintf(linebuffer, "Clocking in HI byte first: 0x%02x", addr_hi);
-  PRINTLINE;
-  for (int i = 0; i <= 7; i++) {
-    // sprintf(linebuffer, "Setting address pin %d to %d", ADDR[i], (addr_hi & mask)>0?HIGH:LOW);
-    // PRINTLINE;
-    
+  // set high byte on address outputs
+  for (int i = 0; i <= 7; i++) {    
     digitalWrite(ADDR[i], (addr_hi & mask)>0?HIGH:LOW);
     mask <<= 1;
   }
-  
-  digitalWrite(FF_CLK, HIGH);   // this clocks in the high byte
+
+  // clock in high byte on the flip-flop
+  digitalWrite(FF_CLK, HIGH);
   delayMicroseconds(10);
   digitalWrite(FF_CLK, LOW);
 
-  sprintf(linebuffer, "Clocking in LO byte next: 0x%02x", addr_lo);
-  PRINTLINE;
-
+  // set low byte on address outputs
   mask = 0x01;
   for (int i = 0; i <= 7; i++) {
     digitalWrite(ADDR[i], (addr_lo & mask)>0?HIGH:LOW);
     mask <<= 1;
   }
-
-  sprintf(linebuffer, "Done. Address set to 0x%04x", address);
 }
 
 void SetData(int data) {
   int mask = 0x01;
   
-  sprintf(linebuffer, "Setting data %d", data);
-  PRINTLINE;
-
   for (int i = 0; i <= 7; i++) {
     digitalWrite(DATA[i], (data & mask)>0?HIGH:LOW);
     mask <<= 1;
   }
 }
 
-void WriteROM(unsigned int address, int value) {
+void Write(unsigned int address, int value) {
   digitalWrite(OE, HIGH);
   
   // setup address and data
@@ -81,7 +80,8 @@ void WriteROM(unsigned int address, int value) {
   
   digitalWrite(CE, LOW);
   delayMicroseconds(1);   // T_cs
-  
+
+  // Write the data to the memory by pulling !WE LOW for at least 55ns (haha!)
   digitalWrite(WE, LOW);
   delayMicroseconds(1);    // T_wp
   
@@ -92,35 +92,16 @@ void WriteROM(unsigned int address, int value) {
   delayMicroseconds(100);   // wait until write done
 }
 
-void WriteRAM(unsigned int address, int value) {
-  digitalWrite(OE, HIGH);
-  
-  SetAddress(address);
-  SetDataToOutput();
-  SetData(value);
-  
-  // Write the data to the memory by pulling !WE LOW for at least 55ns (haha!)
-  Serial.println("Writing data!");
-  digitalWrite(CE, LOW);
-  delayMicroseconds(1);
-  digitalWrite(WE, LOW);
-  delayMicroseconds(1);
-  digitalWrite(WE, HIGH);
-  digitalWrite(CE, HIGH);
-}
-
 int Read(unsigned int address) {
   SetAddress(address);
   SetDataToInput();
   
-  Serial.println("Reading data!");
   digitalWrite(CE, LOW);
   delayMicroseconds(1);
   digitalWrite(OE, LOW);
   delayMicroseconds(1);
   byte data = GetData();
-  sprintf(linebuffer, "Got data: %c (%d, 0x%04x)", data, data, data);
-  PRINTLINE;
+  
   delayMicroseconds(1);
   digitalWrite(OE, HIGH);
   digitalWrite(CE, HIGH);
@@ -133,8 +114,6 @@ byte GetData() {
   byte data = 0;
   for (int i = 7; i >= 0; i--) {
     byte bit = digitalRead(DATA[i]) ? 1 : 0;
-    //sprintf(linebuffer, "Read bit #%d: %d", i, bit);
-    //PRINTLINE;
     data = (data << 1) | bit;
   }
 
@@ -142,48 +121,39 @@ byte GetData() {
 }
 
 
-// the setup function runs once when you press reset or power the board
 void setup() {
-  // initialize digital pin LED_BUILTIN as an output.
-  Serial.begin(9600);
-  
-  Serial.println("SRAM test program v1");
-  
+  Serial.begin(115200);
+
+  sprintf(linebuffer, "EEPROM Programmer v1");
+  PRINTLINE;
+
+  // configure control pins
   pinMode(OE, OUTPUT);
   pinMode(WE, OUTPUT);
   pinMode(CE, OUTPUT);
   pinMode(FF_CLK, OUTPUT);
 
-  Serial.println("Pulling !CE HIGH");
+  // set control pins
   digitalWrite(CE, HIGH);
-  
-  Serial.println("Pulling !WE HIGH, to prevent accidental writes");
-  digitalWrite(WE, HIGH);
-  
-  Serial.println("Pulling !OE HIGH, to put chip in HIGH-Z");
-  digitalWrite(OE, LOW);
-
+  digitalWrite(WE, HIGH);  
+  digitalWrite(OE, LOW);      // put chip in High-Z
   digitalWrite(FF_CLK, LOW);
-  
-  Serial.println("Setting address lines to OUTPUT");
+
+  // configure address pins
   for (int i = 0; i <= 7; i++) {
     pinMode(ADDR[i], OUTPUT);
   }
   
-  // Set to High-Z
   SetDataToInput();
 
-  demo();
+  // Send ENQ to tell our partner we are ready to receive data
+  Serial.write(ENQ);
 }
 
-
-void debug() {
-  SetAddress(0x0001);
-}
 
 void demo() {  
-  WriteROM(0x4010, 'A');
-  WriteROM(0x6020, 'B');
+  Write(0x4010, 'A');
+  Write(0x6020, 'B');
   
   int result = Read(0x4010);
   int result2 = Read(0x6020);
@@ -193,9 +163,44 @@ void demo() {
 
   sprintf(linebuffer, "Done: %c (%d)", result2, result2);  
   PRINTLINE;
-
 }
 
 // the loop function runs over and over again forever
 void loop() {
+  if (Serial.available()) {
+    unsigned int size = 0;
+    unsigned int counter = 0;
+    int b = Serial.read();
+    if (b == STX) {
+      while ( (b = Serial.read()) != ETX) {
+        if (b != -1) {
+          size = (size * 10) + (b - 0x30);
+        }
+      }
+    }
+
+    if (size > HEXFILE_MAX_SIZE) {
+      sprintf(linebuffer, "HEX file too large! Received %u, Max size is %u", size, HEXFILE_MAX_SIZE);
+      PRINTLINE;
+      Serial.write(NAK);
+    } else {
+      sprintf(linebuffer, "Going to read %d bytes from serial.", size);
+      PRINTLINE;
+      Serial.write(ACK);
+
+      while (counter < size) {
+        b = Serial.read();
+        if (b != -1) {
+          Write(counter, b);          
+          counter++;
+        }
+      }
+
+      b = Serial.read();
+      if (b == EOT) {
+        sprintf(linebuffer, "HEX reading successful.");
+        PRINTLINE;
+      }
+    }
+  }
 }
