@@ -1,8 +1,14 @@
 
 const char ADDR[]  = { 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45 };
-extern volatile unsigned long timer0_overflow_count;
-unsigned long ticks() { return timer0_overflow_count; }
+
+#define CLOCK   2
+#define R_NOTW  9
+#define CE      37        // pin 37 = A15, which is used as chip enable
+#define PRINT { Serial.print(linebuffer); }
+
 unsigned char shadow[3];
+unsigned int i = 0;
+char linebuffer[80];
 
 void setup() {
   for (int i = 0; i < 24; i++) {
@@ -17,6 +23,14 @@ void setup() {
   Serial.println("Monitor Tool, for Arduino MEGA");
   Serial.println("This is a 24-bit data monitor.");
   Serial.println("(c) 2021 BF");
+
+  pinMode(CLOCK, INPUT);
+  pinMode(R_NOTW, INPUT);
+  attachInterrupt(digitalPinToInterrupt(CLOCK), onClock, RISING);
+}
+
+static void onClock() {
+  printData(false);
 }
 
 void printBinary(unsigned char b) {
@@ -44,7 +58,7 @@ void printAscii(unsigned char b) {
   }
 }
 
-void printData() {
+void printData(char useShadow) {
   // 24 bits = 6 nibbles = 3 bytes
   // 0000 0000 0000 0000 0000 0000
   //    X    X    X    X    X    X
@@ -66,7 +80,7 @@ void printData() {
     }
   }
 
-  if (shadow[0] != data[0] || shadow[1] != data[1] || shadow[2] != data[2]) {
+  if (!useShadow || (shadow[0] != data[0] || shadow[1] != data[1] || shadow[2] != data[2])) {
     printBinary(data[0]);
     Serial.print(" ");
     printBinary(data[1]);
@@ -88,18 +102,20 @@ void printData() {
     printAscii(data[2]);
     Serial.print("  ");
 
+    // we also have some extra pins
+    sprintf(linebuffer, "R/!W = %d  ", digitalRead(R_NOTW));
+    PRINT;
+    sprintf(linebuffer, "CE = %d", digitalRead(CE));
+    PRINT;
     
     Serial.println();
+    Serial.flush();
+    
     shadow[0] = data[0];
     shadow[1] = data[1];
     shadow[2] = data[2];
   }
 }
 
-void onClock() {
-}
-
 void loop() {
-  delayMicroseconds(1);
-  printData();
 }
