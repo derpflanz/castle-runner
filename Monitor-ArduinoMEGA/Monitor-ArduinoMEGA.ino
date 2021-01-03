@@ -58,6 +58,18 @@ void printAscii(unsigned char b) {
   }
 }
 
+void printRW() {
+  int rw = digitalRead(R_NOTW);
+  sprintf(linebuffer, "R/!W = %d %s", rw, rw==HIGH?"READ ":"WRITE");
+  PRINT;
+}
+
+void printCE() {
+  int ce = digitalRead(CE);
+  sprintf(linebuffer, "CE = %d %s", ce, ce==LOW?"RAM":"ROM");
+  PRINT;
+}
+
 void printData(char useShadow) {
   // 24 bits = 6 nibbles = 3 bytes
   // 0000 0000 0000 0000 0000 0000
@@ -81,32 +93,36 @@ void printData(char useShadow) {
   }
 
   if (!useShadow || (shadow[0] != data[0] || shadow[1] != data[1] || shadow[2] != data[2])) {
+    Serial.print("data: ");    
     printBinary(data[0]);
     Serial.print(" ");
-    printBinary(data[1]);
-    Serial.print(" ");
-    printBinary(data[2]);
-    Serial.print("  ");
-
     printHexadecimal(data[0]);
     Serial.print(" ");
+    printAscii(data[0]);
+    Serial.print("       ");
+
+    Serial.print("address: ");
+    printRW();
+    Serial.print("  ");    
+
     printHexadecimal(data[1]);
     Serial.print(" ");
     printHexadecimal(data[2]);
     Serial.print("  ");
 
-    printAscii(data[0]);
+    printBinary(data[1]);
     Serial.print(" ");
-    printAscii(data[1]);
-    Serial.print(" ");
-    printAscii(data[2]);
+    printBinary(data[2]);
     Serial.print("  ");
 
+//    printAscii(data[1]);
+//    Serial.print(" ");
+//    printAscii(data[2]);
+//    Serial.print("  ");
+
     // we also have some extra pins
-    sprintf(linebuffer, "R/!W = %d  ", digitalRead(R_NOTW));
-    PRINT;
-    sprintf(linebuffer, "CE = %d", digitalRead(CE));
-    PRINT;
+    printCE();
+    Serial.print("  ");
     
     Serial.println();
     Serial.flush();
