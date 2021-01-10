@@ -2,16 +2,17 @@
 #include <stdarg.h>
 #include "communication.h"
 
-char linebuffer[80];
-
 // this implements a blocking read
-byte read_serial() {
+byte Comm::readByte() {
   byte ret = 0x00;
-  while (!Serial.available()) {
-    ret = Serial.read();
-  }
+  while (!Serial.available());
 
+  ret = Serial.read();
   return ret;
+}
+
+void Comm::sendByte(byte b) {
+  Serial.write(b);
 }
 
 void Comm::setup() {

@@ -1,4 +1,3 @@
-
 #include "memory.h"
 #include "communication.h"
 
@@ -7,24 +6,28 @@ void setup() {
   Memory.setup();
 
   Communication.printf("EEPROM Programmer v2");
+  Communication.sendByte(SYN);
 }
-
-//void verify() {
-//  for (int i = 0; i < 0x22; i++) {
-//    unsigned char result = Read(i);
-//
-//    sprintf(linebuffer, "Read %u: (DEC %d; HEX: %x)", i, result, result);
-//    PRINTLINE;
-//  }
-//}
-
 
 void idle() {
-  
+  byte recv;
+  do {
+    recv = Communication.readByte();
+  } while (recv != SOH);
 }
 
-byte receive_header() {
-  return NOTHING;
+byte receive_header(int *data_length) {
+  byte digit, command;
+  *data_length = 0;
+  command = Communication.readByte();
+
+  while ( (digit = Communication.readByte()) != ETB) {
+    *data_length = (*data_length * 10) + (digit - '0');
+
+    Communication.printf("data_length: %d", *data_length);
+  }
+
+  return command;
 }
 
 void receive_data() {
@@ -36,14 +39,15 @@ void send_data() {
 }
 
 void loop() {
+  int data_length = 0;
   idle();
-  byte command = receive_header();  
+  byte command = receive_header(&data_length);
 
-  if (command == RECEIVE_DATA) {
-    receive_data();
-  } else if (command == SEND_DATA) {
-    send_data();
-  }
+  // if (command == RECEIVE_DATA) {
+  //   receive_data();
+  // } else if (command == SEND_DATA) {
+  //   send_data();
+  // }
 }
 
 //// the loop function runs over and over again forever

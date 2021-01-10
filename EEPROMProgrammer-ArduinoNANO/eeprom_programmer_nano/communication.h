@@ -2,12 +2,15 @@
 #define __COMMUNICATION_H__
 
 // ASCII convenience defines
+#define SOH 0x01
 #define STX 0x02
 #define ETX 0x03
 #define EOT 0x04
 #define ENQ 0x05
 #define ACK 0x06
 #define NAK 0x15
+#define SYN 0x16
+#define ETB 0x17
 
 // Commands
 #define RECEIVE_DATA  0x31
@@ -22,6 +25,8 @@ class Comm {
     public:
         void setup();
         void printf(char *format, ...);
+        byte readByte();
+        void sendByte(byte b);
 
     private:
 
