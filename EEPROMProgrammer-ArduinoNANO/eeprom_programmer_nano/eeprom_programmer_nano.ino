@@ -124,7 +124,7 @@ byte GetData() {
 void setup() {
   Serial.begin(9600);
 
-  sprintf(linebuffer, "EEPROM Programmer v1");
+  sprintf(linebuffer, "EEPROM Programmer v2");
   PRINTLINE;
 
   // configure control pins
@@ -145,7 +145,6 @@ void setup() {
   }
   
   SetDataToInput();
-
   verify();
 
   // Send ENQ to tell our partner we are ready to receive data
@@ -157,7 +156,7 @@ void verify() {
   for (int i = 0; i < 0x22; i++) {
     unsigned char result = Read(i);
 
-    sprintf(linebuffer, "Done: %c (DEC %d; HEX: %x)", result, result, result);
+    sprintf(linebuffer, "Read %u: (DEC %d; HEX: %x)", i, result, result);
     PRINTLINE;
   }
 }
@@ -182,7 +181,7 @@ void loop() {
       PRINTLINE;
       Serial.write(NAK);
     } else {
-      sprintf(linebuffer, "Going to read %d bytes from serial.", size);
+      sprintf(linebuffer, "Going to read %u bytes from serial.", size);
       PRINTLINE;
       Serial.write(ACK);
 
@@ -198,6 +197,10 @@ void loop() {
       if (b == EOT) {
         sprintf(linebuffer, "HEX reading successful.");
         PRINTLINE;
+
+        // this ends the transmission
+        verify();
+        Serial.write(EOT);
       }
     }
   }

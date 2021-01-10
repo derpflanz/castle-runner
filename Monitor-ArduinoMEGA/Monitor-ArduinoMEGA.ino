@@ -95,9 +95,9 @@ void printData(char useShadow) {
   if (!useShadow || (shadow[0] != data[0] || shadow[1] != data[1] || shadow[2] != data[2])) {
     Serial.print("data: ");    
     printBinary(data[0]);
-    Serial.print(" ");
+    Serial.print("  ");
     printHexadecimal(data[0]);
-    Serial.print(" ");
+    Serial.print("  ");
     printAscii(data[0]);
     Serial.print("       ");
 
