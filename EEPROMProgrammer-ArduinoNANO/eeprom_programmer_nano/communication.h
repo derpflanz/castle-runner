@@ -13,8 +13,8 @@
 #define ETB 0x17
 
 // Commands
-#define RECEIVE_DATA  0x31
-#define SEND_DATA     0x32
+#define WRITE_EEPROM  0x31
+#define READ_EEPROM   0x32
 #define NOTHING       0x30
 #define HEXFILE_MAX_SIZE  32768
 

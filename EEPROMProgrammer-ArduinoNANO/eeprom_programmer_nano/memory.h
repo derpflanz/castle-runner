@@ -12,14 +12,14 @@
 class EepromMemory {
   public:
     void setup();
+    byte readByte(unsigned int address);
+    void writeByte(unsigned int address, byte value);
 
   private:
     void SetDataToInput();
     void SetDataToOutput();
     void SetAddress(unsigned int address);
     void SetData(int data);
-    void Write(unsigned int address, int value);
-    int Read(unsigned int address);
     byte GetData();
 };
 

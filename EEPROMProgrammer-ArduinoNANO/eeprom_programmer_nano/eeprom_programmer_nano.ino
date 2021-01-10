@@ -5,6 +5,8 @@ void setup() {
   Communication.setup();
   Memory.setup();
 
+  Memory.writeByte(0x03, 0xBF);
+
   Communication.printf("EEPROM Programmer v2");
   Communication.sendByte(SYN);
 }
@@ -23,8 +25,6 @@ byte receive_header(int *data_length) {
 
   while ( (digit = Communication.readByte()) != ETB) {
     *data_length = (*data_length * 10) + (digit - '0');
-
-    Communication.printf("data_length: %d", *data_length);
   }
 
   return command;
@@ -34,8 +34,15 @@ void receive_data() {
   
 }
 
-void send_data() {
-  
+void send_data(int data_length) {
+  Communication.sendByte(STX);
+
+  for (int address = 0; address < data_length; address++) {
+    byte data = Memory.readByte(address);
+    Communication.sendByte(data);
+  }
+
+  Communication.sendByte(ETX);
 }
 
 void loop() {
@@ -43,11 +50,13 @@ void loop() {
   idle();
   byte command = receive_header(&data_length);
 
-  // if (command == RECEIVE_DATA) {
-  //   receive_data();
-  // } else if (command == SEND_DATA) {
-  //   send_data();
-  // }
+  if (command == WRITE_EEPROM) {
+    receive_data();
+  } else if (command == READ_EEPROM) {
+    send_data(data_length);
+  }
+
+  Communication.sendByte(EOT);
 }
 
 //// the loop function runs over and over again forever
