@@ -25,6 +25,7 @@ class Eeprom:
     def _send_header(self, ser, command, length):
         result = False
 
+        ser.write(SYN)
         while True:
             received = ser.read()                
             if received == SYN:

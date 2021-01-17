@@ -6,18 +6,24 @@ void setup() {
   Memory.setup();
 
   Communication.printf("EEPROM Programmer v2");
-  Communication.sendByte(SYN);
 }
 
 void idle() {
   byte recv;
   do {
     recv = Communication.receiveByte();
-  } while (recv != SOH);
+  } while (recv != SYN);
+
+  Communication.sendByte(SYN);
 }
 
 byte receive_header(unsigned long *data_length) {
-  byte digit, command = CMD_NOTHING;
+  byte digit, recv, command = CMD_NOTHING;
+
+  do {
+    recv = Communication.receiveByte();
+  } while (recv != SOH);
+
   *data_length = 0;
   command = Communication.receiveByte();
 
