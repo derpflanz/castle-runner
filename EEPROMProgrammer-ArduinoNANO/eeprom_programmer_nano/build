@@ -1,0 +1,5 @@
+arduino --verify eeprom_programmer_nano.ino && arduino --upload eeprom_programmer_nano.ino --port /dev/ttyACM0 --board arduino:megaavr:nona4809
+
+
+arduino --verify eeprom_programmer_nano.ino 
+

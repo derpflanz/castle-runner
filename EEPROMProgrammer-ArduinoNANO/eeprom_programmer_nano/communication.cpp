@@ -3,7 +3,7 @@
 #include "communication.h"
 
 // this implements a blocking read
-byte Comm::readByte() {
+byte Comm::receiveByte() {
   byte ret = 0x00;
   while (!Serial.available());
 

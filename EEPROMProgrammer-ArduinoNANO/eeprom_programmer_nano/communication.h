@@ -13,10 +13,11 @@
 #define ETB 0x17
 
 // Commands
-#define WRITE_EEPROM  0x31
-#define READ_EEPROM   0x32
-#define NOTHING       0x30
-#define HEXFILE_MAX_SIZE  32768
+#define CMD_WRITE_EEPROM        0x31
+#define CMD_READ_EEPROM         0x32
+#define CMD_NOTHING             0x30
+#define CMD_ERROR               0x39
+#define HEXFILE_MAX_SIZE        32768
 
 #define PRINTLINE { Serial.print("[CR-EP1] "); Serial.println(linebuffer); }
 extern char linebuffer[];
@@ -25,7 +26,7 @@ class Comm {
     public:
         void setup();
         void printf(char *format, ...);
-        byte readByte();
+        byte receiveByte();
         void sendByte(byte b);
 
     private:

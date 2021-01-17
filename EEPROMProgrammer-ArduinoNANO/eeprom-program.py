@@ -1,12 +1,14 @@
 import argparse, os, sys
+from eeprom import eeprom
 
 parser = argparse.ArgumentParser(description='EEPROM Programmer')
 parser.add_argument('action', type=str, help='Action to do', choices=['read','write'])
 parser.add_argument('-f', '--file', dest='file', help='Filename of file to write or to store results in')
 parser.add_argument('-l', '--length', dest='length', type=int, help='Length of data to read or write (may be omitted when writing a HEX file')
+parser.add_argument('-o', '--overwrite', dest='overwrite', help='Overwrite file if already exists.', action='store_true')
 args = parser.parse_args()
 
-if args.action == 'read' and os.path.exists(args.file):
+if args.action == 'read' and os.path.exists(args.file) and args.overwrite == False:
     print(f"Cannot read into {args.file}: file already exists")
     sys.exit(-1)
 
@@ -21,7 +23,10 @@ if args.action == 'read' and args.length is None:
 if args.action == 'read':
     print(f"Going to read {args.length} bytes into {args.file}")
 
-    
+    eeprom = eeprom.Eeprom("/dev/ttyACM0", 9600)
+    data = eeprom.read(args.length)
+    with open(args.file, "wb") as file:
+        file.write(data)        
 elif args.action == 'write':
     length = os.path.getsize(args.file)
     if args.length is not None and args.length > length:
@@ -31,4 +36,10 @@ elif args.action == 'write':
         length = args.length
 
     print(f"Going to write {length} bytes from {args.file}")
+
+    with open(args.file, "rb") as file:
+        data = file.read()
+        
+    eeprom = eeprom.Eeprom("/dev/ttyACM0", 9600)
+    eeprom.write(data)
 

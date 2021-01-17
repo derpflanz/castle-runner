@@ -74,7 +74,9 @@ void EepromMemory::SetData(int data) {
 
 void EepromMemory::writeByte(unsigned int address, byte value) {
   digitalWrite(OE, HIGH);
-  
+  digitalWrite(WE, HIGH);
+  digitalWrite(CE, HIGH);
+
   // setup address and data
   SetAddress(address);
   SetDataToOutput();
@@ -93,10 +95,15 @@ void EepromMemory::writeByte(unsigned int address, byte value) {
   delayMicroseconds(1);    // T_ch
   digitalWrite(CE, HIGH);
   
-  delayMicroseconds(100);   // wait until write done
+//  delayMicroseconds(100);  // wait until write done
+  delay(10);
 }
 
 byte EepromMemory::readByte(unsigned int address) {
+  digitalWrite(OE, HIGH);
+  digitalWrite(WE, HIGH);
+  digitalWrite(CE, HIGH);
+
   SetAddress(address);
   SetDataToInput();
   
