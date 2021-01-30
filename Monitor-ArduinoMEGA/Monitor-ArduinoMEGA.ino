@@ -1,8 +1,9 @@
 
 const char ADDR[]  = { 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45 };
+const char LEDS[] = { 4, 5, 6, 7, 8, 9, 10, 11 };
 
 #define CLOCK   2
-#define R_NOTW  9
+#define R_NOTW  3
 #define CE      37        // pin 37 = A15, which is used as chip enable
 #define PRINT { Serial.print(linebuffer); }
 
@@ -10,10 +11,34 @@ unsigned char shadow[3];
 unsigned int i = 0;
 char linebuffer[80];
 
+void writeLeds(byte pattern) {
+  byte mask = 0x01;
+
+  for (int i = 0; i < 8; i++) {
+    if ((pattern & mask) > 0) {
+      digitalWrite(LEDS[i], HIGH);
+    } else {
+      digitalWrite(LEDS[i], LOW);
+    }
+    mask <<= 1;
+  }
+}
+
 void setup() {
   for (int i = 0; i < 24; i++) {
     pinMode(ADDR[i], INPUT_PULLUP);
   }
+  for (int i = 0; i < 8; i++) {
+    pinMode(LEDS[i], OUTPUT);
+  }
+
+  writeLeds(0x55);
+  delay(500);
+  writeLeds(0xAA);
+  delay(1000);
+  writeLeds(0x55);
+  delay(500);
+  writeLeds(0x00);
 
   Serial.begin(115200);
   while (!Serial) {
