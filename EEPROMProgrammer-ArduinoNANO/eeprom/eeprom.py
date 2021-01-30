@@ -29,13 +29,15 @@ class Eeprom:
         time.sleep(0.5)
 
         ser.write(SYN)
+        head_bytes_received = 0
         while True:
             received = ser.read()
             if received == SYN:
-                self._print("\n\nReceived SYN, starting header")
+                self._print(f"\n\nReceived {head_bytes_received} header bytes, and SYN, starting command")
                 break
             else:
                 self._print(received.decode('iso-8859-1'), end='')
+                head_bytes_received += 1
                 
         ser.write(SOH)
         ser.write(command)
@@ -65,7 +67,9 @@ class Eeprom:
                 self._print("0000 ", end='')
                 for b in _bytes:
                     ser.write(bytes([b]))
-                    self._printByte(b)
+
+                    byte_read = ser.read()
+                    self._printByte(byte_read)
 
                 ser.write(ETX)
 

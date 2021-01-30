@@ -5,14 +5,6 @@
 void setup() {
   Communication.setup();
   Memory.setup();
-
-  Memory.writeByte(0xFFFC, 0x00);
-  Memory.writeByte(0xFFFD, 0x80);
-
-  byte fc = Memory.readByte(0xFFFC);
-  byte fd = Memory.readByte(0xFFFD);
-
-  Communication.printf("EEPROM Programmer v2; vector %02x %02x", fc, fd);
 }
 
 void idle() {
@@ -21,6 +13,7 @@ void idle() {
     recv = Communication.receiveByte();
   } while (recv != SYN);
 
+  Communication.printf("EEPROM Programmer v2");
   Communication.sendByte(SYN);
 }
 
@@ -58,6 +51,11 @@ void receive_data(unsigned long data_length) {
   for (int i = 0; i < data_length; i++) {
     recv = Communication.receiveByte();
     Memory.writeByte(address, recv);
+
+    // send data back, to check
+    byte data = Memory.readByte(address);
+    Communication.sendByte(data);
+
     address++;
   }
 
@@ -85,6 +83,9 @@ void loop() {
   if (command == CMD_WRITE_EEPROM) {
     // 0x8000 is the start vector of the program 
     // this refers to the first byte in the ROM
+    // we write this byte beforehand, so we can work with
+    // smaller hex files; is is OK for the image
+    // to overwrite these bytes
     Memory.writeByte(0xFFFC, 0x00);
     Memory.writeByte(0xFFFD, 0x80);
 
