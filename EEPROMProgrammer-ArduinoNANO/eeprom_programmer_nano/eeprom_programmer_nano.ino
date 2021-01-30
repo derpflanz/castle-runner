@@ -1,11 +1,18 @@
 #include "memory.h"
 #include "communication.h"
+#include "Arduino.h"
 
 void setup() {
   Communication.setup();
   Memory.setup();
 
-  Communication.printf("EEPROM Programmer v2");
+  Memory.writeByte(0xFFFC, 0x00);
+  Memory.writeByte(0xFFFD, 0x80);
+
+  byte fc = Memory.readByte(0xFFFC);
+  byte fd = Memory.readByte(0xFFFD);
+
+  Communication.printf("EEPROM Programmer v2; vector %02x %02x", fc, fd);
 }
 
 void idle() {
@@ -31,7 +38,7 @@ byte receive_header(unsigned long *data_length) {
     *data_length = (*data_length * 10) + (digit - '0');
   }
 
-  if (*data_length < HEXFILE_MAX_SIZE) {
+  if (*data_length <= HEXFILE_MAX_SIZE) {
     Communication.sendByte(ACK);
   } else {
     Communication.sendByte(NAK);
@@ -76,6 +83,11 @@ void loop() {
   byte command = receive_header(&data_length);
 
   if (command == CMD_WRITE_EEPROM) {
+    // 0x8000 is the start vector of the program 
+    // this refers to the first byte in the ROM
+    Memory.writeByte(0xFFFC, 0x00);
+    Memory.writeByte(0xFFFD, 0x80);
+
     receive_data(data_length);
   } else if (command == CMD_READ_EEPROM) {
     send_data(data_length);
