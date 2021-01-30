@@ -1,4 +1,4 @@
-import serial, string
+import serial, string, time
 
 SYN = b'\x16'
 SOH = b'\x01'
@@ -25,12 +25,17 @@ class Eeprom:
     def _send_header(self, ser, command, length):
         result = False
 
+        # wait a little for the Nano to wake up
+        time.sleep(0.5)
+
         ser.write(SYN)
         while True:
-            received = ser.read()                
+            received = ser.read()
             if received == SYN:
-                self._print("Received SYN, starting header")
+                self._print("\n\nReceived SYN, starting header")
                 break
+            else:
+                self._print(received.decode('iso-8859-1'), end='')
                 
         ser.write(SOH)
         ser.write(command)
