@@ -101,11 +101,11 @@ void printData(char useShadow) {
   //    X    X    X    X    X    X
   //         A         A         A
 
-  unsigned char data[3] = {0, 0, 0};
-  unsigned char mask = 0x01;
+  byte data[3] = {0, 0, 0};
+  byte mask = 0x01;
   
   for (int i = 0; i < 24; i++) {
-    char pinState = digitalRead(ADDR[i]);
+    int pinState = digitalRead(ADDR[i]);
     if (pinState == HIGH) {
       data[2 - (i / 8)] = data[2 - (i / 8)] | mask;
     }
@@ -117,14 +117,13 @@ void printData(char useShadow) {
     }
   }
 
+  // data[0] = databus
+  // data[1] = address HIGH
+  // data[2] = address LOW
   if (!useShadow || (shadow[0] != data[0] || shadow[1] != data[1] || shadow[2] != data[2])) {
-    Serial.print("data: ");    
-    printBinary(data[0]);
-    Serial.print("  ");
-    printHexadecimal(data[0]);
-    Serial.print("  ");
-    printAscii(data[0]);
-    Serial.print("       ");
+    if (data[1] == 0x7F && data[2] == 0xFA) {
+      writeLeds(data[0]);
+    }
 
     Serial.print("address: ");
     printRW();
@@ -140,18 +139,21 @@ void printData(char useShadow) {
     printBinary(data[2]);
     Serial.print("  ");
 
-//    printAscii(data[1]);
-//    Serial.print(" ");
-//    printAscii(data[2]);
-//    Serial.print("  ");
-
     // we also have some extra pins
     printCE();
     Serial.print("  ");
-    
+
+    Serial.print("data: ");    
+    printBinary(data[0]);
+    Serial.print("  ");
+    printHexadecimal(data[0]);
+    Serial.print("  ");
+    printAscii(data[0]);
+    Serial.print("       ");
+
     Serial.println();
     Serial.flush();
-    
+
     shadow[0] = data[0];
     shadow[1] = data[1];
     shadow[2] = data[2];
