@@ -3,6 +3,7 @@ from fileprocessing import lexer, opcodes
 
 parser = argparse.ArgumentParser(description='6502 Assembler')
 parser.add_argument('inputfile', type=str, help='.asm file to process')
+parser.add_argument('outputfile', type=str, help='Binary .hex file to generate')
 
 args = parser.parse_args()
 
@@ -10,14 +11,24 @@ if not os.path.exists(args.inputfile):
     print(f"Input file '{args.inputfile}' does not exist.")
     sys.exit(-1)
 
-with open(args.inputfile, 'r') as file:
-    lexer = lexer.AsmLexer()
+if os.path.exists(args.outputfile):
+    print(f"Output file '{args.outputfile}' already exists, will be overwritten.'")
 
-    for line in file:
-        print(f"Processing line: {line}")
+with open(args.inputfile, 'r') as ifile:
+    with open(args.outputfile, 'wb') as ofile:
+        lexer = lexer.AsmLexer()
+        lineno = 0
 
-        result = lexer.tokenize(line)
-        #opcodes = opcodes.Opcodes(result)
-        
-        for token in result:
-            print(f"type={token.type}, value={token.value}")
+        try:
+            for line in ifile:
+                print(f"[{lineno:5}] {line.strip()}")
+                result = lexer.tokenize(line)
+                codes = opcodes.Opcodes(result)
+                codes.process()
+                
+                ofile.write(codes.as_bytes())
+
+                lineno += 1
+        except opcodes.OpcodeError as err:
+            print(f"ERROR: {err}")
+            print(f"Hex file {args.outputfile} was not written correctly.")

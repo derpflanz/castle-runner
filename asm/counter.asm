@@ -1,16 +1,9 @@
+; counter with read/write to zero page
+; and write to hard wired output (address 0x7ffa)
 
-
-;LDA	#	A9	A9 01
-LDA #$1
-
-;STA	zp	85	85 00			
-STA $0
-
-;LDA	zp	A5	A5 00			
-LDA $0
-
-;STA	a	AD	8D FA 7F			
-STA $FA7F
-
-;INC	zp	E6	E6 00			
-;JMP	a	4C	4C 04 80
+LDA #$1                 ; accu = 1
+STA $0                  ; mem[0] = accu
+LDA $0                  ; accu = mem[0]
+STA $7FFa               ; mem[7ffa] = accu
+INC $0                  ; mem[0]++
+JMP $8004               ; goto 8004
