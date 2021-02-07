@@ -1,3 +1,5 @@
 *.hex
 
 *.pyc
+
+.vscode/.ropeproject/

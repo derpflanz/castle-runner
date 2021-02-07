@@ -1,7 +1,7 @@
 import unittest
 from fileprocessing import lexer
 
-class TestOpcodes(unittest.TestCase):
+class TestLexer(unittest.TestCase):
     def test_nop(self):
         # arrange
         l = lexer.AsmLexer()
@@ -36,6 +36,7 @@ class TestOpcodes(unittest.TestCase):
 
         # assert
         token = next(result, None)
+        self.assertEqual("OPCODE", token.type)
         token = next(result, None)
         self.assertEqual("COMMENT", token.type)
 
@@ -77,7 +78,6 @@ class TestOpcodes(unittest.TestCase):
         token = next(result, None)
         token = next(result, None)
         self.assertEqual("ABSOLUTEADDR", token.type)
-
 
 if __name__ == '__main__':
     unittest.main()
