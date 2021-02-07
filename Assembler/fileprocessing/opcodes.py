@@ -10,6 +10,7 @@ class OpcodeError(SyntaxError):
 class Opcodes:
     _tokens = None
     _binary = b''
+    _length = 0
 
     def _f_nop(self, mode, address):
         self._binary = b'\xea'
@@ -53,7 +54,29 @@ class Opcodes:
     }
 
     def __init__(self, tokens):
-        self._tokens = tokens
+        self._tokens = tokens or []
+
+        # a valid Opcodes object has an opcode, followed by an addressing mode
+        # comments are ignored
+        saw_opcode = False
+        saw_address = False
+        for tok in self._tokens:
+            if tok.type == TOK_OPCODE:
+                if saw_address:
+                    raise SyntaxError("Opcode cannot be after address.")
+                if saw_opcode:
+                    raise SyntaxError("Cannot have two opcodes in a line")
+                saw_opcode = True
+
+            if tok.type == MODE_ABSOLUTE or tok.type == MODE_IMMEDIATE or tok.type == MODE_ZEROPAGE:
+                if saw_address:
+                    raise SyntaxError("Cannot have two addresses in a line")
+                saw_address = True
+
+        self._process()
+
+    def length(self):
+        return self._length
 
     def _to_bytes(self, address):
         # address is a string
@@ -71,19 +94,28 @@ class Opcodes:
 
     # the process method takes the tokens and
     # translates them to 6502 assembly binary
-    def process(self):
+    def _process(self):
         opcode = None
         addressing_method = None
         address = None
         lineno = None
+        length = 0
 
         for tok in self._tokens:
             if tok.type == 'OPCODE':
                 opcode = tok.value
                 lineno = tok.lineno
+                length += 1                
             elif tok.type == MODE_IMMEDIATE or tok.type == MODE_ABSOLUTE or tok.type == MODE_ZEROPAGE:
                 addressing_method = tok.type
                 address = tok.value
+
+                if tok.type == MODE_ABSOLUTE:
+                    length += 2
+                else:
+                    length += 1
+
+        self._length = length
 
         try:
             self._opcode_funcs[opcode](self, addressing_method, address)

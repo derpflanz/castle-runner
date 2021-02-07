@@ -1,5 +1,6 @@
 import argparse, os, sys
 from fileprocessing import lexer, opcodes
+import sly
 
 parser = argparse.ArgumentParser(description='6502 Assembler')
 parser.add_argument('inputfile', type=str, help='.asm file to process')
@@ -16,19 +17,48 @@ if os.path.exists(args.outputfile):
 
 with open(args.inputfile, 'r') as ifile:
     with open(args.outputfile, 'wb') as ofile:
-        lexer = lexer.AsmLexer()
-        lineno = 0
+        mylexer = lexer.AsmLexer()
 
-        try:
+        try:            
+            lineno = 1
+            address = 0x8000
+            line = ''
+
             for line in ifile:
-                print(f"[{lineno:5}] {line.strip()}")
-                result = lexer.tokenize(line)
+                result = list(mylexer.tokenize(line))
                 codes = opcodes.Opcodes(result)
-                codes.process()
-                
+
+                if len(result) > 0:
+                    if result[0].type == lexer.TOK_LABEL:
+                        print(f"label {result[0].value} is at address {address:04x}")
+
+                address += codes.length()
+
+            lineno = 1
+            address = 0x8000
+            line = ''
+            ifile.seek(0)
+            for line in ifile:
+                result = list(mylexer.tokenize(line))
+                codes = opcodes.Opcodes(result)
                 ofile.write(codes.as_bytes())
 
+                if codes.length() == 0:
+                    print(f"[{lineno:5}:    ] {line.strip()}")
+                else:
+                    print(f"[{lineno:5}:{address:04x}] {line.strip()}")
                 lineno += 1
+                address += codes.length()
+
         except opcodes.OpcodeError as err:
             print(f"ERROR: {err}")
             print(f"Hex file {args.outputfile} was not written correctly.")
+        except SyntaxError as err:
+            print(f"ERROR: {err}")
+            print(f"Hex file {args.outputfile} was not written correctly.")
+        except sly.lex.LexError as err:
+            print(f"[{lineno:5}:    ] {line.strip()}")
+            print(f"ERROR: {err}")
+            print(f"Hex file {args.outputfile} was not written correctly.")
+
+            

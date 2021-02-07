@@ -3,6 +3,8 @@
 
 LDA #$1                 ; accu = 1
 STA $0                  ; mem[0] = accu
+; start loop
+:loop1
 LDA $0                  ; accu = mem[0]
 STA $7FFa               ; mem[7ffa] = accu
 INC $0                  ; mem[0]++

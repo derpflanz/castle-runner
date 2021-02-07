@@ -17,10 +17,9 @@ class TestOpcodes(unittest.TestCase):
         tokens = [
             self._token('NOP', 'OPCODE')
         ]
-        codes = opcodes.Opcodes(tokens)
 
         # act
-        codes.process()
+        codes = opcodes.Opcodes(tokens)
         assembly = codes.as_bytes()
 
         # assert
@@ -32,11 +31,8 @@ class TestOpcodes(unittest.TestCase):
             self._token('XXX', 'OPCODE')
         ]
 
-        # act
-        codes = opcodes.Opcodes(tokens)
-
-        # assert
-        self.assertRaises(opcodes.OpcodeError, codes.process)
+        # act & assert
+        self.assertRaises(opcodes.OpcodeError, opcodes.Opcodes, tokens)
 
     def test_to_bytes_one_byte(self):
         codes = opcodes.Opcodes(None)
@@ -59,83 +55,110 @@ class TestOpcodes(unittest.TestCase):
             self._token('LDA', lexer.TOK_OPCODE),
             self._token('#$1', lexer.MODE_IMMEDIATE)
         ]
-        codes = opcodes.Opcodes(tokens)
 
         # act
-        codes.process()
+        codes = opcodes.Opcodes(tokens)
         assembly = codes.as_bytes()
 
         # assert
         self.assertEqual(b'\xA9\x01', assembly)
 
     def test_sta_zeropage(self):
+        # arrange
         tokens = [
             self._token('STA', lexer.TOK_OPCODE),
             self._token('$00', lexer.MODE_ZEROPAGE)
         ]
-        codes = opcodes.Opcodes(tokens)
 
-        codes.process()
+        # act
+        codes = opcodes.Opcodes(tokens)
         assembly = codes.as_bytes()
 
+        # assert
         self.assertEqual(b'\x85\x00', assembly)
 
     def test_lda_zeropage(self):
+        # arrange
         tokens = [
             self._token('LDA', lexer.TOK_OPCODE),
             self._token('$00', lexer.MODE_ZEROPAGE)
         ]
-        codes = opcodes.Opcodes(tokens)
 
-        codes.process()
+        # act
+        codes = opcodes.Opcodes(tokens)
+        
+        # assert
         assembly = codes.as_bytes()
 
         self.assertEqual(b'\xa5\x00', assembly)
 
     def test_sta_absolute(self):
+        # arrange
         tokens = [
             self._token('STA', lexer.TOK_OPCODE),
             self._token('$7ffa', lexer.MODE_ABSOLUTE)
         ]
-        codes = opcodes.Opcodes(tokens)
 
-        codes.process()
+        # act
+        codes = opcodes.Opcodes(tokens)
         assembly = codes.as_bytes()
 
+        # assert
         self.assertEqual(b'\x8d\xfa\x7f', assembly)
 
-    def test_jmp_absolute(self):
+    def test_invalid_lines(self):
+        # arrange
+        tokens = [
+            self._token('STA', lexer.TOK_OPCODE),
+            self._token('$7ffa', lexer.MODE_ABSOLUTE),
+            self._token('STA', lexer.TOK_OPCODE)
+        ]
+
+        # act & assert
+        self.assertRaises(SyntaxError, opcodes.Opcodes, tokens)
+
+    def test_length(self):
+        # arrange
         tokens = [
             self._token('JMP', lexer.TOK_OPCODE),
             self._token('$8004', lexer.MODE_ABSOLUTE)
         ]
+
+        # act
         codes = opcodes.Opcodes(tokens)
 
-        codes.process()
-        assembly = codes.as_bytes()
+        # assert
+        self.assertEqual(3, codes.length())
 
-        self.assertEqual(b'\x4c\x04\x80', assembly)
+    def test_jmp_absolute(self):
+        # arrange
+        tokens = [
+            self._token('JMP', lexer.TOK_OPCODE),
+            self._token('$8004', lexer.MODE_ABSOLUTE)
+        ]
+
+        # act
+        codes = opcodes.Opcodes(tokens)
+ 
+        # assert
+        self.assertEqual(b'\x4c\x04\x80', codes.as_bytes())
 
     def test_inc_zeropage(self):
         tokens = [
             self._token('INC', lexer.TOK_OPCODE),
             self._token('$00', lexer.MODE_ZEROPAGE)
         ]
+
         codes = opcodes.Opcodes(tokens)
 
-        codes.process()
-        assembly = codes.as_bytes()
-
-        self.assertEqual(b'\xe6\x00', assembly)
+        self.assertEqual(b'\xe6\x00', codes.as_bytes())
 
     def test_empty(self):
         tokens = []
+
         codes = opcodes.Opcodes(tokens)
 
-        codes.process()
-        assembly = codes.as_bytes()
-
-        self.assertEqual(b'', assembly)
+        self.assertEqual(b'', codes.as_bytes())
 
 if __name__ == '__main__':
     unittest.main()
