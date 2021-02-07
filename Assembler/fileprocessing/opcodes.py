@@ -13,8 +13,7 @@ class Opcodes:
     def _f_lda(self, mode, address):
         if mode == MODE_IMMEDIATE:
             self._binary += b'\xa9'
-
-        self._binary += self._to_bytes(address)
+            self._binary += self._to_bytes(address)
 
     _opcode_funcs = {
         'NOP': _f_nop,
@@ -25,7 +24,15 @@ class Opcodes:
         self._tokens = tokens
 
     def _to_bytes(self, address):
-        pass
+        # address is a string
+        # an address can be #$xx, $xx or $xxxx
+        address = address.replace('#', '')
+        address = address.replace('$', '')
+
+        if len(address) == 1:
+            address = '0' + address
+
+        return bytes.fromhex(address)
 
     def as_bytes(self):
         return self._binary

@@ -43,9 +43,9 @@ class TestOpcodes(unittest.TestCase):
 
         b = codes._to_bytes('#$1')
 
-        self.assertEqual(b'1', b)
+        self.assertEqual(b'\x01', b)
 
-    def _test_lda_direct(self):
+    def test_lda_direct(self):
         # arrange
         tokens = [
             self._token('LDA', 'OPCODE'),
