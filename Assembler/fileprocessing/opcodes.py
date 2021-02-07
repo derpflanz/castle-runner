@@ -3,9 +3,8 @@ from .lexer import *
 class OpcodeError(SyntaxError):
     _tokens = None
 
-    def __init__(self, message, lineno):
+    def __init__(self, message):
         super(OpcodeError, self).__init__(message)
-        self._lineno = lineno
 
 class Opcodes:
     _tokens = None
@@ -22,6 +21,8 @@ class Opcodes:
         elif mode == MODE_ZEROPAGE:
             self._binary += b'\xa5'
             self._binary += self._to_bytes(address)
+        else:
+            raise OpcodeError("Addressing mode {mode} not supported for LDA")
 
     def _f_sta(self, mode, address):
         if mode == MODE_ZEROPAGE:
@@ -30,19 +31,38 @@ class Opcodes:
         elif mode == MODE_ABSOLUTE:
             self._binary += b'\x8d'
             self._binary += self._to_bytes(address)
+        else:
+            raise OpcodeError("Addressing mode {mode} not supported for STA")
 
     def _f_inc(self, mode, address):
         if mode == MODE_ZEROPAGE:
             self._binary += b'\xe6'
             self._binary += self._to_bytes(address)
+        else:
+            raise OpcodeError("Addressing mode {mode} not supported for INC")
 
     def _f_jmp(self, mode, address):
         if mode == MODE_ABSOLUTE:
             self._binary += b'\x4c'
             self._binary += self._to_bytes(address)
+        elif mode == TOK_LABEL:
+            # a label implies absolute addressing
+            self._binary += b'\x4c'
+            self._binary += self._label_to_address(address)
+        else:
+            raise OpcodeError("Addressing mode {mode} not supported for JMP")
 
     def _f_none(self, mode, address):
         return b''
+
+    def _label_to_address(self, label):
+        if self._lookup_labels is True:
+            try:
+                return self._to_bytes(self._labels[label])
+            except KeyError:
+                raise SyntaxError(f"Label {label} not found.")
+        else:
+            return b'\x00\x00'
 
     _opcode_funcs = {
         None: _f_none,
@@ -53,8 +73,10 @@ class Opcodes:
         'JMP': _f_jmp
     }
 
-    def __init__(self, tokens):
+    def __init__(self, tokens, labels = None, lookup_labels = True):
         self._tokens = tokens or []
+        self._labels = labels or {}
+        self._lookup_labels = lookup_labels
 
         # a valid Opcodes object has an opcode, followed by an addressing mode
         # comments are ignored
@@ -98,19 +120,17 @@ class Opcodes:
         opcode = None
         addressing_method = None
         address = None
-        lineno = None
         length = 0
 
         for tok in self._tokens:
             if tok.type == 'OPCODE':
                 opcode = tok.value
-                lineno = tok.lineno
-                length += 1                
-            elif tok.type == MODE_IMMEDIATE or tok.type == MODE_ABSOLUTE or tok.type == MODE_ZEROPAGE:
+                length += 1
+            elif tok.type == MODE_IMMEDIATE or tok.type == MODE_ABSOLUTE or tok.type == MODE_ZEROPAGE or (tok.type == TOK_LABEL and opcode is not None):
                 addressing_method = tok.type
                 address = tok.value
 
-                if tok.type == MODE_ABSOLUTE:
+                if tok.type == MODE_ABSOLUTE or tok.type == TOK_LABEL:
                     length += 2
                 else:
                     length += 1
@@ -120,5 +140,5 @@ class Opcodes:
         try:
             self._opcode_funcs[opcode](self, addressing_method, address)
         except KeyError:
-            raise OpcodeError(f"Opcode {opcode} not supported.", lineno)
+            raise OpcodeError(f"Opcode {opcode} not supported.")
 

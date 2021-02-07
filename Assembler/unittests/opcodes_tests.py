@@ -143,6 +143,21 @@ class TestOpcodes(unittest.TestCase):
         # assert
         self.assertEqual(b'\x4c\x04\x80', codes.as_bytes())
 
+    def test_jmp_label(self):
+        # arrange
+        tokens = [
+            self._token('JMP', lexer.TOK_OPCODE),
+            self._token(':loop1', lexer.TOK_LABEL)
+        ]
+
+        # act
+        codes = opcodes.Opcodes(tokens, {":loop1": "$8004"})
+ 
+        # assert
+        self.assertEqual(b'\x4c\x04\x80', codes.as_bytes())
+
+
+
     def test_inc_zeropage(self):
         tokens = [
             self._token('INC', lexer.TOK_OPCODE),

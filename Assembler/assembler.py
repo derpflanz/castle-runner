@@ -18,29 +18,27 @@ if os.path.exists(args.outputfile):
 with open(args.inputfile, 'r') as ifile:
     with open(args.outputfile, 'wb') as ofile:
         mylexer = lexer.AsmLexer()
+        lineno = 1
+        address = 0x8000
+        line = ''
+        labels = {}
 
-        try:            
-            lineno = 1
-            address = 0x8000
-            line = ''
-
+        try:
             for line in ifile:
                 result = list(mylexer.tokenize(line))
-                codes = opcodes.Opcodes(result)
+                codes = opcodes.Opcodes(result, lookup_labels = False)
 
-                if len(result) > 0:
-                    if result[0].type == lexer.TOK_LABEL:
-                        print(f"label {result[0].value} is at address {address:04x}")
+                if len(result) > 0 and result[0].type == lexer.TOK_LABEL:
+                    labels[result[0].value] = f"{address:04x}"
 
                 address += codes.length()
 
-            lineno = 1
-            address = 0x8000
-            line = ''
             ifile.seek(0)
+            address = 0x8000
+
             for line in ifile:
                 result = list(mylexer.tokenize(line))
-                codes = opcodes.Opcodes(result)
+                codes = opcodes.Opcodes(result, labels)
                 ofile.write(codes.as_bytes())
 
                 if codes.length() == 0:
