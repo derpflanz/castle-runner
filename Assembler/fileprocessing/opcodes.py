@@ -1,3 +1,7 @@
+from .lexer import *
+
+class OpcodeError(SyntaxError):
+    pass
 
 class Opcodes:
     _tokens = None
@@ -6,20 +10,29 @@ class Opcodes:
     def _f_nop(self, mode, address):
         self._binary = b'\xea'
 
+    def _f_lda(self, mode, address):
+        if mode == MODE_IMMEDIATE:
+            self._binary += b'\xa9'
+
+        self._binary += self._to_bytes(address)
+
     _opcode_funcs = {
-        'NOP': _f_nop
+        'NOP': _f_nop,
+        'LDA': _f_lda
     }
 
     def __init__(self, tokens):
         self._tokens = tokens
-        self._process()
+
+    def _to_bytes(self, address):
+        pass
 
     def as_bytes(self):
         return self._binary
 
     # the process method takes the tokens and
     # translates them to 6502 assembly binary
-    def _process(self):
+    def process(self):
         opcode = None
         addressing_method = None
         address = None
@@ -27,9 +40,12 @@ class Opcodes:
         for tok in self._tokens:
             if tok.type == 'OPCODE':
                 opcode = tok.value
-            elif tok.type == 'IMMEDIATEADDR' or tok.type == 'ZEROPAGEADDR' or tok.type == 'ABSOLUTEADDR':
+            elif tok.type == MODE_IMMEDIATE or tok.type == MODE_ABSOLUTE or tok.type == MODE_ZEROPAGE:
                 addressing_method = tok.type
                 address = tok.value
 
-        self._opcode_funcs[opcode](self, addressing_method, address)
+        try:
+            self._opcode_funcs[opcode](self, addressing_method, address)
+        except KeyError:
+            raise OpcodeError(f"Opcode {opcode} not supported.")
 

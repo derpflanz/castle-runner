@@ -1,6 +1,11 @@
 from sly import Lexer
 
+MODE_IMMEDIATE = 'IMMEDIATEADDR'
+MODE_ZEROPAGE = 'ZEROPAGEADDR'
+MODE_ABSOLUTE = 'ABSOLUTEADDR'
+
 class AsmLexer(Lexer):
+    
     tokens = { OPCODE, COMMENT, IMMEDIATEADDR, ZEROPAGEADDR, ABSOLUTEADDR }
     ignore = ' \t\n'
 
