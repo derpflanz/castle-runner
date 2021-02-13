@@ -1,6 +1,7 @@
 
 const char ADDR[]  = { 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45 };
 const char LEDS[] = { 4, 5, 6, 7, 8, 9, 10, 11 };
+const char OUT2[] = { 46, 47, 48 };
 
 #define CLOCK   2
 #define R_NOTW  3
@@ -24,12 +25,39 @@ void writeLeds(byte pattern) {
   }
 }
 
+void writeOut2(byte pattern) {
+  if (pattern & 0x01) {
+    // enable
+    digitalWrite(OUT2[0], HIGH);
+  } else {
+    digitalWrite(OUT2[0], LOW);
+  }
+
+  if (pattern & 0x02) {
+    // rw
+    digitalWrite(OUT2[1], HIGH);
+  } else {
+    digitalWrite(OUT2[1], LOW);
+  }
+
+  if (pattern & 0x04) {
+    // RS
+    digitalWrite(OUT2[2], HIGH);
+  } else {
+    digitalWrite(OUT2[2], LOW);
+  }
+
+}
+
 void setup() {
   for (int i = 0; i < 24; i++) {
     pinMode(ADDR[i], INPUT_PULLUP);
   }
   for (int i = 0; i < 8; i++) {
     pinMode(LEDS[i], OUTPUT);
+  }
+  for (int i = 0; i < 3; i++) {
+    pinMode(OUT2[i], OUTPUT);
   }
 
   writeLeds(0x55);
@@ -121,10 +149,6 @@ void printData(char useShadow) {
   // data[1] = address HIGH
   // data[2] = address LOW
   if (!useShadow || (shadow[0] != data[0] || shadow[1] != data[1] || shadow[2] != data[2])) {
-    if (data[1] == 0x7F && data[2] == 0xFA) {
-      writeLeds(data[0]);
-    }
-
     Serial.print("address: ");
     printRW();
     Serial.print("  ");    
@@ -149,7 +173,20 @@ void printData(char useShadow) {
     printHexadecimal(data[0]);
     Serial.print("  ");
     printAscii(data[0]);
-    Serial.print("       ");
+    Serial.print("   ");
+
+    if (data[1] == 0x7F && data[2] == 0xFA) {
+      writeLeds(data[0]);
+      Serial.print("I/O 1: ");
+      printHexadecimal(data[0]);
+    }
+    if (data[1] == 0x7F && data[2] == 0xFB) {
+      writeOut2(data[0]);
+      Serial.print("I/O 2: ");
+      printHexadecimal(data[0]);
+    }
+
+
 
     Serial.println();
     Serial.flush();
