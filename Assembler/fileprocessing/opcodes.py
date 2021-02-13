@@ -64,6 +64,9 @@ class Opcodes:
         if mode == MODE_ABSOLUTE:
             self._binary += b'\x20'
             self._binary += self._to_bytes(address)
+        elif mode == TOK_LABEL:
+            self._binary += b'\x20'
+            self._binary += self._label_to_address(address)
         else:
             raise OpcodeError(f"Addressing mode {mode} not supported for JSR")
 

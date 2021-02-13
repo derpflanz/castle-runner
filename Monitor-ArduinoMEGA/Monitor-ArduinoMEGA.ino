@@ -27,13 +27,13 @@ static void onClock() {
   Log.printf("CE = %d %s ", Io.chip_enable(), Io.chip_enable()==LOW?"RAM":"ROM");
   Log.printf("R/!W = %d %s ", Io.read_write(), Io.read_write()==HIGH?"READ ":"WRITE");
 
-  Log.printf("address: %02x %02x ", addr_hi, addr_lo);
+  Log.printf("address:   %02x %02x   ", addr_hi, addr_lo);
 
   Log.printBinary(addr_hi);
   Log.printf(" ");
   Log.printBinary(addr_lo);
 
-  Log.printf("   data: ");
+  Log.printf("   data:   %02x   ", data);
   Log.printBinary(data);
   Log.printf(" ");
 
