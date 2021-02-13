@@ -29,7 +29,7 @@ void Logger::printBinary(byte b) {
 
 void Logger::printAscii(byte b) {
     if (b >= 0x20 && b <= 0x7E) {
-        printf("  %c", b);
+        printf("'%c'", b);
     } else {
         printf("---");
     }
