@@ -38,6 +38,8 @@ class Opcodes:
         if mode == MODE_ZEROPAGE:
             self._binary += b'\xe6'
             self._binary += self._to_bytes(address)
+        elif mode == None:      # addressing mode 'A': Accumulator
+            self._binary += b'\x1a'
         else:
             raise OpcodeError("Addressing mode {mode} not supported for INC")
 
@@ -51,6 +53,26 @@ class Opcodes:
             self._binary += self._label_to_address(address)
         else:
             raise OpcodeError("Addressing mode {mode} not supported for JMP")
+
+    def _f_dec(self, mode, address):
+        if mode == None:        # addressing mode 'A': Accumulator
+            self._binary += b'\x3a'
+        else:
+            raise OpcodeError("Addressing mode {mode} not supported for DEC")
+
+    def _f_jsr(self, mode, address):
+        if mode == MODE_ABSOLUTE:
+            self._binary += b'\x20'
+            self._binary += self._to_bytes(address)
+        else:
+            raise OpcodeError("Addressing mode {mode} not supported for JSR")
+
+    def _f_rts(self, mode, address):
+        if mode == None:        # addressing mode 's': Stack
+            self._binary += b'\x60'
+        else:
+            raise OpcodeError("Addressing mode {mode} not supported for DEC")
+
 
     def _f_none(self, mode, address):
         return b''
@@ -70,7 +92,10 @@ class Opcodes:
         'LDA': _f_lda,
         'STA': _f_sta,
         'INC': _f_inc,
-        'JMP': _f_jmp
+        'JMP': _f_jmp,
+        'DEC': _f_dec,
+        'JSR': _f_jsr,
+        'RTS': _f_rts
     }
 
     def __init__(self, tokens, labels = None, lookup_labels = True):
