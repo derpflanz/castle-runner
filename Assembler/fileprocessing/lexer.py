@@ -6,10 +6,11 @@ MODE_ABSOLUTE = 'ABSOLUTEADDR'
 
 TOK_OPCODE = 'OPCODE'
 TOK_LABEL = 'LABEL'
+TOK_ASCII = 'ASCII'
 
 class AsmLexer(Lexer):
     
-    tokens = { OPCODE, COMMENT, IMMEDIATEADDR, ZEROPAGEADDR, ABSOLUTEADDR, LABEL }
+    tokens = { OPCODE, COMMENT, IMMEDIATEADDR, ZEROPAGEADDR, ABSOLUTEADDR, LABEL, ASCII }
     ignore = ' \t\n'
 
     OPCODE          = r'[A-Z]{3}'
@@ -18,6 +19,7 @@ class AsmLexer(Lexer):
     ABSOLUTEADDR    = r'\$[0-9a-fA-F]{4}'           # ex. $4fe4
     ZEROPAGEADDR    = r'\$[0-9a-fA-F]{1,2}'         # ex. $7f
     LABEL           = r':[a-zA-Z][a-zA-Z0-9]*'      # ex. :label1
+    ASCII           = r'\'[a-zA-Z0-9_*\-\\/<>?:\";\'{}|\[\]~`!@#$%^&*()=+]\''
 
 
 

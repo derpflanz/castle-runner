@@ -22,7 +22,7 @@ class Opcodes:
             self._binary += b'\xa5'
             self._binary += self._to_bytes(address)
         else:
-            raise OpcodeError("Addressing mode {mode} not supported for LDA")
+            raise OpcodeError(f"Addressing mode {mode} not supported for LDA")
 
     def _f_sta(self, mode, address):
         if mode == MODE_ZEROPAGE:
@@ -32,7 +32,7 @@ class Opcodes:
             self._binary += b'\x8d'
             self._binary += self._to_bytes(address)
         else:
-            raise OpcodeError("Addressing mode {mode} not supported for STA")
+            raise OpcodeError(f"Addressing mode {mode} not supported for STA")
 
     def _f_inc(self, mode, address):
         if mode == MODE_ZEROPAGE:
@@ -41,7 +41,7 @@ class Opcodes:
         elif mode == None:      # addressing mode 'A': Accumulator
             self._binary += b'\x1a'
         else:
-            raise OpcodeError("Addressing mode {mode} not supported for INC")
+            raise OpcodeError(f"Addressing mode {mode} not supported for INC")
 
     def _f_jmp(self, mode, address):
         if mode == MODE_ABSOLUTE:
@@ -52,27 +52,26 @@ class Opcodes:
             self._binary += b'\x4c'
             self._binary += self._label_to_address(address)
         else:
-            raise OpcodeError("Addressing mode {mode} not supported for JMP")
+            raise OpcodeError(f"Addressing mode {mode} not supported for JMP")
 
     def _f_dec(self, mode, address):
         if mode == None:        # addressing mode 'A': Accumulator
             self._binary += b'\x3a'
         else:
-            raise OpcodeError("Addressing mode {mode} not supported for DEC")
+            raise OpcodeError(f"Addressing mode {mode} not supported for DEC")
 
     def _f_jsr(self, mode, address):
         if mode == MODE_ABSOLUTE:
             self._binary += b'\x20'
             self._binary += self._to_bytes(address)
         else:
-            raise OpcodeError("Addressing mode {mode} not supported for JSR")
+            raise OpcodeError(f"Addressing mode {mode} not supported for JSR")
 
     def _f_rts(self, mode, address):
         if mode == None:        # addressing mode 's': Stack
             self._binary += b'\x60'
         else:
-            raise OpcodeError("Addressing mode {mode} not supported for DEC")
-
+            raise OpcodeError(f"Addressing mode {mode} not supported for DEC")
 
     def _f_none(self, mode, address):
         return b''
@@ -119,6 +118,11 @@ class Opcodes:
                 if saw_address:
                     raise SyntaxError("Cannot have two addresses in a line")
                 saw_address = True
+
+            if tok.type == TOK_ASCII:
+                value = ord(tok.value.strip("'"))       # remove ' from the token and translate to number
+                tok.value = f"{value:02x}"                # translate to two-letter hex code
+                tok.type = MODE_IMMEDIATE
 
         self._process()
 

@@ -79,5 +79,18 @@ class TestLexer(unittest.TestCase):
         token = next(result, None)
         self.assertEqual("ABSOLUTEADDR", token.type)
 
+    def test_ascii_value(self):
+        # arrange
+        l = lexer.AsmLexer()
+        line = "LDA 'A'"
+
+        # act
+        result = l.tokenize(line)
+
+        # assert
+        token = next(result, None)
+        token = next(result, None)
+        self.assertEqual("ASCII", token.type) 
+
 if __name__ == '__main__':
     unittest.main()

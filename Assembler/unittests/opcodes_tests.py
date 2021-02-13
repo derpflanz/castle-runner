@@ -63,6 +63,17 @@ class TestOpcodes(unittest.TestCase):
         # assert
         self.assertEqual(b'\xA9\x01', assembly)
 
+    def test_ascii(self):
+        tokens = [
+            self._token('LDA', lexer.TOK_OPCODE),
+            self._token("'A'", lexer.TOK_ASCII)
+        ]
+
+        codes = opcodes.Opcodes(tokens)
+        assembly = codes.as_bytes()
+
+        self.assertEqual(b'\xA9\x41', assembly)
+
     def test_sta_zeropage(self):
         # arrange
         tokens = [
@@ -174,6 +185,8 @@ class TestOpcodes(unittest.TestCase):
         codes = opcodes.Opcodes(tokens)
 
         self.assertEqual(b'', codes.as_bytes())
+
+
 
 if __name__ == '__main__':
     unittest.main()
