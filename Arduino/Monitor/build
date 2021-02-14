@@ -1,5 +1,0 @@
-
-arduino --verify Monitor-ArduinoMEGA.ino && arduino --upload Monitor-ArduinoMEGA.ino --port /dev/ttyACM1 --board arduino:avr:mega:cpu=atmega2560
-
-
-
