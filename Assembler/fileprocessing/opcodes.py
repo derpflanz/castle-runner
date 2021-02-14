@@ -21,6 +21,9 @@ class Opcodes:
         elif mode == MODE_ZEROPAGE:
             self._binary += b'\xa5'
             self._binary += self._to_bytes(address)
+        elif mode == MODE_ABSOLUTE:
+            self._binary += b'\xad'
+            self._binary += self._to_bytes(address)
         else:
             raise OpcodeError(f"Addressing mode {mode} not supported for LDA")
 

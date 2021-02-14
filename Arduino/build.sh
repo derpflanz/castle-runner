@@ -1,8 +1,6 @@
 
 #!/bin/bash
 
-# arduino --verify Monitor-ArduinoMEGA.ino && arduino --upload Monitor-ArduinoMEGA.ino --port /dev/ttyACM1 --board arduino:avr:mega:cpu=atmega2560
-
 red() {
     echo -e "\e[31m$1\e[39m"
 }
@@ -10,7 +8,6 @@ red() {
 green() {
     echo -e "\e[32m$1\e[39m"
 }
-
 
 if [ "$1" == "" ]; then
     red "Usage: $0 <project>";
@@ -48,7 +45,7 @@ if [ "$LINE" = "" ]; then
     exit;
 fi
 
-PORT=`echo $LINE | awk '{print $1; }'`
+PORT=`echo $LINE | awk '{ print $1; }'`
 green "Found $BOARD on port $PORT"
 echo
 

@@ -10,10 +10,10 @@ args = parser.parse_args()
 
 if not os.path.exists(args.inputfile):
     print(f"Input file '{args.inputfile}' does not exist.")
-    sys.exit(-1)
+    sys.exit(1)
 
 if os.path.exists(args.outputfile):
-    print(f"Output file '{args.outputfile}' already exists, will be overwritten.'")
+    print(f"Output file '{args.outputfile}' already exists, will be overwritten.")
 
 with open(args.inputfile, 'r') as ifile:
     with open(args.outputfile, 'wb') as ofile:
@@ -51,12 +51,15 @@ with open(args.inputfile, 'r') as ifile:
         except opcodes.OpcodeError as err:
             print(f"ERROR: {err}")
             print(f"Hex file {args.outputfile} was not written correctly.")
+            sys.exit(1)
         except SyntaxError as err:
             print(f"ERROR: {err}")
             print(f"Hex file {args.outputfile} was not written correctly.")
+            sys.exit(1)
         except sly.lex.LexError as err:
             print(f"[{lineno:5}:    ] {line.strip()}")
             print(f"ERROR: {err}")
             print(f"Hex file {args.outputfile} was not written correctly.")
+            sys.exit(1)
 
             

@@ -46,6 +46,7 @@ void Logger::printOpcode(byte b) {
             break;
         case 0xa9:
         case 0xa5:
+        case 0xad:
             printf("LDA");
             break;
         case 0x1a:
