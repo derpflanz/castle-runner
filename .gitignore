@@ -1,13 +1,7 @@
 *.hex
-
 *.pyc
-
 .vscode/.ropeproject/
-
 asm/
-
 *.sch-bak
-
 *.kicad_pcb-bak
-
 Arduino/EepromProgrammer/output/
