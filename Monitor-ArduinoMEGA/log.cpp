@@ -76,4 +76,3 @@ void Logger::flush() {
 }
 
 Logger Log;
-
