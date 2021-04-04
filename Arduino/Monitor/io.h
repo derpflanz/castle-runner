@@ -3,12 +3,13 @@
 
 #include "Arduino.h"
 
-#define R_NOTW  3
-#define CE      37        // pin 37 = A15, which is used as chip enable
+#define R_NOTW  52
+#define CE      53        // pin 37 = A15, which is used as chip enable
 
-const char ADDR[]  = { 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45 };
-const char LEDS[] = { 4, 5, 6, 7, 8, 9, 10, 11 };
-const char OUT2[] = { 46, 47, 48 };
+//const char ADDR[]  = { 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45 };
+const char ADDR[] = { 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 6, 7, 8, 9, 10, 11, 12, 13};
+const char LEDS[] = { 22, 24, 26, 28, 30, 32, 34, 36 };
+const char OUT2[] = { 46, 48, 50 };
 
 typedef int pin;
 

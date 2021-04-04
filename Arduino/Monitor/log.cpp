@@ -66,7 +66,7 @@ void Logger::printOpcode(byte b) {
             printf("RTS");
             break;
         default:
-            printf("%02x", b);
+            printf("%02x ", b);
             break;
     }
 }
