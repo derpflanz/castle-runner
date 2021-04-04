@@ -47,13 +47,14 @@ with open(args.outputfile, 'wb') as ofile:
         # first process labels and string names
         for line in lines:
             result = list(mylexer.tokenize(line))
-            codes = opcodes.Opcodes(result, lookup_labels = False)
+            codes = opcodes.Opcodes(result)
 
             if len(result) > 0 and (result[0].type == lexer.TOK_LABEL or result[0].type == lexer.TOK_STRINGNAME):
                 labels[result[0].value] = f"{address:04x}"
 
             address += codes.length()
 
+        print(f"Labels: {labels}")
 
         # then preprocess the lines, replacing all labels and string names with their absolute address
         # this way, the assembler only needs to handle absolute addresses
@@ -72,11 +73,13 @@ with open(args.outputfile, 'wb') as ofile:
 
         for line in preprocessed_lines:
             result = list(mylexer.tokenize(line))
-            codes = opcodes.Opcodes(result, labels)
+            codes = opcodes.Opcodes(result, address)
             ofile.write(codes.as_bytes())
 
             a = "    " if codes.length() == 0 else f"{address:04x}"
-            print(f"[{lineno:5}:{a}] {line.strip()}")
+            s = f"[{lineno:5}:{a}] {line.strip()}"
+            h = codes.as_bytes().hex(' ', 1)
+            print(f"{s:80} {h}")
             
             lineno += 1
             address += codes.length()

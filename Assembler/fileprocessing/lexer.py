@@ -11,15 +11,14 @@ TOK_ASCII = 'ASCII'
 
 # will be unused in the assembler
 TOK_LABEL = 'LABEL'
-TOK_ABSINDEXX_S = 'ABSINDEXX_S'
-TOK_ABSINDEXY_S = 'ABSINDEXY_S'
+TOK_ABSINDEX = 'ABSINDEX'
 TOK_STRINGNAME = 'STRINGNAME'
 TOK_STRING = 'STRING'
 
 class AsmLexer(Lexer):
     
     tokens = { OPCODE, COMMENT, IMMEDIATEADDR, ZEROPAGEADDR, ABSINDEXX, ABSINDEXY, ABSOLUTEADDR, ASCII, \
-        LABEL, ABSINDEXX_S, ABSINDEXY_S, STRINGNAME, STRING  }
+        LABEL, ABSINDEX, STRINGNAME, STRING  }
     ignore = ' \t\n'
 
     # regexes for tokens: order matters!
@@ -36,8 +35,7 @@ class AsmLexer(Lexer):
     STRING          = r'".*"'
 
     # stuff that only needs to be recognised by the preprocessing
-    ABSINDEXX_S     = r'@[a-zA-Z]+,[Xx]'               # ex. @MSG,X
-    ABSINDEXY_S     = r'@[a-zA-Z]+,[Yy]'               # ex. @MSG,Y
+    ABSINDEX        = r'@[a-zA-Z]+,[XxYy]'               # ex. @MSG,X
     STRINGNAME      = r'@[a-zA-Z]+'
     LABEL           = r':[a-zA-Z][a-zA-Z0-9]*'      # ex. :label1
 
