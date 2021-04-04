@@ -43,6 +43,20 @@ class Opcodes:
         else:
             raise OpcodeError(f"Addressing mode {mode} not supported for LDX")
 
+    def _f_ldy(self, mode, address):
+        if mode == MODE_IMMEDIATE:
+            self._binary += b'\xa0'
+            self._binary += self._to_bytes(address)
+        elif mode == MODE_ZEROPAGE:
+            self._binary += b'\xa4'
+            self._binary += self._to_bytes(address)
+        elif mode == MODE_ABSOLUTE:
+            self._binary += b'\xac'
+            self._binary += self._to_bytes(address)
+        else:
+            raise OpcodeError(f"Addressing mode {mode} not supported for LDX")
+
+
     def _f_sta(self, mode, address):
         if mode == MODE_ZEROPAGE:
             self._binary += b'\x85'
@@ -101,6 +115,9 @@ class Opcodes:
     def _f_inx(self, mode, address):
         self._binary += b'\xe8'
 
+    def _f_iny(self, mode, address):
+        self._binary += b'\xc8'
+
     def _label_to_address(self, label):
         if self._lookup_labels is True:
             try:
@@ -122,7 +139,8 @@ class Opcodes:
         'RTS': _f_rts,
         'BRK': _f_brk,
         'LDX': _f_ldx,
-        'INX': _f_inx
+        'INX': _f_inx,
+        'LDY': _f_ldy
     }
 
     def __init__(self, tokens, labels = None, lookup_labels = True):
@@ -184,11 +202,14 @@ class Opcodes:
             if tok.type == TOK_OPCODE:
                 opcode = tok.value
                 length += 1
-            elif tok.type == MODE_IMMEDIATE or tok.type == MODE_ABSOLUTE or tok.type == MODE_ZEROPAGE or tok.type == MODE_ABSINDEXX or \
+            elif tok.type == MODE_IMMEDIATE or tok.type == MODE_ABSOLUTE or tok.type == MODE_ZEROPAGE or \
+                    tok.type == MODE_ABSINDEXX or tok.type == MODE_ABSINDEXY or \
+                        \
                      (tok.type == TOK_STRINGNAME and opcode is not None) or \
                      (tok.type == TOK_LABEL and opcode is not None) or \
                      (tok.type == TOK_ABSINDEXY_S and opcode is not None) or \
                      (tok.type == TOK_ABSINDEXX_S and opcode is not None):
+                     
                 addressing_method = tok.type
                 address = tok.value
 
