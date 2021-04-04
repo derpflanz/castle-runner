@@ -105,6 +105,9 @@ class Opcodes:
 
     def _f_brk(self, mode, address):
         self._binary += b'\x00'
+    
+    def _f_inx(self, mode, address):
+        self._binary += b'\xe8'
 
     def _label_to_address(self, label):
         if self._lookup_labels is True:
@@ -126,7 +129,8 @@ class Opcodes:
         'JSR': _f_jsr,
         'RTS': _f_rts,
         'BRK': _f_brk,
-        'LDX': _f_ldx
+        'LDX': _f_ldx,
+        'INX': _f_inx
     }
 
     def __init__(self, tokens, labels = None, lookup_labels = True):
