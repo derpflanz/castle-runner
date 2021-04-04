@@ -24,10 +24,14 @@ class Opcodes:
         elif mode == MODE_ABSOLUTE:
             self._binary += b'\xad'
             self._binary += self._to_bytes(address)
-        elif mode == TOK_STRINGNAME:
-            # string name implies absolute addressing
-            self._binary += b'\xad'
-            self._binary += self._label_to_address(address)
+        elif mode == MODE_ABSINDEXX:
+            self._binary += b'\xbd'
+            self._binary += self._to_bytes(address)
+        elif mode == TOK_ABSINDEXX_S:
+            # only used for calculating length
+            # this implies absolute addressing, just add
+            # dummy code
+            self._binary += b'\x00\x00\x00'
         else:
             raise OpcodeError(f"Addressing mode {mode} not supported for LDA")
 
@@ -162,6 +166,7 @@ class Opcodes:
         # an address can be #$xx, $xx or $xxxx
         address = address.replace('#', '')
         address = address.replace('$', '')
+        address = address.replace(',X', '')
 
         if len(address) == 1:
             address = '0' + address
@@ -183,13 +188,14 @@ class Opcodes:
             if tok.type == TOK_OPCODE:
                 opcode = tok.value
                 length += 1
-            elif tok.type == MODE_IMMEDIATE or tok.type == MODE_ABSOLUTE or tok.type == MODE_ZEROPAGE or \
+            elif tok.type == MODE_IMMEDIATE or tok.type == MODE_ABSOLUTE or tok.type == MODE_ZEROPAGE or tok.type == MODE_ABSINDEXX or \
                      (tok.type == TOK_STRINGNAME and opcode is not None) or \
-                     (tok.type == TOK_LABEL and opcode is not None):
+                     (tok.type == TOK_LABEL and opcode is not None) or \
+                     (tok.type == TOK_ABSINDEXX_S and opcode is not None):
                 addressing_method = tok.type
                 address = tok.value
 
-                if tok.type == MODE_ABSOLUTE or tok.type == TOK_LABEL:
+                if tok.type == MODE_ABSOLUTE or tok.type == MODE_ABSINDEXX or tok.type == TOK_LABEL:
                     length += 2
                 else:
                     length += 1
