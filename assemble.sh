@@ -22,7 +22,7 @@ fi
 
 green "Assembling $1..."
 echo
-CMD="python Assembler/assembler.py $1 $1.hex"
+CMD="python Assembler/assembler.py -s8000 $1 $1.hex"
 echo $CMD
 $CMD
 
