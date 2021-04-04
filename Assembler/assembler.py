@@ -63,7 +63,7 @@ with open(args.outputfile, 'wb') as ofile:
             for label,address in labels.items():
                 if line.startswith(label):
                     line = line.strip(label)
-                    
+
                 line = line.replace(label, '$' + address)
 
             preprocessed_lines.append(line)
@@ -75,10 +75,9 @@ with open(args.outputfile, 'wb') as ofile:
             codes = opcodes.Opcodes(result, labels)
             ofile.write(codes.as_bytes())
 
-            if codes.length() == 0:
-                print(f"[{lineno:5}:    ] {line.strip()}")
-            else:
-                print(f"[{lineno:5}:{address:04x}] {line.strip()}")
+            a = "    " if codes.length() == 0 else f"{address:04x}"
+            print(f"[{lineno:5}:{a}] {line.strip()}")
+            
             lineno += 1
             address += codes.length()
 
