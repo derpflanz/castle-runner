@@ -17,55 +17,55 @@ class Opcodes:
     def _f_lda(self, mode, address):
         if mode == MODE_IMMEDIATE:
             self._binary += b'\xa9'
-            self._binary += self._to_bytes(address)
         elif mode == MODE_ZEROPAGE:
             self._binary += b'\xa5'
-            self._binary += self._to_bytes(address)
         elif mode == MODE_ABSOLUTE:
             self._binary += b'\xad'
-            self._binary += self._to_bytes(address)
         elif mode == MODE_ABSINDEXX:
             self._binary += b'\xbd'
-            self._binary += self._to_bytes(address)
         else:
             raise OpcodeError(f"Addressing mode {mode} not supported for LDA")
+
+        self._binary += self._to_bytes(address)
+
 
     def _f_ldx(self, mode, address):
         if mode == MODE_IMMEDIATE:
             self._binary += b'\xa2'
-            self._binary += self._to_bytes(address)
         elif mode == MODE_ZEROPAGE:
             self._binary += b'\xa6'
-            self._binary += self._to_bytes(address)
         elif mode == MODE_ABSOLUTE:
             self._binary += b'\xae'
-            self._binary += self._to_bytes(address)
         else:
             raise OpcodeError(f"Addressing mode {mode} not supported for LDX")
+
+        self._binary += self._to_bytes(address)
+
 
     def _f_ldy(self, mode, address):
         if mode == MODE_IMMEDIATE:
             self._binary += b'\xa0'
-            self._binary += self._to_bytes(address)
         elif mode == MODE_ZEROPAGE:
             self._binary += b'\xa4'
-            self._binary += self._to_bytes(address)
         elif mode == MODE_ABSOLUTE:
             self._binary += b'\xac'
-            self._binary += self._to_bytes(address)
         else:
             raise OpcodeError(f"Addressing mode {mode} not supported for LDX")
 
+        self._binary += self._to_bytes(address)
 
     def _f_sta(self, mode, address):
         if mode == MODE_ZEROPAGE:
             self._binary += b'\x85'
-            self._binary += self._to_bytes(address)
         elif mode == MODE_ABSOLUTE:
             self._binary += b'\x8d'
-            self._binary += self._to_bytes(address)
+        elif mode == MODE_ABSINDEXY:
+            self._binary += b'\x99'
         else:
             raise OpcodeError(f"Addressing mode {mode} not supported for STA")
+
+        self._binary += self._to_bytes(address)
+
 
     def _f_inc(self, mode, address):
         if mode == MODE_ZEROPAGE:
@@ -80,10 +80,6 @@ class Opcodes:
         if mode == MODE_ABSOLUTE:
             self._binary += b'\x4c'
             self._binary += self._to_bytes(address)
-        elif mode == TOK_LABEL:
-            # a label implies absolute addressing
-            self._binary += b'\x4c'
-            self._binary += self._label_to_address(address)
         else:
             raise OpcodeError(f"Addressing mode {mode} not supported for JMP")
 
@@ -118,15 +114,6 @@ class Opcodes:
     def _f_iny(self, mode, address):
         self._binary += b'\xc8'
 
-    def _label_to_address(self, label):
-        if self._lookup_labels is True:
-            try:
-                return self._to_bytes(self._labels[label])
-            except KeyError:
-                raise SyntaxError(f"Label {label} not found.")
-        else:
-            return b'\x00\x00'        
-
     _opcode_funcs = {
         None: _f_none,
         'NOP': _f_nop,
@@ -140,7 +127,8 @@ class Opcodes:
         'BRK': _f_brk,
         'LDX': _f_ldx,
         'INX': _f_inx,
-        'LDY': _f_ldy
+        'LDY': _f_ldy,
+        'INY': _f_iny
     }
 
     def __init__(self, tokens, labels = None, lookup_labels = True):
@@ -181,6 +169,7 @@ class Opcodes:
         address = address.replace('#', '')
         address = address.replace('$', '')
         address = address.replace(',X', '')
+        address = address.replace(',Y', '')
 
         if len(address) == 1:
             address = '0' + address
@@ -209,7 +198,7 @@ class Opcodes:
                      (tok.type == TOK_LABEL and opcode is not None) or \
                      (tok.type == TOK_ABSINDEXY_S and opcode is not None) or \
                      (tok.type == TOK_ABSINDEXX_S and opcode is not None):
-                     
+
                 addressing_method = tok.type
                 address = tok.value
 
