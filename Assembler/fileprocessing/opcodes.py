@@ -24,8 +24,25 @@ class Opcodes:
         elif mode == MODE_ABSOLUTE:
             self._binary += b'\xad'
             self._binary += self._to_bytes(address)
+        elif mode == TOK_STRINGNAME:
+            # string name implies absolute addressing
+            self._binary += b'\xad'
+            self._binary += self._label_to_address(address)
         else:
             raise OpcodeError(f"Addressing mode {mode} not supported for LDA")
+
+    def _f_ldx(self, mode, address):
+        if mode == MODE_IMMEDIATE:
+            self._binary += b'\xa2'
+            self._binary += self._to_bytes(address)
+        elif mode == MODE_ZEROPAGE:
+            self._binary += b'\xa6'
+            self._binary += self._to_bytes(address)
+        elif mode == MODE_ABSOLUTE:
+            self._binary += b'\xae'
+            self._binary += self._to_bytes(address)
+        else:
+            raise OpcodeError(f"Addressing mode {mode} not supported for LDX")
 
     def _f_sta(self, mode, address):
         if mode == MODE_ZEROPAGE:
@@ -82,6 +99,9 @@ class Opcodes:
     def _f_none(self, mode, address):
         return b''
 
+    def _f_brk(self, mode, address):
+        self._binary += b'\x00'
+
     def _label_to_address(self, label):
         if self._lookup_labels is True:
             try:
@@ -89,7 +109,7 @@ class Opcodes:
             except KeyError:
                 raise SyntaxError(f"Label {label} not found.")
         else:
-            return b'\x00\x00'
+            return b'\x00\x00'        
 
     _opcode_funcs = {
         None: _f_none,
@@ -100,7 +120,9 @@ class Opcodes:
         'JMP': _f_jmp,
         'DEC': _f_dec,
         'JSR': _f_jsr,
-        'RTS': _f_rts
+        'RTS': _f_rts,
+        'BRK': _f_brk,
+        'LDX': _f_ldx
     }
 
     def __init__(self, tokens, labels = None, lookup_labels = True):
@@ -158,10 +180,12 @@ class Opcodes:
         length = 0
 
         for tok in self._tokens:
-            if tok.type == 'OPCODE':
+            if tok.type == TOK_OPCODE:
                 opcode = tok.value
                 length += 1
-            elif tok.type == MODE_IMMEDIATE or tok.type == MODE_ABSOLUTE or tok.type == MODE_ZEROPAGE or (tok.type == TOK_LABEL and opcode is not None):
+            elif tok.type == MODE_IMMEDIATE or tok.type == MODE_ABSOLUTE or tok.type == MODE_ZEROPAGE or \
+                     (tok.type == TOK_STRINGNAME and opcode is not None) or \
+                     (tok.type == TOK_LABEL and opcode is not None):
                 addressing_method = tok.type
                 address = tok.value
 
@@ -169,6 +193,10 @@ class Opcodes:
                     length += 2
                 else:
                     length += 1
+            elif tok.type == TOK_STRING:
+                value = tok.value.strip('"')
+                length += len(value)
+                self._binary += value.encode('ascii')
 
         self._length = length
 

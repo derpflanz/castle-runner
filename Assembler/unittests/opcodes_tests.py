@@ -48,6 +48,16 @@ class TestOpcodes(unittest.TestCase):
 
         self.assertEqual(b'\xfa\x7f', b)
 
+    def test_brk(self):
+        # arrange
+        tokens = [ self._token('BRK', lexer.TOK_OPCODE) ]
+
+        # act
+        codes = opcodes.Opcodes(tokens)
+        assembly = codes.as_bytes()
+
+        # assert
+        self.assertEqual(b'\x00', assembly)
 
     def test_lda_direct(self):
         # arrange
