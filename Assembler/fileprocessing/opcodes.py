@@ -27,11 +27,6 @@ class Opcodes:
         elif mode == MODE_ABSINDEXX:
             self._binary += b'\xbd'
             self._binary += self._to_bytes(address)
-        elif mode == TOK_ABSINDEXX_S:
-            # only used for calculating length
-            # this implies absolute addressing, just add
-            # dummy code
-            self._binary += b'\x00\x00\x00'
         else:
             raise OpcodeError(f"Addressing mode {mode} not supported for LDA")
 
@@ -88,9 +83,6 @@ class Opcodes:
         if mode == MODE_ABSOLUTE:
             self._binary += b'\x20'
             self._binary += self._to_bytes(address)
-        elif mode == TOK_LABEL:
-            self._binary += b'\x20'
-            self._binary += self._label_to_address(address)
         else:
             raise OpcodeError(f"Addressing mode {mode} not supported for JSR")
 
@@ -195,14 +187,16 @@ class Opcodes:
             elif tok.type == MODE_IMMEDIATE or tok.type == MODE_ABSOLUTE or tok.type == MODE_ZEROPAGE or tok.type == MODE_ABSINDEXX or \
                      (tok.type == TOK_STRINGNAME and opcode is not None) or \
                      (tok.type == TOK_LABEL and opcode is not None) or \
+                     (tok.type == TOK_ABSINDEXY_S and opcode is not None) or \
                      (tok.type == TOK_ABSINDEXX_S and opcode is not None):
                 addressing_method = tok.type
                 address = tok.value
 
-                if tok.type == MODE_ABSOLUTE or tok.type == MODE_ABSINDEXX or tok.type == TOK_LABEL:
+                if tok.type == MODE_ABSOLUTE or tok.type == MODE_ABSINDEXX or tok.type == TOK_LABEL or tok.type == MODE_ABSINDEXY:
                     length += 2
                 else:
                     length += 1
+
             elif tok.type == TOK_STRING:
                 value = tok.value.strip('"')
                 length += len(value)
@@ -211,7 +205,9 @@ class Opcodes:
         self._length = length
 
         try:
-            self._opcode_funcs[opcode](self, addressing_method, address)
+            # we skip the preprocessing addressing modes
+            if not (addressing_method == TOK_LABEL or addressing_method == TOK_ABSINDEXX_S or addressing_method == TOK_ABSINDEXY_S):
+                self._opcode_funcs[opcode](self, addressing_method, address)
         except KeyError:
             raise OpcodeError(f"Opcode {opcode} not supported.")
 
