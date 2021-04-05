@@ -44,3 +44,7 @@ elif args.action == 'write':
     eeprom = eeprom.Eeprom(args.port, 9600)
     eeprom.write(data)
 
+print("")
+print("")
+print("Done.")
+
