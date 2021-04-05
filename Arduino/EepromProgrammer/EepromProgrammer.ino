@@ -2,6 +2,9 @@
 #include "communication.h"
 #include "Arduino.h"
 
+byte resb_lo = 0;
+byte resb_hi = 0;
+
 void setup() {
   Communication.setup();
   Memory.setup();
@@ -48,7 +51,19 @@ void receive_data(unsigned long data_length) {
   } while (recv != STX);
 
   unsigned int address = 0;
-  for (int i = 0; i < data_length; i++) {
+
+  // first read the RESB vector
+  resb_lo = Communication.receiveByte();
+  Communication.sendByte(resb_lo);
+
+  resb_hi = Communication.receiveByte();
+  Communication.sendByte(resb_hi);
+
+  // write the RESB vector
+  Memory.writeByte(0xFFFC, resb_lo);
+  Memory.writeByte(0xFFFD, resb_hi);
+
+  for (int i = 0; i < data_length - 2; i++) {
     recv = Communication.receiveByte();
     Memory.writeByte(address, recv);
 
@@ -81,14 +96,10 @@ void loop() {
   byte command = receive_header(&data_length);
 
   if (command == CMD_WRITE_EEPROM) {
-    // 0x8000 is the start vector of the program 
-    // this refers to the first byte in the ROM
-    // we write this byte beforehand, so we can work with
-    // smaller hex files; is is OK for the image
-    // to overwrite these bytes
-    Memory.writeByte(0xFFFC, 0x00);
-    Memory.writeByte(0xFFFD, 0x80);
-
+    // the first two byte of the HEX file
+    // are the lo and hi bytes of the first opcode
+    // (the RESB vector); they will be valid after
+    // "receive_data"
     receive_data(data_length);
   } else if (command == CMD_READ_EEPROM) {
     send_data(data_length);
