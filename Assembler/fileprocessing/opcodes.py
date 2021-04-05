@@ -24,6 +24,8 @@ class Opcodes:
             self._binary += b'\xad'
         elif mode == MODE_ABSINDEXX:
             self._binary += b'\xbd'
+        elif mode == MODE_ZPINDINDY:
+            self._binary += b'\xb1'
         else:
             raise OpcodeError(f"Addressing mode {mode} not supported for LDA")
 
@@ -132,7 +134,6 @@ class Opcodes:
         self._binary += self._relative(address)
 
     _opcode_funcs = {
-        None: _f_none,
         'NOP': _f_nop,
         'LDA': _f_lda,
         'STA': _f_sta,
@@ -167,29 +168,6 @@ class Opcodes:
     def __init__(self, tokens, address = 0):
         self._tokens = tokens or []
         self._address = self._to_bytes(address)
-
-        # a valid Opcodes object has an opcode, followed by an addressing mode
-        # comments are ignored
-        saw_opcode = False
-        saw_address = False
-        for tok in self._tokens:
-            if tok.type == TOK_OPCODE:
-                if saw_address:
-                    raise SyntaxError("Opcode cannot be after address.")
-                if saw_opcode:
-                    raise SyntaxError("Cannot have two opcodes in a line")
-                saw_opcode = True
-
-            if tok.type == MODE_ABSOLUTE or tok.type == MODE_IMMEDIATE or tok.type == MODE_ZEROPAGE:
-                if saw_address:
-                    raise SyntaxError("Cannot have two addresses in a line")
-                saw_address = True
-
-            if tok.type == TOK_ASCII:
-                value = ord(tok.value.strip("'"))       # remove ' from the token and translate to number
-                tok.value = f"{value:02x}"                # translate to two-letter hex code
-                tok.type = MODE_IMMEDIATE
-
         self._process()
 
     def length(self):
@@ -202,12 +180,19 @@ class Opcodes:
         if address.startswith("@") or address.startswith(":"):
             return address
 
+        if address.startswith("LO"):
+            address = address[6:8]
+        if address.startswith("HI"):
+            address = address[4:6]
+
         # address is a string
         # an address can be #$xx, $xx or $xxxx
         address = address.replace('#', '')
         address = address.replace('$', '')
         address = address.replace(',X', '')
         address = address.replace(',Y', '')
+        address = address.replace('(', '')
+        address = address.replace(')', '')
 
         if len(address) == 1:
             address = '0' + address
@@ -222,37 +207,88 @@ class Opcodes:
     def _process(self):
         opcode = None
         addressing_method = None
-        address = None
-        length = 0
+        operand = None
 
         for tok in self._tokens:
             if tok.type == TOK_OPCODE:
+                if opcode is not None:
+                    raise SyntaxError("Already saw OPCODE on this line.")
+
                 opcode = tok.value
-                length += 1
-            elif tok.type == MODE_IMMEDIATE or tok.type == MODE_ABSOLUTE or tok.type == MODE_ZEROPAGE or \
-                    tok.type == MODE_ABSINDEXX or tok.type == MODE_ABSINDEXY or \
-                        \
-                     (tok.type == TOK_STRINGNAME and opcode is not None) or \
-                     (tok.type == TOK_LABEL and opcode is not None) or \
-                     (tok.type == TOK_ABSINDEX and opcode is not None):
+            elif tok.type in (MODE_IMMEDIATE, MODE_ABSOLUTE, MODE_ABSINDEXX, MODE_ABSINDEXY, MODE_ZEROPAGE, MODE_ZPINDINDY):
+                if opcode is None:
+                    raise SyntaxError("Operand without OPCODE")
 
+                # 'real' addressing modes
                 addressing_method = tok.type
-                address = self._to_bytes(tok.value)
-
+                operand = self._to_bytes(tok.value)
             elif tok.type == TOK_STRING:
+                # verbatim string
                 value = tok.value.strip('"')
-                length += len(value) + 1
                 self._binary += value.encode('ascii')
-
-                # add a null-terminating byte
                 self._binary += b'\x00'
-        try:
-            # we skip the preprocessing addressing modes
-            if (addressing_method == TOK_LABEL or addressing_method == TOK_ABSINDEX):
+            elif tok.type in (TOK_STRINGNAME, TOK_LABEL, TOK_ABSINDEX):
+                # addresses that will be translated in a later run to a real address
+                # we only need to put them in for the opcode length
                 addressing_method = MODE_ABSOLUTE
-                address = b'\x00\x00'
+                operand = b'\x00\x00'
+            elif tok.type in (TOK_HI, TOK_LO):
+                addressing_method = MODE_IMMEDIATE
+                operand = b'\x00'
+            elif tok.type == TOK_ASCII:
+                value = ord(tok.value.strip("'"))       # remove ' from the token and translate to number
+                operand = self._to_bytes(f"{value:02x}")                # translate to two-letter hex code
+                addressing_method = MODE_IMMEDIATE
+            elif tok.type == TOK_COMMENT:
+                pass
+            else:
+                raise SyntaxError(f"Unknown token type: {tok.type}. This shouldn't happen.")
 
-            self._opcode_funcs[opcode](self, addressing_method, address)
+        try:
+            if opcode is not None:
+                self._opcode_funcs[opcode](self, addressing_method, operand)
         except KeyError:
             raise OpcodeError(f"Opcode {opcode} not supported.")
+
+    # def __process(self):
+    #     opcode = None
+    #     addressing_method = None
+    #     address = None
+    #     length = 0
+
+    #     for tok in self._tokens:
+    #         if tok.type == TOK_OPCODE:
+    #             opcode = tok.value
+    #             length += 1
+    #         elif tok.type == MODE_IMMEDIATE or tok.type == MODE_ABSOLUTE or tok.type == MODE_ZEROPAGE or \
+    #                 tok.type == MODE_ABSINDEXX or tok.type == MODE_ABSINDEXY or \
+    #                     \
+    #                  (tok.type == TOK_STRINGNAME and opcode is not None) or \
+    #                  (tok.type == TOK_LABEL and opcode is not None) or \
+    #                  (tok.type == TOK_HI and opcode is not None) or \
+    #                  (tok.type == TOK_LO and opcode is not None) or \
+    #                  (tok.type == TOK_ABSINDEX and opcode is not None):
+
+    #             addressing_method = tok.type
+    #             address = self._to_bytes(tok.value)
+
+    #         elif tok.type == TOK_STRING:
+    #             value = tok.value.strip('"')
+    #             length += len(value) + 1
+    #             self._binary += value.encode('ascii')
+
+    #             # add a null-terminating byte
+    #             self._binary += b'\x00'
+    #     try:
+    #         # we skip the preprocessing addressing modes
+    #         if (addressing_method == TOK_LABEL or addressing_method == TOK_ABSINDEX):
+    #             addressing_method = MODE_ABSOLUTE
+    #             address = b'\x00\x00'
+    #         if (addressing_method == TOK_HI or addressing_method == TOK_LO):
+    #             addressing_method = MODE_IMMEDIATE
+    #             address = b'\x00'
+
+    #         self._opcode_funcs[opcode](self, addressing_method, address)
+    #     except KeyError:
+    #         raise OpcodeError(f"Opcode {opcode} not supported.")
 
