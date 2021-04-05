@@ -7,6 +7,7 @@ parser.add_argument('inputfile', type=str, help='.asm file to process')
 parser.add_argument('outputfile', type=str, help='Binary .hex file to generate')
 parser.add_argument('-s', '--starting-address', type=str, default='8000',
     help='Starting address, in HEX (e.g. -s 8000). This address is stored at the beginning of the file. Default is 8000.')
+parser.add_argument('-t', '--target', choices=['c64', 'cr1'], default='cr1', help='Type of HEX file. "c64" will put location on where to store the image, "cr1" will set the RESB vector to the first opcode.')
 
 args = parser.parse_args()
 
@@ -26,6 +27,7 @@ except:
     print(f"Address '{args.starting_address}' is not a valid address.")
     sys.exit(1)
 
+print(f"Going to create HEX file for target '{args.target}'")
 print(f"Using ${args.starting_address} as starting address")
 
 with open(args.inputfile, 'r') as ifile:
@@ -35,8 +37,6 @@ with open(args.inputfile, 'r') as ifile:
         lines.append(line)
 
 with open(args.outputfile, 'wb') as ofile:
-    ofile.write(starting_address.to_bytes(2, 'little'))
-
     mylexer = lexer.AsmLexer()
     lineno = 1
     address = starting_address
@@ -44,6 +44,8 @@ with open(args.outputfile, 'wb') as ofile:
     labels = {}
 
     try:
+        first_opcode_address = None
+
         # first process labels and string names
         for line in lines:
             result = list(mylexer.tokenize(line))
@@ -52,9 +54,13 @@ with open(args.outputfile, 'wb') as ofile:
             if len(result) > 0 and (result[0].type == lexer.TOK_LABEL or result[0].type == lexer.TOK_STRINGNAME):
                 labels[result[0].value] = f"{address:04x}"
 
+            if len(result) > 0 and result[0].type == lexer.TOK_OPCODE and first_opcode_address == None:
+                first_opcode_address = address
+
             address += codes.length()
 
-        print(f"Labels: {labels}")
+        if first_opcode_address == None:
+            raise SyntaxError('No opcodes found. This ASM file is useless.')
 
         # then preprocess the lines, replacing all labels and string names with their absolute address
         # this way, the assembler only needs to handle absolute addresses
@@ -70,6 +76,11 @@ with open(args.outputfile, 'wb') as ofile:
             preprocessed_lines.append(line)
 
         address = starting_address
+
+        if args.target == 'c64':
+            ofile.write(starting_address.to_bytes(2, 'little'))
+        else:
+            ofile.write(first_opcode_address.to_bytes(2, 'little'))
 
         for line in preprocessed_lines:
             result = list(mylexer.tokenize(line))
