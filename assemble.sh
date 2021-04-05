@@ -20,9 +20,16 @@ if [ ! -f "$1" ]; then
     exit;
 fi
 
-green "Assembling $1..."
+if [ -f "$2" ]; then
+    green "Appending $2 to end of $1 before assembly"
+    cat $1 $2 > /tmp/__program__.asm
+else
+    green "Assembling $1..."
+    cat $1 > /tmp/__program__.asm
+fi
+
 echo
-CMD="python Assembler/assembler.py -s8000 $1 $1.hex"
+CMD="python Assembler/assembler.py -s8000 /tmp/__program__.asm $1.hex"
 echo $CMD
 $CMD
 
