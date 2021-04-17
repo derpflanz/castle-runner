@@ -133,6 +133,9 @@ class Opcodes:
         self._binary += b'\xd0'
         self._binary += self._relative(address)
 
+    def _f_txs(self, mode, address):
+        self._binary += b'\x9a'
+
     _opcode_funcs = {
         'NOP': _f_nop,
         'LDA': _f_lda,
@@ -149,7 +152,8 @@ class Opcodes:
         'INY': _f_iny,
         'CMP': _f_cmp,
         'BEQ': _f_beq,
-        'BNE': _f_bne
+        'BNE': _f_bne,
+        'TXS': _f_txs
     }
 
     def _relative(self, address):
