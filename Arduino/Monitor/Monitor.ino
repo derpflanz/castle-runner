@@ -12,6 +12,8 @@ byte rw_shadow = 0;
 byte aux_shadow = 0;
 byte diff_shadow = 0;
 
+bool clock_edge = false;
+
 void setup() {
   Io.setup();
   Log.setup();
@@ -28,6 +30,10 @@ void setup() {
 }
 
 static void onClock() {
+  clock_edge = true;
+}
+
+void doInfoLineOnClock() {
   Io.read();
 
   byte data = Io.data();
@@ -38,6 +44,11 @@ static void onClock() {
 }
 
 void loop() {
+  if (clock_edge == true) {
+    clock_edge = false;
+    doInfoLineOnClock();
+  }
+
   if (digitalRead(DIFF) == HIGH) {
     Io.read();
 
