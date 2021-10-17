@@ -73,7 +73,10 @@ class Opcodes:
     def _f_inc(self, mode, address):
         if mode == MODE_ZEROPAGE:
             self._binary += b'\xe6'
-            self._binary += self._to_bytes(address)
+            self._binary += address
+        elif mode == MODE_ABSOLUTE:
+            self._binary += b'\xee'
+            self._binary += address
         elif mode == None:      # addressing mode 'A': Accumulator
             self._binary += b'\x1a'
         else:
