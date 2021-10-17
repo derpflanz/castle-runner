@@ -20,8 +20,28 @@ import sys
 # (zp)      Zero Page Indirect
 # (zp),y    Zero Page Indirect Indexed with Y
 
+_addressing_mode_map = {
+    'a': 0,
+    '(a,x)': 1,
+    'a,x': 2,
+    'a,y': 3,
+    '(a)': 4,
+    'A': 5,
+    '#': 6,
+    'i': 7,
+    'r': 8,
+    's': 9,
+    'zp': 10,
+    '(zp,x)': 11,
+    'zp,x': 12,
+    'zp,y': 13,
+    '(zp)': 14,
+    '(zp),y': 15
+}
+
 _unimplemented = b'\x03'
 _invalid_addressing_mode = b'\x02'
+
 _opcode_matrix = {
     'ADC': [ b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03' ],
     'AND': [ b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03' ],
@@ -104,6 +124,47 @@ class Opcodes:
     _tokens = None
     _binary = b''
     _length = 0
+
+    def _construct_statement(self, opcode, addressing_mode, operand):
+        opcode_record = _opcode_matrix[opcode]
+        opcode_mnemonic = None
+
+        if addressing_mode is None:
+            # no operand given, this is either A, i or s
+            for mode in ['A', 'i', 's']:
+                addressing_mode_idx = _addressing_mode_map[mode]
+                opcode_mnemonic = opcode_record[addressing_mode_idx]
+                if opcode_mnemonic != _invalid_addressing_mode:
+                    addressing_mode = mode
+                    break
+        else:
+            if addressing_mode == MODE_ABSOLUTE:
+                # operand with two bytes (e.g. $0400) given, this is either a or r
+                for mode in ['a', 'r']:
+                    addressing_mode_idx = _addressing_mode_map[mode]
+                    opcode_mnemonic = opcode_record[addressing_mode_idx]
+                    if opcode_mnemonic != _invalid_addressing_mode:
+                        addressing_mode = mode
+                        break
+            else: 
+                addressing_mode_idx = _addressing_mode_map[addressing_mode]
+                opcode_mnemonic = opcode_record[addressing_mode_idx]
+
+        if opcode_mnemonic == _invalid_addressing_mode:
+            raise OpcodeError(f'Addressing mode {addressing_mode} not supported for {opcode}')
+
+        if opcode_mnemonic == _unimplemented:
+            raise OpcodeError(f'Addressing mode {addressing_mode} not implemented for {opcode}')
+
+        # write mnemonc
+        self._binary += opcode_mnemonic
+
+        if addressing_mode is not None:
+            if addressing_mode == MODE_RELATIVE:
+                self._binary += self._relative(operand)
+            else:
+                self._binary += operand
+
 
     def _f_nop(self, mode, address):
         self._binary = b'\xea'
@@ -354,6 +415,7 @@ class Opcodes:
 
         try:
             if opcode is not None:
-                self._opcode_funcs[opcode](self, addressing_method, operand)
+                self._construct_statement(opcode, addressing_method, operand)
+#                self._opcode_funcs[opcode](self, addressing_method, operand)
         except KeyError:
             raise OpcodeError(f"Opcode {opcode} not supported.")
