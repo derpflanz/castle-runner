@@ -3,7 +3,7 @@
 
 void IO::setup() {
     for (int i = 0; i < 24; i++) {
-        pinMode(ADDR[i], INPUT_PULLUP);
+        pinMode(ADDR[i], INPUT);
     }
     for (int i = 0; i < 8; i++) {
         pinMode(LEDS[i], OUTPUT);
