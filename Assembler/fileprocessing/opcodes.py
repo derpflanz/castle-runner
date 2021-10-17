@@ -43,7 +43,7 @@ _unimplemented = b'\x03'
 _invalid_addressing_mode = b'\x02'
 
 _opcode_matrix = {
-#                 a        1        2        3        4        5        #        7        r        s       10       11       12       13       14       15
+#                 a    (a,x)      a,x      a,y      (a)        A        #        i        r        s       zp   (zp,x)     zp,x     zp,y     (zp)   (zp),y
     'ADC': [ b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03' ],
     'AND': [ b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03' ],
     'ASL': [ b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03', b'\x03' ],
