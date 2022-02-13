@@ -35,8 +35,7 @@ void setup() {
   pinMode(CLOCK, INPUT);
   pinMode(AUX, INPUT);
 
-  //attachInterrupt(digitalPinToInterrupt(CLOCK), onClock, CHANGE);  
-  attachInterrupt(digitalPinToInterrupt(CLOCK), onClock, FALLING);
+  attachInterrupt(digitalPinToInterrupt(CLOCK), onClock, RISING);
 }
 
 static void onClock() {
@@ -73,6 +72,8 @@ void doInfoLineOnClock() {
 }
 
 void loop() {
+  byte _aux = digitalRead(AUX);
+
   if (data_valid == true) {
     Io.read();
     data = Io.data();
@@ -90,7 +91,10 @@ void loop() {
     address_read = true;
   }
 
-  if (clock_edge == true) {
+  if (
+    (_aux == LOW && clock_edge == true) ||
+    (_aux == HIGH && clock_edge == true && addr_hi == 0x40 && r_w == LOW)
+  ) {
     printInfoLine("CLK ", data, addr_hi, addr_lo, r_w);
 
     clock_edge = false;
