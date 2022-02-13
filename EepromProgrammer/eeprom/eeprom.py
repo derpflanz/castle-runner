@@ -64,8 +64,15 @@ class Eeprom:
                 self._print("Header sent, continuing with sending data.")
                 
                 ser.write(STX)
+                self._print("RESB: ", end='')
+                for vector in _bytes[:2]:
+                    ser.write(bytes([vector]))
+                    byte_read = ser.read()
+                    self._print(f"{vector:02x} ", end='')
+
+                self._print("")
                 self._print("0000 ", end='')
-                for b in _bytes:
+                for b in _bytes[2:]:
                     ser.write(bytes([b]))
 
                     byte_read = ser.read()
