@@ -29,7 +29,7 @@ else
 fi
 
 echo
-CMD="python Assembler/assembler.py -s8000 /tmp/__program__.asm $1.hex"
+CMD="python Assembler/assembler.py -s8000 --opcodefile Assembler/w65c02s_opcodes.txt  /tmp/__program__.asm $1.hex"
 echo $CMD
 $CMD
 
@@ -44,6 +44,8 @@ echo
 LINE=`arduino-cli board list | grep $BOARD`
 if [ "$LINE" = "" ]; then
     red "Board $BOARD not connected. Could not program EEPROM."
+    green "Running HEX on virtual machine."
+    VirtualCR001/fake6502 $1.hex    
     exit;
 fi
 

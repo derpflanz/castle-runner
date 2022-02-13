@@ -63,7 +63,7 @@ class TestOpcodes(unittest.TestCase):
         # arrange
         tokens = [
             self._token('LDA', lexer.TOK_OPCODE),
-            self._token('#$1', lexer.MODE_IMMEDIATE)
+            self._token('#$1', lexer.TOK_OPER_IMMEDIATE)
         ]
 
         # act
@@ -88,7 +88,7 @@ class TestOpcodes(unittest.TestCase):
         # arrange
         tokens = [
             self._token('STA', lexer.TOK_OPCODE),
-            self._token('$00', lexer.MODE_ZEROPAGE)
+            self._token('$00', lexer.TOK_OPER_ZP)
         ]
 
         # act
@@ -102,7 +102,7 @@ class TestOpcodes(unittest.TestCase):
         # arrange
         tokens = [
             self._token('LDA', lexer.TOK_OPCODE),
-            self._token('$00', lexer.MODE_ZEROPAGE)
+            self._token('$00', lexer.TOK_OPER_ZP)
         ]
 
         # act
@@ -117,7 +117,7 @@ class TestOpcodes(unittest.TestCase):
         # arrange
         tokens = [
             self._token('STA', lexer.TOK_OPCODE),
-            self._token('$7ffa', lexer.MODE_ABSOLUTE)
+            self._token('$7ffa', lexer.TOK_OPER_ABSOLUTE)
         ]
 
         # act
@@ -131,7 +131,7 @@ class TestOpcodes(unittest.TestCase):
         # arrange
         tokens = [
             self._token('STA', lexer.TOK_OPCODE),
-            self._token('$7ffa', lexer.MODE_ABSOLUTE),
+            self._token('$7ffa', lexer.TOK_OPER_ABSOLUTE),
             self._token('STA', lexer.TOK_OPCODE)
         ]
 
@@ -142,7 +142,7 @@ class TestOpcodes(unittest.TestCase):
         # arrange
         tokens = [
             self._token('JMP', lexer.TOK_OPCODE),
-            self._token('$8004', lexer.MODE_ABSOLUTE)
+            self._token('$8004', lexer.TOK_OPER_ABSOLUTE)
         ]
 
         # act
@@ -155,7 +155,7 @@ class TestOpcodes(unittest.TestCase):
         # arrange
         tokens = [
             self._token('JMP', lexer.TOK_OPCODE),
-            self._token('$8004', lexer.MODE_ABSOLUTE)
+            self._token('$8004', lexer.TOK_OPER_ABSOLUTE)
         ]
 
         # act
@@ -182,7 +182,7 @@ class TestOpcodes(unittest.TestCase):
     def test_inc_zeropage(self):
         tokens = [
             self._token('INC', lexer.TOK_OPCODE),
-            self._token('$00', lexer.MODE_ZEROPAGE)
+            self._token('$00', lexer.TOK_OPER_ZP)
         ]
 
         codes = opcodes.Opcodes(tokens)

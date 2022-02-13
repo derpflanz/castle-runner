@@ -44,7 +44,6 @@ elif args.action == 'write':
     eeprom = eeprom.Eeprom(args.port, 9600)
     eeprom.write(data)
 
-print("")
-print("")
-print("Done.")
+    print(f"Wrote {len(data)} bytes.")
+
 
