@@ -45,7 +45,7 @@ LINE=`arduino-cli board list | grep $BOARD`
 if [ "$LINE" = "" ]; then
     red "Board $BOARD not connected. Could not program EEPROM."
     green "Running HEX on virtual machine."
-    VirtualCR001/fake6502 $1.hex    
+    VirtualCR001/virtual_cr001 $1.hex    
     exit;
 fi
 
