@@ -1,55 +1,37 @@
 from .lexer import *
-import sys
-import ast
-
-# Opcode Matrix, by addressing mode
-# modes: 
-# a         Absolute a
-# (a,x)     Absolute Indexed indirect 
-# a,x       Absolute Indexed with X
-# a,y       Absolute Indexed with Y
-# (a)       Absolute Indirect
-# A         Accumulator
-# #         Immediate
-# i         Implied
-# r         Program Counter Relative
-# s         Stack
-# zp        Zero Page
-# (zp,x)    Zero Page Indexed Indirect
-# zp,x      Zero Page Indexed with X
-# zp,y      Zero Page Indexed with Y
-# (zp)      Zero Page Indirect
-# (zp),y    Zero Page Indirect Indexed with Y
+import sys, ast
 
 _addressing_mode_map = {
-    'ABSOLUTE': 0,
-    'ABSINDIND': 1,
-    'ABSINDEXX': 2,
-    'ABSINDEXY': 3,
-    'INDIRECT': 4,
-    'ACCU': 5,
-    'IMMEDIATE': 6,
-    'IMPLIED': 7,
-    'RELATIVE': 8,
-    'STACK': 9,
-    'ZEROPAGE': 10,
-    'ZPINDIND': 11,
-    'ZPINDX': 12,
-    'ZPINDY': 13,
-    'ZPIND': 14,
-    'ZPINDINDY': 15
+    'ABSOLUTE': 0,          # a         Absolute a
+    'ABSINDIND': 1,         # (a,x)     Absolute Indexed indirect 
+    'ABSINDEXX': 2,         # a,x       Absolute Indexed with X
+    'ABSINDEXY': 3,         # a,y       Absolute Indexed with Y
+    'INDIRECT': 4,          # (a)       Absolute Indirect
+    'ACCU': 5,              # A         Accumulator
+    'IMMEDIATE': 6,         # #         Immediate
+    'IMPLIED': 7,           # i         Implied
+    'RELATIVE': 8,          # r         Program Counter Relative
+    'STACK': 9,             # s         Stack
+    'ZEROPAGE': 10,         # zp        Zero Page
+    'ZPINDIND': 11,         # (zp,x)    Zero Page Indexed Indirect
+    'ZPINDX': 12,           # zp,x      Zero Page Indexed with X
+    'ZPINDY': 13,           # zp,y      Zero Page Indexed with Y
+    'ZPIND': 14,            # (zp)      Zero Page Indirect
+    'ZPINDINDY': 15         # (zp),y    Zero Page Indirect Indexed with Y
 }
 
 _invalid_addressing_mode = b'\x03'
 _opcode_matrix = {}
-with open("w65c02s_opcodes.txt", "r") as opcode_file:
-    s = opcode_file.read()
-    _opcode_matrix = ast.literal_eval(s)
-class OpcodeError(SyntaxError):
-    _tokens = None
 
-    def __init__(self, message):
-        super(OpcodeError, self).__init__(message)
+def opcode_init(opcode_filename):
+    global _opcode_matrix
+
+    with open(opcode_filename, "r") as opcode_file:
+        s = opcode_file.read()
+        _opcode_matrix = ast.literal_eval(s)
+
+class OpcodeError(SyntaxError):
+    pass
 
 class Opcodes:
     _tokens = None
@@ -61,7 +43,7 @@ class Opcodes:
         opcode_mnemonic = None
 
         if addressing_mode is None:
-            # no operand given, this is either A, i or s
+            # no operand given, this is either Accu, Implied or Stack
             for mode in ['ACCU', 'IMPLIED', 'STACK']:
                 addressing_mode_idx = _addressing_mode_map[mode]
                 opcode_mnemonic = opcode_record[addressing_mode_idx]
@@ -70,7 +52,7 @@ class Opcodes:
                     break
         else:
             if addressing_mode == TOK_OPER_ABSOLUTE:
-                # operand with two bytes (e.g. $0400) given, this is either a or r
+                # operand with two bytes (e.g. $0400) given, this is either Absolute or Relative
                 for mode in ['ABSOLUTE', 'RELATIVE']:
                     addressing_mode_idx = _addressing_mode_map[mode]
                     opcode_mnemonic = opcode_record[addressing_mode_idx]
@@ -90,7 +72,7 @@ class Opcodes:
         if addressing_mode is not None:
             if addressing_mode == 'RELATIVE':
                 self._binary += self._relative(operand)
-            else:
+            elif addressing_mode != 'IMPLIED' and addressing_mode != 'STACK' and addressing_mode != 'ACCU':
                 self._binary += operand
 
     def _relative(self, address):
@@ -113,31 +95,33 @@ class Opcodes:
     def length(self):
         return len(self._binary)
 
-    def _to_bytes(self, address):
-        if type(address) is int:
-            address = f"{address:04x}"
+    def _to_bytes(self, operand):
+        if type(operand) is int:
+            operand = f"{operand:04x}"
 
-        if address.startswith("@") or address.startswith(":"):
-            return address
+        if operand.startswith("@") or operand.startswith(":"):
+            return operand
 
-        if address.startswith("LO"):
-            address = address[6:8]
-        if address.startswith("HI"):
-            address = address[4:6]
+        if operand.startswith("LO"):
+            operand = operand[6:8]
+        if operand.startswith("HI"):
+            operand = operand[4:6]
 
-        # address is a string
-        # an address can be #$xx, $xx or $xxxx
-        address = address.replace('#', '')
-        address = address.replace('$', '')
-        address = address.replace(',X', '')
-        address = address.replace(',Y', '')
-        address = address.replace('(', '')
-        address = address.replace(')', '')
+        # operand is a string
+        # an operand can be #$xx, $xx or $xxxx
+        operand = operand.replace('#', '')
+        operand = operand.replace('$', '')
+        operand = operand.replace(',X', '')
+        operand = operand.replace(',Y', '')
+        operand = operand.replace(',x', '')
+        operand = operand.replace(',y', '')
+        operand = operand.replace('(', '')
+        operand = operand.replace(')', '')
 
-        if len(address) == 1:
-            address = '0' + address
+        if len(operand) == 1:
+            operand = '0' + operand
 
-        return bytes.fromhex(address)[::-1]
+        return bytes.fromhex(operand)[::-1]
 
     def as_bytes(self):
         return self._binary
@@ -188,6 +172,5 @@ class Opcodes:
         try:
             if opcode is not None:
                 self._construct_statement(opcode, addressing_method, operand)
-#                self._opcode_funcs[opcode](self, addressing_method, operand)
         except KeyError:
             raise OpcodeError(f"Opcode {opcode} not supported.")

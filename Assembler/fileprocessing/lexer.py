@@ -40,7 +40,7 @@ class AsmLexer(Lexer):
     # regexes for tokens: order matters!
 
     # stuff that needs to be processed
-    OPCODE          = r'[A-Z]{3}'
+    OPCODE          = r'[A-Z]{3}[0-9]?'
 
     # operands
     ABSOLUTE        = r'\$[0-9a-fA-F]{4}'                                   # ex. $4fe4             a       Absolute (1)
@@ -57,12 +57,12 @@ class AsmLexer(Lexer):
     ZPINDIND        = r'\(\$[0-9a-fA-F]{1,2},[Xx]\)'                        # ex. ($7f,x)           (zp,x)  Zero Page Indexed Indirect (12)
     ZPINDX          = r'\$[0-9a-fA-F]{1,2},[Xx]'                            # ex. $7f,x             zp,x    Zero Page Indexed with X (13)
     ZPINDY          = r'\$[0-9a-fA-F]{1,2},[Yy]'                            # ex. $7f,y             zp,y    Zero Page Indexed with Y (14)
-    ZPIND           = r'\(\$[0-9a-fA-F]{1,2}\)'                             # ex. ($7f)             (zp)    Zero Page Indirect (15)
     ZPINDINDY       = r'\(\$[0-9a-fA-F]{2}\),[Yy]'                          # ex. ($10),Y           (zp),y  Zero Page Indirect Indexed with Y (16)
+    ZPIND           = r'\(\$[0-9a-fA-F]{1,2}\)'                             # ex. ($7f)             (zp)    Zero Page Indirect (15)
 
 
     # extra stuff
-    ASCII           = r'\'[a-zA-Z0-9_*\-\\/<>?:\";\'{}|\[\]~`!@#$%^&*()=+]\''
+    ASCII           = r'\'[a-zA-Z0-9_*\-\\/<>?:\";\'{}|\[\]~`!@#$%^&*()=+ ]\''
     STRING          = r'".*"'
     COMMENT         = r';.*$'
 
