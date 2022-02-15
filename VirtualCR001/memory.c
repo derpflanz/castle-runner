@@ -4,6 +4,7 @@
 
 #include "memory.h"
 #include "ui.h"
+#include "lcd.h"
 
 uint8_t *ram;
 
@@ -39,7 +40,7 @@ long _getsize(FILE *f) {
     return fsize;
 }
 
-uint16_t _getbaseaddress(FILE *f) {
+uint16_t _getresetvector(FILE *f) {
     int resb_low = fgetc(f);
     int resb_hi  = fgetc(f);
     return resb_hi << 8 | resb_low;
@@ -48,8 +49,9 @@ uint16_t _getbaseaddress(FILE *f) {
 int mem_readfile(const char *hexfilename) {
     FILE *f = fopen(hexfilename, "rb");
     long image_size = _getsize(f) - 2;           // minus 2 to accomodate for the RESB vector the image starts with
-    uint16_t base_address = _getbaseaddress(f);
-    setresb(base_address);
+    uint16_t reset_vector = _getresetvector(f);
+    uint16_t base_address = 0x8000;             // CR001 start of ROM
+    setresb(reset_vector);
 
     long available_size = _64K - base_address;
 
@@ -76,4 +78,12 @@ uint8_t read6502(uint16_t address) {
 void write6502(uint16_t address, uint8_t value) {
     ui_writelog("WRITE  address %04x: %02x\n", address, value);
     ram[address] = value;
+
+    // connect the 0x4000 and 0x4001 addresses to the LCD
+    if (address == 0x4000) {
+        lcd_io_write(value);
+    }
+    if (address == 0x4001) {
+        lcd_ctrl_write(value);
+    }
 }
