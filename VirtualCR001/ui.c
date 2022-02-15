@@ -6,12 +6,14 @@ WINDOW *run;
 WINDOW *lcd;
 WINDOW *_create_newwin(int height, int width, int starty, int startx);
 
+void ui_print_lcd(char character, int row, int column) {
+    mvwaddch(lcd, row, column, character);
+    wrefresh(lcd);
+}
+
 void ui_init_lcd() {
     lcd = newwin(4, 20, LINES - 8, 1);
     wbkgd(lcd, COLOR_PAIR(1));
-
-    wprintw(lcd, "test");
-
     wrefresh(lcd);
 }
 
@@ -54,7 +56,7 @@ void ui_writelog(const char *format, ...) {
     wrefresh(run);
 }
 
-void _wshowmem(WINDOW *win, uint8_t *mem, uint16_t base_address) {    
+void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address) {    
     int width, height;
     wclear(win);
     getmaxyx(win, height, width);
@@ -78,7 +80,7 @@ void _wshowmem(WINDOW *win, uint8_t *mem, uint16_t base_address) {
 void ui_update_ram(uint16_t base_address) {
     WINDOW *memory_win;
     memory_win = _create_newwin(LINES - 10, COLS / 2, 1, COLS / 2);
-    _wshowmem(memory_win, ram, base_address);
+    _mem_wshow(memory_win, ram, base_address);
     box(memory_win, 0, 0);
     wrefresh(memory_win);
 }

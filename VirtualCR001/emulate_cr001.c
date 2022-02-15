@@ -2,6 +2,7 @@
 #include "fake6502.h"
 #include "memory.h"
 #include "ui.h"
+#include "lcd.h"
 
 int main(int argc, char **argv) {
     if (argc < 2) {
@@ -9,18 +10,17 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    initialisememory();
-    if (readfile(argv[1]) != 0) {
+    mem_init();
+    if (mem_readfile(argv[1]) != 0) {
         return -1;
     }
 
     reset6502();
     ui_init();
     ui_init_lcd();
-    ui_update_ram(0x0000);
+    lcd_init();
 
-    lcd_set_pointer(3);
-    lcd_set_character('A');    
+    ui_update_ram(0x0000);
 
     int ch;
     while ((ch = getch()) != KEY_F(8)) {
