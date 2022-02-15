@@ -68,12 +68,12 @@ int readfile(const char *hexfilename) {
 
 uint8_t read6502(uint16_t address) {
     uint8_t value = ram[address];
-    writelog("READ   address %04x: %02x\n", address, value);
+    ui_writelog("READ   address %04x: %02x\n", address, value);
 
     return value;
 }
 
 void write6502(uint16_t address, uint8_t value) {
-    writelog("WRITE  address %04x: %02x\n", address, value);
+    ui_writelog("WRITE  address %04x: %02x\n", address, value);
     ram[address] = value;
 }

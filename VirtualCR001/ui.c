@@ -6,7 +6,7 @@ WINDOW *run;
 WINDOW *lcd;
 WINDOW *_create_newwin(int height, int width, int starty, int startx);
 
-void init_lcd_window() {
+void ui_init_lcd() {
     lcd = newwin(4, 20, LINES - 8, 1);
     wbkgd(lcd, COLOR_PAIR(1));
 
@@ -15,7 +15,7 @@ void init_lcd_window() {
     wrefresh(lcd);
 }
 
-void initui() {
+void ui_init() {
     initscr();
     start_color();
     init_pair(1, COLOR_WHITE, COLOR_BLUE);
@@ -28,7 +28,7 @@ void initui() {
     run = _create_newwin(LINES - 10, COLS / 2, 1, 0);
     scrollok(run, TRUE);
     wprintw(run, "\n");
-    writelog("6502 emulator ready\n");
+    ui_writelog("6502 emulator ready\n");
     wrefresh(run);
 }
 
@@ -42,7 +42,7 @@ WINDOW *_create_newwin(int height, int width, int starty, int startx)
 	return local_win;
 }
 
-void writelog(const char *format, ...) {
+void ui_writelog(const char *format, ...) {
     char buffer[1024];
     va_list ap;
     va_start(ap, format);
@@ -75,7 +75,7 @@ void _wshowmem(WINDOW *win, uint8_t *mem, uint16_t base_address) {
     }   
 }
 
-void update_ram_window(uint16_t base_address) {
+void ui_update_ram(uint16_t base_address) {
     WINDOW *memory_win;
     memory_win = _create_newwin(LINES - 10, COLS / 2, 1, COLS / 2);
     _wshowmem(memory_win, ram, base_address);

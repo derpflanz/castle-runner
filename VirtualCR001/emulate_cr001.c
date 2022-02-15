@@ -15,18 +15,22 @@ int main(int argc, char **argv) {
     }
 
     reset6502();
-    initui();    
-    update_ram_window(0x0000);
+    ui_init();
+    ui_init_lcd();
+    ui_update_ram(0x0000);
+
+    lcd_set_pointer(3);
+    lcd_set_character('A');    
 
     int ch;
     while ((ch = getch()) != KEY_F(8)) {
         switch (ch) {
         case KEY_F(7):
-            update_ram_window(0x0000);
+            ui_update_ram(0x0000);
             break;
         case KEY_F(10):
             step6502();
-            update_ram_window(0x0000);
+            ui_update_ram(0x0000);
             break;
         default:
             break;

@@ -3,9 +3,10 @@
 
 #include <ncurses.h>
 
-void initui();
-void update_ram_window(uint16_t base_address);
-void writelog(const char *fmt, ...);
+void ui_init();
+void ui_init_lcd();
+void ui_update_ram(uint16_t base_address);
+void ui_writelog(const char *fmt, ...);
 
 extern uint8_t *ram;
 
