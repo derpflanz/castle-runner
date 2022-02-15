@@ -3,10 +3,22 @@
 #include <stdarg.h>
 
 WINDOW *run;
+WINDOW *lcd;
 WINDOW *_create_newwin(int height, int width, int starty, int startx);
+
+void init_lcd_window() {
+    lcd = newwin(4, 20, LINES - 8, 1);
+    wbkgd(lcd, COLOR_PAIR(1));
+
+    wprintw(lcd, "test");
+
+    wrefresh(lcd);
+}
 
 void initui() {
     initscr();
+    start_color();
+    init_pair(1, COLOR_WHITE, COLOR_BLUE);
     cbreak();
     keypad(stdscr, TRUE);
 
@@ -24,9 +36,7 @@ WINDOW *_create_newwin(int height, int width, int starty, int startx)
 {	WINDOW *local_win;
 
 	local_win = newwin(height, width, starty, startx);
-	box(local_win, 0 , 0);		/* 0, 0 gives default characters 
-					 * for the vertical and horizontal
-					 * lines			*/
+	box(local_win, 0 , 0);		/* 0, 0 gives default characters */
 	wrefresh(local_win);		/* Show that box 		*/
 
 	return local_win;
