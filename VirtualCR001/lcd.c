@@ -1,9 +1,15 @@
 #include "ui.h"
 
 int pointer;
+uint8_t io_buffer;
+uint8_t data_register;
+uint8_t instr_register;
 
 void lcd_init() {
     pointer = 0;
+    io_buffer = 0;
+    data_register = 0;
+    instr_register = 0;
 }
 
 void lcd_set_pointer(unsigned int newvalue) {
@@ -38,4 +44,37 @@ void lcd_put_character(char character) {
 
     lcd_set_pointer(pointer+1);
     ui_print_lcd(character, line, column);
+}
+
+void lcd_io_write(uint8_t value) {
+    io_buffer = value;
+}
+
+void lcd_ctrl_write(uint8_t value) {
+    // ctrl_buffer is not a real buffer, but three 
+    // control lines E, RS and !RW
+    // on the CR001, these are wired
+    // ctrl[0] = ENABLE
+    // ctrl[1] = !RW (read not supported)
+    // ctrl[2] = REG_SEL
+
+    int enable = (value & 0x01) > 0;
+    int reg_sel = (value & 0x04) > 0;
+    ui_writelog("CTRL; ENABLE=%d, REGSEL=%d\n", enable, reg_sel);
+
+    if (enable == 1) {
+        if (reg_sel == 0) {
+            instr_register = io_buffer;
+            if (instr_register & 0x80) {    // DB7 = 1
+                pointer = instr_register & 0x7f;
+            }
+            ui_writelog("INSTR VAL=%02x; DATA=%02x\n", value, instr_register);
+        }
+        if (reg_sel == 1) {
+            data_register = io_buffer;
+            lcd_put_character(data_register);
+            ui_writelog("DATA VAL=%02x; DATA=%02x\n", value, data_register);
+        }
+
+    }
 }
