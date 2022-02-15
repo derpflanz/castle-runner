@@ -20,17 +20,17 @@ int main(int argc, char **argv) {
     ui_init_lcd();
     lcd_init();
 
-    ui_update_ram(0x0000);
+    ui_update_ram(0x8000);
 
     int ch;
     while ((ch = getch()) != KEY_F(8)) {
         switch (ch) {
         case KEY_F(7):
-            ui_update_ram(0x0000);
+            ui_update_ram(0x8000);
             break;
         case KEY_F(10):
             step6502();
-            ui_update_ram(0x0000);
+            ui_update_ram(0x8000);
             break;
         default:
             break;
