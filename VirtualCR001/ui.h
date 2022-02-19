@@ -11,4 +11,7 @@ void ui_print_lcd(char character, int row, int column);
 
 extern uint8_t *ram;
 
+// From the CPU
+extern uint8_t sp;          // stack pointer
+
 #endif

@@ -56,7 +56,7 @@ void ui_writelog(const char *format, ...) {
     wrefresh(run);
 }
 
-void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address) {    
+void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address) {
     int width, height;
     wclear(win);
     getmaxyx(win, height, width);
@@ -78,9 +78,19 @@ void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address) {
 }
 
 void ui_update_ram(uint16_t base_address) {
+    int stack_height = 10;
+
     WINDOW *memory_win;
-    memory_win = _create_newwin(LINES - 10, COLS / 2, 1, COLS / 2);
+    memory_win = _create_newwin(LINES - 10 - stack_height, COLS / 2, 1, COLS / 2);
     _mem_wshow(memory_win, ram, base_address);
     box(memory_win, 0, 0);
+    mvwprintw(memory_win, 0, 0, "[MEMORY]");
     wrefresh(memory_win);
+
+    WINDOW *stack_win;
+    stack_win = _create_newwin(stack_height, COLS / 2, LINES - 9 - stack_height, COLS / 2);
+    _mem_wshow(stack_win, ram, 0x0100);
+    box(stack_win, 0, 0);
+    mvwprintw(stack_win, 0, 0, "[STACK SP=01%02x]", sp);
+    wrefresh(stack_win);
 }
