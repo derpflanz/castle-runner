@@ -617,7 +617,7 @@ static void lsr() {
 
 static void nop() {
     if (opcode != 0xEA) {
-        ui_writelog("used NOP for opcode %02x; this might be an unsupported opcode or addressing mode.\n");
+        ui_writelog(WARNLOG, "used NOP for opcode %02x; this might be an unsupported opcode or addressing mode.\n");
     }
     switch (opcode) {
         case 0x1C:
