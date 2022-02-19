@@ -104,6 +104,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include "ui.h"
 
 //6502 defines
 #define DEFAULT
@@ -615,6 +616,9 @@ static void lsr() {
 }
 
 static void nop() {
+    if (opcode != 0xEA) {
+        ui_writelog("used NOP for opcode %02x; this might be an unsupported opcode or addressing mode.\n");
+    }
     switch (opcode) {
         case 0x1C:
         case 0x3C:
