@@ -1,6 +1,11 @@
 ; This is the CR001 ROM
 ; 
 ; This ROM provides routines to use the CR001 computer
+; 
+; Memory map:
+; OUTPUT 0x4000 - 0x4001 are connected to the display
+; $80 - $8F     - used for parameters
+
 
 ; NAME      InitCR
 ; USAGE     JSR :InitCR
@@ -60,9 +65,9 @@ RTS
 
 ; NAME      DisplayGotoXY
 ; USAGE     LDA <position>
-;           PHA
+;           STA $80
 ;           LDA <line>
-;           PHA
+;           STA $81
 ;           JSR :DisplayGotoXY
 ; RESULT    The cursor is placed on location X,Y
 ;           X = position, Y = line, 0-based
@@ -105,7 +110,11 @@ JSR :_DisplayEdge
 RTS         ; /DisplayChar
 
 ; NAME      DisplayString
-; USAGE     Load lo-byte of start address of string in $10, hibyte in $11
+; USAGE     Load lo-byte of start address of string in $80, hibyte in $81
+; EXAMPLE   LDA LO(@INFO)
+;           STA $80
+;           LDA HI(@INFO)
+;           STA $81
 ;           JSR :DisplayString
 ; RESULT    The string pointed to in $0010-$0011 will put put on display
 :DisplayString
