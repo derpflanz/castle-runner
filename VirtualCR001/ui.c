@@ -6,6 +6,22 @@ WINDOW *memory_log, *io_log;
 WINDOW *lcd;
 WINDOW *_create_newwin(int height, int width, int starty, int startx);
 
+void _init_io_log() {
+    io_log = _create_newwin(LINES - 10, COLS / 4, 1, COLS / 4);
+    scrollok(io_log, TRUE);
+    wprintw(io_log, "\n");
+    ui_writelog(IOLOG, "IO log ready\n");
+    wrefresh(io_log);
+}
+
+void _init_memory_log() {
+    memory_log = _create_newwin(LINES - 10, COLS / 4, 1, 0);
+    scrollok(memory_log, TRUE);
+    wprintw(memory_log, "\n");
+    ui_writelog(MEMLOG, "Memory log ready\n");
+    wrefresh(memory_log);
+}
+
 void ui_print_lcd(char character, int row, int column) {
     mvwaddch(lcd, row, column, character);
     wrefresh(lcd);
@@ -28,18 +44,8 @@ void ui_init() {
     printw("F7: refresh memory view; F8: exit; F10: step");
     refresh();
 
-    memory_log = _create_newwin(LINES - 10, COLS / 4, 1, 0);
-    scrollok(memory_log, TRUE);
-    wprintw(memory_log, "\n");
-    ui_writelog(MEMLOG, "Memory log ready\n");
-    wrefresh(memory_log);
-
-    io_log = _create_newwin(LINES - 10, COLS / 4, 1, COLS / 4);
-    scrollok(io_log, TRUE);
-    wprintw(io_log, "\n");
-    ui_writelog(IOLOG, "IO log ready\n");
-    wrefresh(io_log);
-
+    _init_memory_log();
+    _init_io_log();
 }
 
 WINDOW *_create_newwin(int height, int width, int starty, int startx)
