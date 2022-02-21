@@ -4,7 +4,44 @@
 
 WINDOW *memory_log, *io_log;
 WINDOW *lcd;
-WINDOW *_create_newwin(int height, int width, int starty, int startx);
+
+WINDOW *_create_newwin(int height, int width, int starty, int startx)
+{	WINDOW *local_win;
+
+	local_win = newwin(height, width, starty, startx);
+	box(local_win, 0 , 0);		/* 0, 0 gives default characters */
+	wrefresh(local_win);		/* Show that box 		*/
+
+	return local_win;
+}
+
+void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highlight) {
+    int width, height;
+    wclear(win);
+    getmaxyx(win, height, width);
+    uint16_t pointer = base_address;
+    int lines = 0;
+
+    wprintw(win, "\n");
+    while (lines < (height - 2)) {
+        wprintw(win, " [%04x] ", pointer);
+
+        int printable_bytes = (width - 9) / 3;
+        for (int i = 0; i < printable_bytes; i++) {
+            if (pointer == highlight) {
+                wbkgdset(win, COLOR_PAIR(1));
+            }
+            wprintw(win, "%02x", mem[pointer]);
+            if (pointer == highlight) {
+                wbkgdset(win, COLOR_PAIR(2));
+            }
+            wprintw(win, " ");
+            pointer++;
+        }
+        lines++;
+        wprintw(win, "\n");
+    }   
+}
 
 void _init_io_log() {
     io_log = _create_newwin(LINES - 10, COLS / 4, 1, COLS / 4);
@@ -48,16 +85,6 @@ void ui_init() {
     _init_io_log();
 }
 
-WINDOW *_create_newwin(int height, int width, int starty, int startx)
-{	WINDOW *local_win;
-
-	local_win = newwin(height, width, starty, startx);
-	box(local_win, 0 , 0);		/* 0, 0 gives default characters */
-	wrefresh(local_win);		/* Show that box 		*/
-
-	return local_win;
-}
-
 void ui_writelog(int target, const char *format, ...) {
     WINDOW *win = target == IOLOG?io_log:memory_log;
 
@@ -70,34 +97,6 @@ void ui_writelog(int target, const char *format, ...) {
     wprintw(win, " %s", buffer);
     box(win, 0, 0);
     wrefresh(win);
-}
-
-void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highlight) {
-    int width, height;
-    wclear(win);
-    getmaxyx(win, height, width);
-    uint16_t pointer = base_address;
-    int lines = 0;
-
-    wprintw(win, "\n");
-    while (lines < (height - 2)) {
-        wprintw(win, " [%04x] ", pointer);
-
-        int printable_bytes = (width - 9) / 3;
-        for (int i = 0; i < printable_bytes; i++) {
-            if (pointer == highlight) {
-                wbkgdset(win, COLOR_PAIR(1));
-            }
-            wprintw(win, "%02x", mem[pointer]);
-            if (pointer == highlight) {
-                wbkgdset(win, COLOR_PAIR(2));
-            }
-            wprintw(win, " ");
-            pointer++;
-        }
-        lines++;
-        wprintw(win, "\n");
-    }   
 }
 
 void ui_update_ram(uint16_t base_address) {
