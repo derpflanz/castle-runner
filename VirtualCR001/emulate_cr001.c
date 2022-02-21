@@ -47,6 +47,8 @@ int main(int argc, char **argv) {
             step6502();
             napms(100);
             ui_update_ram(MEMORY_BASE);
+        } else {
+            napms(100);
         }
     }
 
