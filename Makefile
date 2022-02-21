@@ -9,3 +9,7 @@ vm:
 
 run: vm game
 	make -C GameCode run
+
+test: vm
+	make -C GameCode test
+	
