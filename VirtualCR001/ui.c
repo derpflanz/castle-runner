@@ -4,6 +4,7 @@
 
 WINDOW *memory_log, *io_log;
 WINDOW *lcd;
+WINDOW *memory_win, *rom_win, *stack_win;
 
 WINDOW *_create_newwin(int height, int width, int starty, int startx)
 {	
@@ -29,7 +30,8 @@ char *_binary(uint8_t value) {
 
 void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highlight) {
     int width, height;
-    wclear(win);
+
+    wmove(win, 0, 0);
     getmaxyx(win, height, width);
     uint16_t pointer = base_address;
     int lines = 0;
@@ -71,6 +73,15 @@ void _init_memory_log() {
     wrefresh(memory_log);
 }
 
+void _init_memory_windows() {
+    int stack_height = 10;
+    int rom_height = 15;
+
+    memory_win = _create_newwin(LINES - 10 - rom_height - stack_height, COLS / 2, 1, COLS / 2);
+    rom_win = _create_newwin(rom_height, COLS / 2, LINES - 9 - stack_height - rom_height, COLS / 2);
+    stack_win = _create_newwin(stack_height, COLS / 2, LINES - 9 - stack_height, COLS / 2);
+}
+
 void ui_print_lcd(char character, int row, int column) {
     mvwaddch(lcd, row, column, character);
     wrefresh(lcd);
@@ -97,6 +108,7 @@ void ui_init() {
 
     _init_memory_log();
     _init_io_log();
+    _init_memory_windows();
 }
 
 void ui_writelog(int target, const char *format, ...) {
@@ -114,26 +126,17 @@ void ui_writelog(int target, const char *format, ...) {
 }
 
 void ui_update_ram(uint16_t base_address) {
-    int stack_height = 10;
-    int rom_height = 15;
-
-    WINDOW *memory_win;
-    memory_win = _create_newwin(LINES - 10 - rom_height - stack_height, COLS / 2, 1, COLS / 2);
     _mem_wshow(memory_win, ram, base_address, 0);
     box(memory_win, 0, 0);
     mvwprintw(memory_win, 0, 0, "[MEMORY]");
     wrefresh(memory_win);
 
-   WINDOW *rom_win;
-    rom_win = _create_newwin(rom_height, COLS / 2, LINES - 9 - stack_height - rom_height, COLS / 2);
     _mem_wshow(rom_win, ram, 0x8000, pc);
     box(rom_win, 0, 0);
     mvwprintw(rom_win, 0, 0, "[ROM PC=%04x A=%02x X=%02x Y=%02x STATUS=%s #=%d TICKS=%d]", 
         pc, a, x, y, _binary(status), instructions, clockticks6502);
     wrefresh(rom_win);
 
-    WINDOW *stack_win;
-    stack_win = _create_newwin(stack_height, COLS / 2, LINES - 9 - stack_height, COLS / 2);
     _mem_wshow(stack_win, ram, 0x0100, (0x0100 | sp));
     box(stack_win, 0, 0);
     mvwprintw(stack_win, 0, 0, "[STACK SP=01%02x]", sp);
