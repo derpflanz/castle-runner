@@ -3,10 +3,19 @@
 
 #include <ncurses.h>
 
-void initui();
-void update_ram_window(uint16_t base_address);
-void writelog(const char *fmt, ...);
+#define MEMLOG  1
+#define IOLOG   2
+#define WARNLOG 3
+
+void ui_init();
+void ui_init_lcd();
+void ui_update_ram(uint16_t base_address);
+void ui_writelog(int target, const char *fmt, ...);
+void ui_print_lcd(char character, int row, int column);
 
 extern uint8_t *ram;
+
+// From the CPU
+extern uint8_t sp;          // stack pointer
 
 #endif
