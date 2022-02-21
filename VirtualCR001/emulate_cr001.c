@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
             break;
         case KEY_F(6):
             reset6502();
+            ui_update_ram(MEMORY_BASE);
             break;
         default:
             break;
@@ -45,7 +46,7 @@ int main(int argc, char **argv) {
 
         if (running) {
             step6502();
-            napms(100);
+            napms(1);
             ui_update_ram(MEMORY_BASE);
         } else {
             napms(100);

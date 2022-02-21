@@ -221,26 +221,34 @@ static void (*addrtable[256])();
 static void (*optable[256])();
 uint8_t penaltyop, penaltyaddr;
 
+char addressing[32];
+
 //addressing mode functions, calculates effective addresses
 static void imp() { //implied
+    addressing[0] = '\0';
 }
 
 static void acc() { //accumulator
+    addressing[0] = '\0';
 }
 
 static void imm() { //immediate
+    sprintf(addressing, "#$%02x", read6502(pc));
     ea = pc++;
 }
 
 static void zp() { //zero-page
+    sprintf(addressing, "$%02x", read6502(pc));
     ea = (uint16_t)read6502((uint16_t)pc++);
 }
 
 static void zpx() { //zero-page,X
+    sprintf(addressing, "$%02x,X", read6502(pc));
     ea = ((uint16_t)read6502((uint16_t)pc++) + (uint16_t)x) & 0xFF; //zero-page wraparound
 }
 
 static void zpy() { //zero-page,Y
+    sprintf(addressing, "$%02x,Y", read6502(pc));
     ea = ((uint16_t)read6502((uint16_t)pc++) + (uint16_t)y) & 0xFF; //zero-page wraparound
 }
 
@@ -889,6 +897,26 @@ static void (*optable[256])() = {
 /* F */      beq,  sbc,  nop,  isb,  nop,  sbc,  inc,  isb,  sed,  sbc,  nop,  isb,  nop,  sbc,  inc,  isb  /* F */
 };
 
+static const char *mnemonics[256] = {
+/*        |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |  A  |  B  |  C  |  D  |  E  |  F  |      */
+/* 0 */      "brk",  "ora",  "nop",  "slo",  "nop",  "ora",  "asl",  "slo",  "php",  "ora",  "asl",  "nop",  "nop",  "ora",  "asl",  "slo", /* 0 */
+/* 1 */      "bpl",  "ora",  "nop",  "slo",  "nop",  "ora",  "asl",  "slo",  "clc",  "ora",  "nop",  "slo",  "nop",  "ora",  "asl",  "slo", /* 1 */
+/* 2 */      "jsr",  "and",  "nop",  "rla",  "bit",  "and",  "rol",  "rla",  "plp",  "and",  "rol",  "nop",  "bit",  "and",  "rol",  "rla", /* 2 */
+/* 3 */      "bmi",  "and",  "nop",  "rla",  "nop",  "and",  "rol",  "rla",  "sec",  "and",  "dec",  "rla",  "nop",  "and",  "rol",  "rla", /* 3 */
+/* 4 */      "rti",  "eor",  "nop",  "sre",  "nop",  "eor",  "lsr",  "sre",  "pha",  "eor",  "lsr",  "nop",  "jmp",  "eor",  "lsr",  "sre", /* 4 */
+/* 5 */      "bvc",  "eor",  "nop",  "sre",  "nop",  "eor",  "lsr",  "sre",  "cli",  "eor",  "nop",  "sre",  "nop",  "eor",  "lsr",  "sre", /* 5 */
+/* 6 */      "rts",  "adc",  "nop",  "rra",  "nop",  "adc",  "ror",  "rra",  "pla",  "adc",  "ror",  "nop",  "jmp",  "adc",  "ror",  "rra", /* 6 */
+/* 7 */      "bvs",  "adc",  "nop",  "rra",  "nop",  "adc",  "ror",  "rra",  "sei",  "adc",  "nop",  "rra",  "nop",  "adc",  "ror",  "rra", /* 7 */
+/* 8 */      "nop",  "sta",  "nop",  "sax",  "sty",  "sta",  "stx",  "sax",  "dey",  "nop",  "txa",  "nop",  "sty",  "sta",  "stx",  "sax", /* 8 */
+/* 9 */      "bcc",  "sta",  "nop",  "nop",  "sty",  "sta",  "stx",  "sax",  "tya",  "sta",  "txs",  "nop",  "nop",  "sta",  "nop",  "nop", /* 9 */
+/* A */      "ldy",  "lda",  "ldx",  "lax",  "ldy",  "lda",  "ldx",  "lax",  "tay",  "lda",  "tax",  "nop",  "ldy",  "lda",  "ldx",  "lax", /* A */
+/* B */      "bcs",  "lda",  "nop",  "lax",  "ldy",  "lda",  "ldx",  "lax",  "clv",  "lda",  "tsx",  "lax",  "ldy",  "lda",  "ldx",  "lax", /* B */
+/* C */      "cpy",  "cmp",  "nop",  "dcp",  "cpy",  "cmp",  "dec",  "dcp",  "iny",  "cmp",  "dex",  "nop",  "cpy",  "cmp",  "dec",  "dcp", /* C */
+/* D */      "bne",  "cmp",  "nop",  "dcp",  "nop",  "cmp",  "dec",  "dcp",  "cld",  "cmp",  "nop",  "dcp",  "nop",  "cmp",  "dec",  "dcp", /* D */
+/* E */      "cpx",  "sbc",  "nop",  "isb",  "cpx",  "sbc",  "inc",  "isb",  "inx",  "sbc",  "nop",  "sbc",  "cpx",  "sbc",  "inc",  "isb", /* E */
+/* F */      "beq",  "sbc",  "nop",  "isb",  "nop",  "sbc",  "inc",  "isb",  "sed",  "sbc",  "nop",  "isb",  "nop",  "sbc",  "inc",  "isb"  /* F */
+};
+
 static const uint32_t ticktable[256] = {
 /*        |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |  A  |  B  |  C  |  D  |  E  |  F  |     */
 /* 0 */      7,    6,    2,    8,    3,    3,    5,    5,    3,    2,    2,    2,    4,    4,    6,    6,  /* 0 */
@@ -927,28 +955,6 @@ void irq6502() {
 uint8_t callexternal = 0;
 void (*loopexternal)();
 
-void exec6502(uint32_t tickcount) {
-    clockgoal6502 += tickcount;
-   
-    while (clockticks6502 < clockgoal6502) {
-        opcode = read6502(pc++);
-        status |= FLAG_CONSTANT;
-
-        penaltyop = 0;
-        penaltyaddr = 0;
-
-        (*addrtable[opcode])();
-        (*optable[opcode])();
-        clockticks6502 += ticktable[opcode];
-        if (penaltyop && penaltyaddr) clockticks6502++;
-
-        instructions++;
-
-        if (callexternal) (*loopexternal)();
-    }
-
-}
-
 void step6502() {
     opcode = read6502(pc++);
     status |= FLAG_CONSTANT;
@@ -958,6 +964,8 @@ void step6502() {
 
     (*addrtable[opcode])();
     (*optable[opcode])();
+    ui_writelog(IOLOG, "%s %s (ea=%04x)\n", mnemonics[opcode], addressing, ea);
+
     clockticks6502 += ticktable[opcode];
     if (penaltyop && penaltyaddr) clockticks6502++;
     clockgoal6502 = clockticks6502;
@@ -965,6 +973,14 @@ void step6502() {
     instructions++;
 
     if (callexternal) (*loopexternal)();
+}
+
+void exec6502(uint32_t tickcount) {
+    clockgoal6502 += tickcount;
+   
+    while (clockticks6502 < clockgoal6502) {
+        step6502();
+    }
 }
 
 void hookexternal(void *funcptr) {
