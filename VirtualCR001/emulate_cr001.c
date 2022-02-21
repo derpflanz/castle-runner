@@ -26,17 +26,27 @@ int main(int argc, char **argv) {
     ui_update_ram(MEMORY_BASE);
 
     int ch;
+    int running = FALSE;
     while ((ch = getch()) != KEY_F(8)) {
         switch (ch) {
-        case KEY_F(7):
-            ui_update_ram(MEMORY_BASE);
-            break;
         case KEY_F(10):
             step6502();
             ui_update_ram(MEMORY_BASE);
             break;
+        case KEY_F(5):
+            running = !running;
+            break;
+        case KEY_F(6):
+            reset6502();
+            break;
         default:
             break;
+        }
+
+        if (running) {
+            step6502();
+            napms(100);
+            ui_update_ram(MEMORY_BASE);
         }
     }
 

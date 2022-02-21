@@ -70,13 +70,13 @@ int mem_readfile(const char *hexfilename) {
 
 uint8_t read6502(uint16_t address) {
     uint8_t value = ram[address];
-    ui_writelog(MEMLOG, "READ   address %04x: %02x\n", address, value);
+    ui_writelog(MEMLOG, "%06d %06d READ   address %04x: %02x\n", instructions, clockticks6502, address, value);
 
     return value;
 }
 
 void write6502(uint16_t address, uint8_t value) {
-    ui_writelog(MEMLOG, "WRITE  address %04x: %02x\n", address, value);
+    ui_writelog(MEMLOG, "%06d %06d WRITE  address %04x: %02x\n", instructions, clockticks6502, address, value);
     ram[address] = value;
 
     // connect the 0x4000 and 0x4001 addresses to the LCD

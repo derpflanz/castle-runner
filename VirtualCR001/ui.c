@@ -16,6 +16,17 @@ WINDOW *_create_newwin(int height, int width, int starty, int startx)
 	return local_win;
 }
 
+char __bin__buf__[9];
+char *_binary(uint8_t value) {
+    char mask = 1;
+    for (int i = 7; i >= 0; i--) {
+        __bin__buf__[i] = (value & mask)?'1':'0';
+        mask <<= 1;
+    }
+    __bin__buf__[8] = '\0';
+    return __bin__buf__;
+}
+
 void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highlight) {
     int width, height;
     wclear(win);
@@ -77,9 +88,11 @@ void ui_init() {
     init_pair(1, COLOR_WHITE, COLOR_BLUE);
     init_pair(2, COLOR_WHITE, COLOR_BLACK);
     cbreak();
+    noecho();
+    nodelay(stdscr, TRUE);
     keypad(stdscr, TRUE);
 
-    printw("F7: refresh memory view; F8: exit; F10: step");
+    printw("F5: start/stop; F6: reset; F8: exit; F10: step");
     refresh();
 
     _init_memory_log();
@@ -115,7 +128,8 @@ void ui_update_ram(uint16_t base_address) {
     rom_win = _create_newwin(rom_height, COLS / 2, LINES - 9 - stack_height - rom_height, COLS / 2);
     _mem_wshow(rom_win, ram, 0x8000, pc);
     box(rom_win, 0, 0);
-    mvwprintw(rom_win, 0, 0, "[ROM PC=%04x A=%02x X=%02x Y=%02x #=%d]", pc, a, x, y, instructions);
+    mvwprintw(rom_win, 0, 0, "[ROM PC=%04x A=%02x X=%02x Y=%02x STATUS=%s #=%d TICKS=%d]", 
+        pc, a, x, y, _binary(status), instructions, clockticks6502);
     wrefresh(rom_win);
 
     WINDOW *stack_win;
