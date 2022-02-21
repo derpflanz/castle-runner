@@ -8,6 +8,20 @@
 
 uint8_t *ram;
 
+uint16_t _getresetvector(FILE *f) {
+    int resb_low = fgetc(f);
+    int resb_hi  = fgetc(f);
+    return resb_hi << 8 | resb_low;
+}
+
+long _getsize(FILE *f) {
+    fseek(f, 0, SEEK_END);
+    long fsize = ftell(f);
+    fseek(f, 0, SEEK_SET); 
+
+    return fsize;
+}
+
 void setresb(uint16_t address) {
     // write the address into 0xfffc and 0xfffd
     ram[0xfffc] = (uint8_t) (address & 0x00ff);
@@ -30,20 +44,6 @@ void mem_show(uint16_t base_address, uint16_t length) {
     }
 
     printf("\n");
-}
-
-long _getsize(FILE *f) {
-    fseek(f, 0, SEEK_END);
-    long fsize = ftell(f);
-    fseek(f, 0, SEEK_SET); 
-
-    return fsize;
-}
-
-uint16_t _getresetvector(FILE *f) {
-    int resb_low = fgetc(f);
-    int resb_hi  = fgetc(f);
-    return resb_hi << 8 | resb_low;
 }
 
 int mem_readfile(const char *hexfilename) {

@@ -102,13 +102,21 @@ void ui_writelog(int target, const char *format, ...) {
 
 void ui_update_ram(uint16_t base_address) {
     int stack_height = 10;
+    int rom_height = 15;
 
     WINDOW *memory_win;
-    memory_win = _create_newwin(LINES - 10 - stack_height, COLS / 2, 1, COLS / 2);
+    memory_win = _create_newwin(LINES - 10 - rom_height - stack_height, COLS / 2, 1, COLS / 2);
     _mem_wshow(memory_win, ram, base_address, 0);
     box(memory_win, 0, 0);
     mvwprintw(memory_win, 0, 0, "[MEMORY]");
     wrefresh(memory_win);
+
+   WINDOW *rom_win;
+    rom_win = _create_newwin(rom_height, COLS / 2, LINES - 9 - stack_height - rom_height, COLS / 2);
+    _mem_wshow(rom_win, ram, 0x8000, pc);
+    box(rom_win, 0, 0);
+    mvwprintw(rom_win, 0, 0, "[ROM PC=%04x]", pc);
+    wrefresh(rom_win);
 
     WINDOW *stack_win;
     stack_win = _create_newwin(stack_height, COLS / 2, LINES - 9 - stack_height, COLS / 2);
