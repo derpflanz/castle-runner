@@ -53,10 +53,10 @@ class AsmLexer(Lexer):
   # IMPLIED                                                                 #                       i       Implied (8)
   # RELATIVE                                                                #                       r       Program Counter Relative (9)
   # STACK                                                                   #                       s       Stack (10)
-    ZEROPAGE        = r'\$[0-9a-fA-F]{1,2}'                                 # ex. $7f               zp      Zero Page (11)
-    ZPINDIND        = r'\(\$[0-9a-fA-F]{1,2},[Xx]\)'                        # ex. ($7f,x)           (zp,x)  Zero Page Indexed Indirect (12)
     ZPINDX          = r'\$[0-9a-fA-F]{1,2},[Xx]'                            # ex. $7f,x             zp,x    Zero Page Indexed with X (13)
     ZPINDY          = r'\$[0-9a-fA-F]{1,2},[Yy]'                            # ex. $7f,y             zp,y    Zero Page Indexed with Y (14)
+    ZEROPAGE        = r'\$[0-9a-fA-F]{1,2}'                                 # ex. $7f               zp      Zero Page (11)
+    ZPINDIND        = r'\(\$[0-9a-fA-F]{1,2},[Xx]\)'                        # ex. ($7f,x)           (zp,x)  Zero Page Indexed Indirect (12)
     ZPINDINDY       = r'\(\$[0-9a-fA-F]{2}\),[Yy]'                          # ex. ($10),Y           (zp),y  Zero Page Indirect Indexed with Y (16)
     ZPIND           = r'\(\$[0-9a-fA-F]{1,2}\)'                             # ex. ($7f)             (zp)    Zero Page Indirect (15)
 
