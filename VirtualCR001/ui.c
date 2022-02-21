@@ -115,7 +115,7 @@ void ui_update_ram(uint16_t base_address) {
     rom_win = _create_newwin(rom_height, COLS / 2, LINES - 9 - stack_height - rom_height, COLS / 2);
     _mem_wshow(rom_win, ram, 0x8000, pc);
     box(rom_win, 0, 0);
-    mvwprintw(rom_win, 0, 0, "[ROM PC=%04x]", pc);
+    mvwprintw(rom_win, 0, 0, "[ROM PC=%04x A=%02x X=%02x Y=%02x #=%d]", pc, a, x, y, instructions);
     wrefresh(rom_win);
 
     WINDOW *stack_win;

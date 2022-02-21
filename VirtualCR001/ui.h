@@ -16,7 +16,8 @@ void ui_print_lcd(char character, int row, int column);
 extern uint8_t *ram;
 
 // From the CPU
-extern uint8_t sp;          // stack pointer
-extern uint16_t pc;         // program counter
+extern uint8_t sp, a, x, y;     // stack pointer, accu, x-reg, y-reg
+extern uint16_t pc;             // program counter
+extern uint32_t instructions;    // number of instructions run
 
 #endif
