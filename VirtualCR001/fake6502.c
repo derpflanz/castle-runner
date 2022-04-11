@@ -254,6 +254,7 @@ static void zpy() { //zero-page,Y
 }
 
 static void rel() { //relative for branch ops (8-bit immediate value, sign-extended)
+    sprintf(addressing, "%02x", read6502(pc));
     reladdr = (uint16_t)read6502(pc++);
     if (reladdr & 0x80) reladdr |= 0xFF00;
 }
@@ -305,6 +306,7 @@ static void indx() { // (indirect,X)
 }
 
 static void indy() { // (indirect),Y
+    sprintf(addressing, "($%02x),Y", read6502(pc));
     uint16_t eahelp, eahelp2, startpage;
     eahelp = (uint16_t)read6502(pc++);
     eahelp2 = (eahelp & 0xFF00) | ((eahelp + 1) & 0x00FF); //zero-page wraparound
