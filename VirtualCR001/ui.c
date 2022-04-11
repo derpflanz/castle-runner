@@ -61,7 +61,7 @@ void _init_io_log() {
     io_log = _create_newwin(LINES - 10, COLS / 4, 1, COLS / 4);
     scrollok(io_log, TRUE);
     wprintw(io_log, "\n");
-    ui_writelog(IOLOG, "IO log ready\n");
+    ui_writelog(IOLOG, "Opcode log ready\n");
     wrefresh(io_log);
 }
 
