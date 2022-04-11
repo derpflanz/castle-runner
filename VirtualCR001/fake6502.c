@@ -104,6 +104,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include "ui.h"
 
 //6502 defines
@@ -258,6 +259,7 @@ static void rel() { //relative for branch ops (8-bit immediate value, sign-exten
 }
 
 static void abso() { //absolute
+    sprintf(addressing, "$%04x", (read6502(pc) | read6502(pc+1) << 8));
     ea = (uint16_t)read6502(pc) | ((uint16_t)read6502(pc+1) << 8);
     pc += 2;
 }
@@ -964,7 +966,12 @@ void step6502() {
 
     (*addrtable[opcode])();
     (*optable[opcode])();
-    ui_writelog(IOLOG, "%s %s (ea=%04x)\n", mnemonics[opcode], addressing, ea);
+    if (addressing[0] == '\0' || addressing[0] == '#') {
+        // immediate and implied have no EA
+        ui_writelog(IOLOG, "%s %s\n", mnemonics[opcode], addressing);
+    } else {
+        ui_writelog(IOLOG, "%s %s\t[ea=%04x]\n", mnemonics[opcode], addressing, ea);
+    }
 
     clockticks6502 += ticktable[opcode];
     if (penaltyop && penaltyaddr) clockticks6502++;
