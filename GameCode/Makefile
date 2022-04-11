@@ -19,6 +19,8 @@ all: $(ASM_FILES)
 	cat $(ASM_FILES) > $(TMP_FILE)
 	$(ASSEMBLER) $(ASM_FLAGS) $(TMP_FILE) $(OUTPUT)
 
+$(OUTPUT): all
+
 run: $(OUTPUT)
 	$(VM_BASE)$(VM_EXEC) $(OUTPUT)
 
