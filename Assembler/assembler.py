@@ -7,6 +7,7 @@ parser = argparse.ArgumentParser(description='6502 Assembler')
 parser.add_argument('inputfile', type=str, help='.asm file to process')
 parser.add_argument('outputfile', type=str, help='Binary .hex file to generate')
 parser.add_argument('-c', '--opcodefile', type=str, help='Opcode file to use')
+parser.add_argument('-d', '--debuginfo', type=str, help='Where to store debug info')
 parser.add_argument('-s', '--starting-address', type=str, default='8000',
     help='Starting address, in HEX (e.g. -s 8000). This address is stored at the beginning of the file. Default is 8000.')
 parser.add_argument('-t', '--target', choices=['c64', 'cr1'], default='cr1', help='Type of HEX file. "c64" will put location on where to store the image, "cr1" will set the RESB vector to the first opcode.')
@@ -46,7 +47,7 @@ with open(args.inputfile, 'r') as ifile:
 
 with open(args.outputfile, 'wb') as ofile:
     mylexer = lexer.AsmLexer()
-    directives = directives.Directives(args.outputfile)
+    directives = directives.Directives(args.debuginfo)
     lineno = 1
     address = starting_address
     line = ''

@@ -106,6 +106,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "ui.h"
+#include "debug.h"
 
 //6502 defines
 #define DEFAULT
@@ -181,9 +182,6 @@ uint32_t instructions = 0; //keep track of total instructions executed
 uint32_t clockticks6502 = 0, clockgoal6502 = 0;
 uint16_t oldpc, ea, reladdr, value, result;
 uint8_t opcode, oldstatus;
-
-//debugging helpers
-int breakpoint_hit = FALSE;
 
 //externally supplied functions
 extern uint8_t read6502(uint16_t address);
@@ -448,7 +446,7 @@ static void bpl() {
 }
 
 static void brk() {
-    breakpoint_hit = TRUE;
+    breakpoint_hit = 1;
 
     pc++;
     push16(pc); //push next instruction address onto stack

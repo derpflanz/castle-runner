@@ -10,7 +10,7 @@ class Directives:
         self._breakpoints.append(address)
 
     def Finalise(self):
-        with open(self._filename + ".breakpoints", "w") as ofile:
+        with open(self._filename, "w") as ofile:
             for address in self._breakpoints:
                 ofile.write(f"{address:04x}\n")
 

@@ -16,3 +16,4 @@ VirtualCR001/fake6502
 VirtualCR001/virtual_cr001
 *.exe
 *.breakpoints
+*.debug

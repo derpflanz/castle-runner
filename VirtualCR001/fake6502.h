@@ -7,6 +7,4 @@ void step6502();
 void reset6502();
 void exec6502(uint32_t tickcount);
 
-extern int breakpoint_hit;
-
 #endif

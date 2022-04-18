@@ -3,6 +3,7 @@
 #include "memory.h"
 #include "ui.h"
 #include "lcd.h"
+#include "debug.h"
 #include <curses.h>
 
 // base for the mem-view
@@ -10,7 +11,7 @@
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        printf("Usage: %s <hexfile>\n", argv[0]);
+        printf("Usage: %s <hexfile> [<debugfile>]\n", argv[0]);
         return -1;
     }
 
@@ -19,7 +20,10 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    reset6502();
+    if (argc >= 3) {
+        debug_init(argv[2]);
+    }
+    reset6502();    
     ui_init();
     ui_init_lcd();
     lcd_init();
