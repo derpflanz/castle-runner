@@ -18,6 +18,8 @@ LDA #$01
 STA $81
 JSR :DisplayGotoXY
 
+!break
+
 LDA LO(@SPLASH)
 STA $80
 LDA HI(@SPLASH)

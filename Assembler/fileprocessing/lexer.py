@@ -27,13 +27,16 @@ TOK_INCLUDE = 'INCLUDE'
 TOK_HI = 'HI'
 TOK_LO = 'LO'
 
+TOK_DIRECTIVE = 'DIRECTIVE'
+
 class AsmLexer(Lexer):
     tokens = { 
         OPCODE, 
         ABSOLUTE, ABSINDIND, ABSINDEXX, ABSINDEXY, INDIRECT, IMMEDIATE, 
         ZEROPAGE, ZPINDIND, ZPINDX, ZPINDY, ZPIND, ZPINDINDY,
         ASCII, STRING, COMMENT,
-        STRINGDEREF, STRINGNAME, LABEL, INCLUDE, HI, LO
+        STRINGDEREF, STRINGNAME, LABEL, INCLUDE, HI, LO,
+        DIRECTIVE
     }
     ignore = ' \t\n'
 
@@ -60,6 +63,7 @@ class AsmLexer(Lexer):
     ZPINDINDY       = r'\(\$[0-9a-fA-F]{2}\),[Yy]'                          # ex. ($10),Y           (zp),y  Zero Page Indirect Indexed with Y (16)
     ZPIND           = r'\(\$[0-9a-fA-F]{1,2}\)'                             # ex. ($7f)             (zp)    Zero Page Indirect (15)
 
+    DIRECTIVE       = r'![a-z]+'                                            # ex. !break            Virtual machine runtime directives
 
     # extra stuff
     ASCII           = r'\'[a-zA-Z0-9_*\-\\/<>?:\";\'{}|\[\]~`!@#$%^&*()=+ ]\''

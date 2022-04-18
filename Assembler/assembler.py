@@ -1,5 +1,6 @@
 import argparse, os, sys
 from fileprocessing import lexer, opcodes
+from directives import directives
 import sly
 
 parser = argparse.ArgumentParser(description='6502 Assembler')
@@ -45,6 +46,7 @@ with open(args.inputfile, 'r') as ifile:
 
 with open(args.outputfile, 'wb') as ofile:
     mylexer = lexer.AsmLexer()
+    directives = directives.Directives()
     lineno = 1
     address = starting_address
     line = ''
@@ -64,6 +66,9 @@ with open(args.outputfile, 'wb') as ofile:
 
             if len(result) > 0 and result[0].type == lexer.TOK_OPCODE and first_opcode_address == None:
                 first_opcode_address = address
+
+            if len(result) > 0 and result[0].type == lexer.TOK_DIRECTIVE:
+                directives.Process(result[0].value, address)
 
             address += codes.length()
 
@@ -98,6 +103,7 @@ with open(args.outputfile, 'wb') as ofile:
         linenumber = 1
         for line in preprocessed_lines:
             result = list(mylexer.tokenize(line))
+
             codes = opcodes.Opcodes(result, address)
             ofile.write(codes.as_bytes())
 
