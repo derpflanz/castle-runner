@@ -46,7 +46,7 @@ with open(args.inputfile, 'r') as ifile:
 
 with open(args.outputfile, 'wb') as ofile:
     mylexer = lexer.AsmLexer()
-    directives = directives.Directives()
+    directives = directives.Directives(args.outputfile)
     lineno = 1
     address = starting_address
     line = ''
@@ -130,5 +130,7 @@ with open(args.outputfile, 'wb') as ofile:
         print(f"ERROR: {err}")
         print(f"Hex file {args.outputfile} was not written correctly.")
         sys.exit(1)
+    finally:
+        directives.Finalise()
 
             
