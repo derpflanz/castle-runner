@@ -3,6 +3,7 @@
 #include "memory.h"
 #include "ui.h"
 #include "lcd.h"
+#include <curses.h>
 
 // base for the mem-view
 #define MEMORY_BASE 0x0000
