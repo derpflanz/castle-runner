@@ -182,6 +182,9 @@ uint32_t clockticks6502 = 0, clockgoal6502 = 0;
 uint16_t oldpc, ea, reladdr, value, result;
 uint8_t opcode, oldstatus;
 
+//debugging helpers
+int breakpoint_hit = FALSE;
+
 //externally supplied functions
 extern uint8_t read6502(uint16_t address);
 extern void write6502(uint16_t address, uint8_t value);
@@ -445,6 +448,8 @@ static void bpl() {
 }
 
 static void brk() {
+    breakpoint_hit = TRUE;
+
     pc++;
     push16(pc); //push next instruction address onto stack
     push8(status | FLAG_BREAK); //push CPU status to stack

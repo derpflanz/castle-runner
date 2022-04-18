@@ -48,6 +48,11 @@ int main(int argc, char **argv) {
             step6502();
             napms(1);
             ui_update_ram(MEMORY_BASE);
+
+            if (breakpoint_hit == TRUE) {
+                running = FALSE;
+                breakpoint_hit = FALSE;
+            }
         } else {
             napms(100);
         }
