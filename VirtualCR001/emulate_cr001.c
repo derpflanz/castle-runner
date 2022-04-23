@@ -16,6 +16,7 @@ int main(int argc, char **argv) {
     }
 
     mem_init();
+
     if (mem_readfile(argv[1]) != 0) {
         return -1;
     }
@@ -23,6 +24,7 @@ int main(int argc, char **argv) {
     if (argc >= 3) {
         debug_init(argv[2]);
     }
+
     reset6502();    
     ui_init();
     ui_init_lcd();

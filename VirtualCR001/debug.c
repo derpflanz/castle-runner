@@ -45,10 +45,11 @@ FILE *open_debug_file(const char *debug_filename) {
 }
 
 void init_breakpoints() {
-    memset(breakpoints, 0, MAX_BREAKPOINTS * sizeof(int));
+    memset(breakpoints, 0, MAX_BREAKPOINTS * sizeof(uint16_t));
 }
 
-void debug_init(const char *debug_filename) {    
+extern uint8_t *ram;
+void debug_init(const char *debug_filename) {
     FILE *debug_file = open_debug_file(debug_filename);
     if (debug_file == NULL) {
         return;

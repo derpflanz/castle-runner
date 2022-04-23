@@ -28,7 +28,7 @@ void setresb(uint16_t address) {
     ram[0xfffd] = (uint8_t) (address >> 8);
 }
 
-void mem_init() {
+void mem_init() {    
     ram = malloc(sizeof(uint8_t) * _64K);
 }
 
