@@ -1,6 +1,7 @@
 #include <ncurses.h>
 #include "ui.h"
 #include <stdarg.h>
+#include <stdlib.h>
 
 WINDOW *memory_log, *io_log;
 WINDOW *lcd;
@@ -28,13 +29,22 @@ char *_binary(uint8_t value) {
     return __bin__buf__;
 }
 
-void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highlight) {
+uint16_t *_read_addresses(FILE *listfile) {
+    return NULL;
+}
+
+void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highlight, FILE *extra_highlights) {
     int width, height;
 
     wmove(win, 0, 0);
     getmaxyx(win, height, width);
     uint16_t pointer = base_address;
     int lines = 0;
+    uint16_t *address_list = NULL;
+
+    if (extra_highlights != NULL) {
+        address_list = _read_addresses(extra_highlights);
+    }
 
     wprintw(win, "\n");
     while (lines < (height - 2)) {
@@ -54,7 +64,11 @@ void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highl
         }
         lines++;
         wprintw(win, "\n");
-    }   
+    }  
+
+    if (address_list != NULL) {
+        free(address_list);
+    } 
 }
 
 void _init_io_log() {
@@ -127,18 +141,18 @@ void ui_writelog(int target, const char *format, ...) {
 }
 
 void ui_update_ram(uint16_t base_address) {
-    _mem_wshow(memory_win, ram, base_address, 0);
+    _mem_wshow(memory_win, ram, base_address, 0, NULL);
     box(memory_win, 0, 0);
     mvwprintw(memory_win, 0, 0, "[MEMORY]");
     wrefresh(memory_win);
 
-    _mem_wshow(rom_win, ram, 0x8000, pc);
+    _mem_wshow(rom_win, ram, 0x8000, pc, NULL);
     box(rom_win, 0, 0);
     mvwprintw(rom_win, 0, 0, "[ROM PC=%04x A=%02x X=%02x Y=%02x STATUS=%s #=%d TICKS=%d]", 
         pc, a, x, y, _binary(status), instructions, clockticks6502);
     wrefresh(rom_win);
 
-    _mem_wshow(stack_win, ram, 0x0100, (0x0100 | sp));
+    _mem_wshow(stack_win, ram, 0x0100, (0x0100 | sp), NULL);
     box(stack_win, 0, 0);
     mvwprintw(stack_win, 0, 0, "[STACK SP=01%02x]", sp);
     wrefresh(stack_win);
