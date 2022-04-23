@@ -2,6 +2,7 @@
 #include "ui.h"
 #include <stdarg.h>
 #include <stdlib.h>
+#include "debug.h"
 
 WINDOW *memory_log, *io_log;
 WINDOW *lcd;
@@ -33,18 +34,16 @@ uint16_t *_read_addresses(FILE *listfile) {
     return NULL;
 }
 
-void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highlight, FILE *extra_highlights) {
+/* Shows memory in a window, "highlight" will be set blue, the list of addresses in 
+   "extra_highlight" will be set red
+*/
+void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highlight, uint16_t *extra_highlights) {
     int width, height;
 
     wmove(win, 0, 0);
     getmaxyx(win, height, width);
     uint16_t pointer = base_address;
     int lines = 0;
-    uint16_t *address_list = NULL;
-
-    if (extra_highlights != NULL) {
-        address_list = _read_addresses(extra_highlights);
-    }
 
     wprintw(win, "\n");
     while (lines < (height - 2)) {
@@ -65,10 +64,6 @@ void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highl
         lines++;
         wprintw(win, "\n");
     }  
-
-    if (address_list != NULL) {
-        free(address_list);
-    } 
 }
 
 void _init_io_log() {
@@ -146,7 +141,7 @@ void ui_update_ram(uint16_t base_address) {
     mvwprintw(memory_win, 0, 0, "[MEMORY]");
     wrefresh(memory_win);
 
-    _mem_wshow(rom_win, ram, 0x8000, pc, NULL);
+    _mem_wshow(rom_win, ram, 0x8000, pc, breakpoints);
     box(rom_win, 0, 0);
     mvwprintw(rom_win, 0, 0, "[ROM PC=%04x A=%02x X=%02x Y=%02x STATUS=%s #=%d TICKS=%d]", 
         pc, a, x, y, _binary(status), instructions, clockticks6502);

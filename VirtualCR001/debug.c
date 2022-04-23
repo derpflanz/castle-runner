@@ -3,11 +3,13 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 int breakpoint_hit = 0;
 int debug_enabled = 0;
 
-unsigned int breakpoints[MAX_BREAKPOINTS];
+// list of breakpoints, address 0 is used as "end of array"
+uint16_t breakpoints[MAX_BREAKPOINTS];
 
 void read_breakpoints(FILE *debug_file) {
     char *line = NULL;
@@ -16,7 +18,7 @@ void read_breakpoints(FILE *debug_file) {
     int breakpoint_ctr = 0;
 
     while ((read = getline(&line, &len, debug_file)) != -1) {
-        unsigned long int address = strtoul(line, NULL, 16);
+        uint16_t address = strtoul(line, NULL, 16);
         breakpoints[breakpoint_ctr++] = address;
     }
 
