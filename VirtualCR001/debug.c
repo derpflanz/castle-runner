@@ -56,5 +56,4 @@ void debug_init(const char *debug_filename) {
     read_breakpoints(debug_file);
     
     fclose(debug_file);
-    exit(-1);
 }
