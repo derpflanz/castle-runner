@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include "debug.h"
+#include "generic.h"
 
 WINDOW *memory_log, *io_log;
 WINDOW *lcd;
@@ -30,19 +31,6 @@ char *_binary(uint8_t value) {
     return __bin__buf__;
 }
 
-int _in_list(uint16_t needle, uint16_t *haystack) {
-    if (haystack == NULL) return 0;
-    int counter = 0;
-
-    while (haystack[counter] > 0) {
-        if (needle == haystack[counter++]) {
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
 /* Shows memory in a window, "highlight" will be set blue, the list of addresses in 
    "extra_highlight" will be set red
 */
@@ -60,7 +48,7 @@ void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highl
 
         int printable_bytes = (width - 9) / 3;
         for (int i = 0; i < printable_bytes; i++) {
-            if (_in_list(pointer, extra_highlights)) {
+            if (array_contains(pointer, extra_highlights)) {
                 wbkgdset(win, COLOR_PAIR(3));
             }
             if (pointer == highlight) {

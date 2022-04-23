@@ -20,11 +20,16 @@ void read_breakpoints(FILE *debug_file) {
     while ((read = getline(&line, &len, debug_file)) != -1) {
         uint16_t address = strtoul(line, NULL, 16);
         breakpoints[breakpoint_ctr++] = address;
+
+        if (breakpoint_ctr == MAX_BREAKPOINTS) {
+            breakpoints[MAX_BREAKPOINTS - 1] = 0;
+            break;
+        }
     }
 
     if (line) {
         free(line);
-    }   
+    }
 }
 
 FILE *open_debug_file(const char *debug_filename) {

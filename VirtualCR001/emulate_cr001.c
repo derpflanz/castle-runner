@@ -5,6 +5,7 @@
 #include "lcd.h"
 #include "debug.h"
 #include <curses.h>
+#include "generic.h"
 
 // base for the mem-view
 #define MEMORY_BASE 0x0000
@@ -53,6 +54,9 @@ int main(int argc, char **argv) {
 
         if (running) {
             step6502();
+            if (array_contains(pc, breakpoints)) {
+                breakpoint_hit = TRUE;
+            }
             napms(1);
             ui_update_ram(MEMORY_BASE);
 
