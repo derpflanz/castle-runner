@@ -1,9 +1,5 @@
 ; This is the Castle Runner game!
-
-; This ASM shows U/D/L/R/F when using the joystick
 ; It uses the cr001-rom.asm library
-
-; to assemble: ./assemble.sh asm/joystick-demo.asm asm/cr001-rom.asm
 
 ; DATA
 @SPLASH   "Castle Runner"       ; 13 characters, X=3 to middle it
@@ -21,6 +17,9 @@ STA $80
 LDA #$01
 STA $81
 JSR :DisplayGotoXY
+
+!break
+
 
 LDA LO(@SPLASH)
 STA $80

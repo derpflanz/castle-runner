@@ -106,6 +106,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "ui.h"
+#include "debug.h"
 
 //6502 defines
 #define DEFAULT
@@ -445,6 +446,8 @@ static void bpl() {
 }
 
 static void brk() {
+    breakpoint_hit = 1;
+
     pc++;
     push16(pc); //push next instruction address onto stack
     push8(status | FLAG_BREAK); //push CPU status to stack

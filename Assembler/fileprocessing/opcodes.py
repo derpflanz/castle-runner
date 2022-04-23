@@ -164,7 +164,7 @@ class Opcodes:
                 value = ord(token.value.strip("'"))       # remove ' from the token and translate to number
                 operand = self._to_bytes(f"{value:02x}")                # translate to two-letter hex code
                 addressing_method = TOK_OPER_IMMEDIATE
-            elif token.type == TOK_COMMENT:
+            elif token.type in (TOK_COMMENT, TOK_DIRECTIVE):
                 pass
             else:
                 raise SyntaxError(f"Unknown token type: {token.type}. This shouldn't happen.")

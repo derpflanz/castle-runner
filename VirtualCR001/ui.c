@@ -1,6 +1,9 @@
 #include <ncurses.h>
 #include "ui.h"
 #include <stdarg.h>
+#include <stdlib.h>
+#include "debug.h"
+#include "generic.h"
 
 WINDOW *memory_log, *io_log;
 WINDOW *lcd;
@@ -28,7 +31,10 @@ char *_binary(uint8_t value) {
     return __bin__buf__;
 }
 
-void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highlight) {
+/* Shows memory in a window, "highlight" will be set blue, the list of addresses in 
+   "extra_highlight" will be set red
+*/
+void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highlight, uint16_t *extra_highlights) {
     int width, height;
 
     wmove(win, 0, 0);
@@ -42,19 +48,20 @@ void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highl
 
         int printable_bytes = (width - 9) / 3;
         for (int i = 0; i < printable_bytes; i++) {
+            if (array_contains(pointer, extra_highlights)) {
+                wbkgdset(win, COLOR_PAIR(3));
+            }
             if (pointer == highlight) {
                 wbkgdset(win, COLOR_PAIR(1));
             }
             wprintw(win, "%02x", mem[pointer]);
-            if (pointer == highlight) {
-                wbkgdset(win, COLOR_PAIR(2));
-            }
+            wbkgdset(win, COLOR_PAIR(2));
             wprintw(win, " ");
             pointer++;
         }
         lines++;
         wprintw(win, "\n");
-    }   
+    }  
 }
 
 void _init_io_log() {
@@ -98,6 +105,7 @@ void ui_init() {
     start_color();
     init_pair(1, COLOR_WHITE, COLOR_BLUE);
     init_pair(2, COLOR_WHITE, COLOR_BLACK);
+    init_pair(3, COLOR_WHITE, COLOR_RED);
     cbreak();
     noecho();
     nodelay(stdscr, TRUE);
@@ -126,18 +134,18 @@ void ui_writelog(int target, const char *format, ...) {
 }
 
 void ui_update_ram(uint16_t base_address) {
-    _mem_wshow(memory_win, ram, base_address, 0);
+    _mem_wshow(memory_win, ram, base_address, 0, NULL);
     box(memory_win, 0, 0);
     mvwprintw(memory_win, 0, 0, "[MEMORY]");
     wrefresh(memory_win);
 
-    _mem_wshow(rom_win, ram, 0x8000, pc);
+    _mem_wshow(rom_win, ram, 0x8000, pc, breakpoints);
     box(rom_win, 0, 0);
     mvwprintw(rom_win, 0, 0, "[ROM PC=%04x A=%02x X=%02x Y=%02x STATUS=%s #=%d TICKS=%d]", 
         pc, a, x, y, _binary(status), instructions, clockticks6502);
     wrefresh(rom_win);
 
-    _mem_wshow(stack_win, ram, 0x0100, (0x0100 | sp));
+    _mem_wshow(stack_win, ram, 0x0100, (0x0100 | sp), NULL);
     box(stack_win, 0, 0);
     mvwprintw(stack_win, 0, 0, "[STACK SP=01%02x]", sp);
     wrefresh(stack_win);

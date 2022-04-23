@@ -3,22 +3,30 @@
 #include "memory.h"
 #include "ui.h"
 #include "lcd.h"
+#include "debug.h"
+#include <curses.h>
+#include "generic.h"
 
 // base for the mem-view
 #define MEMORY_BASE 0x0000
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        printf("Usage: %s <hexfile>\n", argv[0]);
+        printf("Usage: %s <hexfile> [<debugfile>]\n", argv[0]);
         return -1;
     }
 
     mem_init();
+
     if (mem_readfile(argv[1]) != 0) {
         return -1;
     }
 
-    reset6502();
+    if (argc >= 3) {
+        debug_init(argv[2]);
+    }
+
+    reset6502();    
     ui_init();
     ui_init_lcd();
     lcd_init();
@@ -46,8 +54,16 @@ int main(int argc, char **argv) {
 
         if (running) {
             step6502();
+            if (array_contains(pc, breakpoints)) {
+                breakpoint_hit = TRUE;
+            }
             napms(1);
             ui_update_ram(MEMORY_BASE);
+
+            if (breakpoint_hit == TRUE) {
+                running = FALSE;
+                breakpoint_hit = FALSE;
+            }
         } else {
             napms(100);
         }

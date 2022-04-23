@@ -4,10 +4,11 @@ VM_BASE=../VirtualCR001/
 ASSEMBLER=python $(ASM_BASE)assembler.py
 VM_EXEC=virtual_cr001
 
-ASM_FLAGS=-s8000 --opcodefile $(ASM_BASE)w65c02s_opcodes.txt
-
 OUTPUT=castlerunner.hex
 ASM_FILES=castlerunner.asm cr001-rom.asm 
+DEBUGFILE=castlerunner.debug
+
+ASM_FLAGS=-s8000 --opcodefile $(ASM_BASE)w65c02s_opcodes.txt --debuginfo=$(DEBUGFILE)
 
 # testing stuff (a scratch file)
 TEST_HEX=test.hex
@@ -22,7 +23,7 @@ all: $(ASM_FILES)
 $(OUTPUT): all
 
 run: $(OUTPUT)
-	$(VM_BASE)$(VM_EXEC) $(OUTPUT)
+	$(VM_BASE)$(VM_EXEC) $(OUTPUT) $(DEBUGFILE)
 
 test: $(TEST_ASM)
 	$(ASSEMBLER) $(ASM_FLAGS) $(TEST_ASM) $(TEST_HEX)
