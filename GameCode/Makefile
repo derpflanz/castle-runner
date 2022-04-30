@@ -1,14 +1,20 @@
+# assembler stuff
 ASM_BASE=../Assembler/
-VM_BASE=../VirtualCR001/
-
-ASSEMBLER=python $(ASM_BASE)assembler.py
-VM_EXEC=virtual_cr001
-
-OUTPUT=castlerunner.hex
 ASM_FILES=castlerunner.asm cr001-rom.asm 
 DEBUGFILE=castlerunner.debug
+ASM_FLAGS=-s8000 --opcodefile $(ASM_BASE)w65c02s_opcodes.txt --debuginfo=$(DEBUGFILE) 
+ASSEMBLER=python $(ASM_BASE)assembler.py
+OUTPUT=castlerunner.hex
 
-ASM_FLAGS=-s8000 --opcodefile $(ASM_BASE)w65c02s_opcodes.txt --debuginfo=$(DEBUGFILE)
+# vm stuff
+VM_BASE=../VirtualCR001/
+VM_EXEC=virtual_cr001
+
+# eeprom stuff
+PROG_BASE=../EepromProgrammer/
+PROGRAMMER=python $(PROG_BASE)eeprom-program.py write 
+BOARD=arduino:megaavr:nona4809
+PORT=$(shell arduino-cli board list | grep $(BOARD) | awk '{ print $$1; }')
 
 # testing stuff (a scratch file)
 TEST_HEX=test.hex
@@ -28,3 +34,6 @@ run: $(OUTPUT)
 test: $(TEST_ASM)
 	$(ASSEMBLER) $(ASM_FLAGS) $(TEST_ASM) $(TEST_HEX)
 	$(VM_BASE)$(VM_EXEC) $(TEST_HEX)
+
+program: $(OUTPUT)
+	$(PROGRAMMER) -f $(OUTPUT) -p $(PORT)

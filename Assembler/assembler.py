@@ -8,6 +8,7 @@ parser.add_argument('inputfile', type=str, help='.asm file to process')
 parser.add_argument('outputfile', type=str, help='Binary .hex file to generate')
 parser.add_argument('-c', '--opcodefile', type=str, help='Opcode file to use')
 parser.add_argument('-d', '--debuginfo', type=str, help='Where to store debug info')
+parser.add_argument('-r', '--result', action='store_true', help='Show resulting code')
 parser.add_argument('-s', '--starting-address', type=str, default='8000',
     help='Starting address, in HEX (e.g. -s 8000). This address is stored at the beginning of the file. Default is 8000.')
 parser.add_argument('-t', '--target', choices=['c64', 'cr1'], default='cr1', help='Type of HEX file. "c64" will put location on where to store the image, "cr1" will set the RESB vector to the first opcode.')
@@ -108,10 +109,11 @@ with open(args.outputfile, 'wb') as ofile:
             codes = opcodes.Opcodes(result, address)
             ofile.write(codes.as_bytes())
 
-            a = "    " if codes.length() == 0 else f"{address:04x}"
-            s = f"[{lineno:5}:{a}] {line.strip()}"
-            h = codes.as_bytes().hex(' ', 1)
-            print(f"{s:80} {h}")
+            if args.result:
+                a = "    " if codes.length() == 0 else f"{address:04x}"
+                s = f"[{lineno:5}:{a}] {line.strip()}"
+                h = codes.as_bytes().hex(' ', 1)
+                print(f"{s:80} {h}")
             
             lineno += 1
             address += codes.length()

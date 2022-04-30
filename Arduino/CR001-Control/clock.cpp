@@ -11,7 +11,7 @@ void ClockGenerator::setup() {
     pinMode(CLOCK_OUT, OUTPUT);
 
     // initialise
-    digitalWrite(CLOCK_OUT, LOW);
+    digitalWrite(CLOCK_OUT, HIGH);
     counter = 0;
     speed = analogRead(CLOCK_SENSOR);
     timestamp = millis();
@@ -54,9 +54,9 @@ void ClockGenerator::manual() {
 void ClockGenerator::external_tick() {
     if (interrupt) interrupt(speed);
 
-    digitalWrite(CLOCK_OUT, HIGH);
-    delayMicroseconds(1);
     digitalWrite(CLOCK_OUT, LOW);
+    delayMicroseconds(1);
+    digitalWrite(CLOCK_OUT, HIGH);
 }
 
 void ClockGenerator::onTick(void (*intr)(int)) {

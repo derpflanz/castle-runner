@@ -23,23 +23,23 @@ void lcd_put_character(char character) {
     // idx  0 - 19 is line 0
     // idx 20 - 39 is line 2
     // idx 40 - 59 is line 1
-    // idx 60 - 79 is line 4
+    // idx 60 - 79 is line 3
     int line, column;
-    if (pointer >=  0 && pointer <= 19) {
+    if (pointer >= 0x00 && pointer <= 0x00 + 19) {
         line = 0;
         column = pointer;
     }
-    if (pointer >= 20 && pointer <= 39) {
+    if (pointer >= (0x00 + 20) && pointer <= (0x00 + 39)) {
         line = 2;
         column = pointer - 20;
     }
-    if (pointer >= 40 && pointer <= 59) {
+    if (pointer >= (0x40) && pointer <= (0x40 + 19)) {
         line = 1;
-        column = pointer - 40;
+        column = pointer - 0x40;
     }
-    if (pointer >= 60 && pointer <= 79) {
+    if (pointer >= (0x40 + 20) && pointer <= (0x40 + 39)) {
         line = 3;
-        column = pointer - 60;
+        column = pointer - (0x40 + 20);
     }
 
     lcd_set_pointer(pointer+1);
@@ -60,15 +60,17 @@ void lcd_ctrl_write(uint8_t value) {
 
     int enable = (value & 0x01) > 0;
     int reg_sel = (value & 0x04) > 0;
-    ui_writelog(IOLOG, "CTRL; ENABLE=%d, REGSEL=%d\n", enable, reg_sel);
+    ui_writelog(IOLOG, "[lcd] ctrl; enable=%d, reg=%s\n", enable, reg_sel==0?"ir":"da");
 
     if (enable == 1) {
         if (reg_sel == 0) {
             instr_register = io_buffer;
             if (instr_register & 0x80) {    // DB7 = 1
                 pointer = instr_register & 0x7f;
+                ui_writelog(IOLOG, "[lcd] set char ptr to %d (0x%02x)\n", pointer, pointer);
+            } else {
+                ui_writelog(IOLOG, "[lcd] wrote IR, value=%02x; ir=%02x\n", value, instr_register);
             }
-            ui_writelog(IOLOG, "INSTR VAL=%02x; DATA=%02x\n", value, instr_register);
         }
         if (reg_sel == 1) {
             data_register = io_buffer;

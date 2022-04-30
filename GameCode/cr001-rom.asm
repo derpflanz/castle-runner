@@ -33,16 +33,12 @@ LDA #$06        ; increase on write, no display shift
 JSR :_DisplayInstruction
 RTS             ; /InitDisplay
 
-:_DisplayEdge
-DEC                 ; EN = 0
-STA $4001           ; edge it in
-RTS
-
 :_DisplayInstruction
 STA $4000           ; DATA = ACCU
 LDA #$01            ; RS=0, RW=0, EN=1
 STA $4001           ; CTRL = $01
-JSR :_DisplayEdge
+DEC                 ; EN = 0
+STA $4001           ; edge it in
 RTS
 
 ; NAME      DisplayHome
@@ -64,16 +60,16 @@ JSR :_DisplayInstruction
 RTS
 
 ; NAME      DisplayGotoXY
-; USAGE     LDA <position>
+; USAGE     LDA <row>
 ;           STA $80
-;           LDA <line>
+;           LDA <column>
 ;           STA $81
 ;           JSR :DisplayGotoXY
 ; RESULT    The cursor is placed on location X,Y
 ;           X = position, Y = line, 0-based
 :DisplayGotoXY
 ; In the display, lines are 0-2-1-3
-LDA $81
+LDA $80
 CMP #$01
 BEQ :__line_1__
 CMP #$02
@@ -84,17 +80,17 @@ LDA #$00            ; fallback: line 0
 JMP :__gotoxy_continued__
 
 :__line_1__
-LDA #$40            ; hex 28 = dec 40 = line 1
+LDA #$40            ; hex 40 = dec 64 = line 1
 JMP :__gotoxy_continued__
 :__line_2__
 LDA #$14            ; hex 14 = dec 20 = line 2
 JMP :__gotoxy_continued__
 :__line_3__
-LDA #$54            ; hex 3c = dec 60 = line 3
+LDA #$54            ; hex 54 = dec 84 = line 3
 
 :__gotoxy_continued__
 CLC
-ADC $80         ; ACCU += x
+ADC $81         ; ACCU += x
 JSR :DisplaySetAddress
 RTS             ; /DisplayGotoXY
 
@@ -106,7 +102,8 @@ RTS             ; /DisplayGotoXY
 STA $4000           ; data = ACCU
 LDA #$05            ; RS=1, RW=0, EN=1
 STA $4001           ; ctrl = ACCU
-JSR :_DisplayEdge
+DEC                 ; EN = 0
+STA $4001           ; edge it in
 RTS         ; /DisplayChar
 
 ; NAME      DisplayString

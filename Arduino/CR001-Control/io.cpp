@@ -15,9 +15,9 @@ void IO::read() {
   //    X    X    X    X    X    X
   //         A         A         A
 
-  // data[0] = databus
+  // data[0] = address LOW
   // data[1] = address HIGH
-  // data[2] = address LOW
+  // data[2] = databus
 
   byte data[3] = {0, 0, 0};
   byte mask = 0x01;
@@ -34,10 +34,10 @@ void IO::read() {
       mask <<= 1;
     }
   }
-
-  _data = data[0];
+  
   _addr_hi = data[1];
   _addr_lo = data[2];
+  _data = data[0];
 }
 
 IO Io;
