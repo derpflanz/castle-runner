@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "debug.h"
 #include "generic.h"
+#include "fake6502.h"
 
 WINDOW *memory_log, *io_log;
 WINDOW *lcd;
@@ -20,15 +21,44 @@ WINDOW *_create_newwin(int height, int width, int starty, int startx)
 	return local_win;
 }
 
-char __bin__buf__[9];
-char *_binary(uint8_t value) {
-    char mask = 1;
+char __flag_buf[9];
+char *_flags(uint8_t value) {
+    unsigned char mask = 1;
+    char set, c;
     for (int i = 7; i >= 0; i--) {
-        __bin__buf__[i] = (value & mask)?'1':'0';
+        set = (value & mask);
+        switch (mask) {
+            case FLAG_CARRY:
+                c = set?'C':'c';
+                break;
+            case FLAG_ZERO:
+                c = set?'Z':'z';
+                break;
+            case FLAG_INTERRUPT:
+                c = set?'I':'i';
+                break;
+            case FLAG_DECIMAL:
+                c = set?'D':'d';
+                break;
+            case FLAG_BREAK:
+                c = set?'B':'b';
+                break;
+            case FLAG_CONSTANT:
+                c = set?'T':'t';
+                break;
+            case FLAG_OVERFLOW:
+                c = set?'O':'o';
+                break;
+            case FLAG_SIGN:
+                c = set?'S':'s';
+                break;
+        }
+
+        __flag_buf[i] = c;
         mask <<= 1;
     }
-    __bin__buf__[8] = '\0';
-    return __bin__buf__;
+    __flag_buf[8] = '\0';
+    return __flag_buf;
 }
 
 /* Shows memory in a window, "highlight" will be set blue, the list of addresses in 
@@ -143,7 +173,7 @@ void ui_update_ram(uint16_t base_address) {
     _mem_wshow(rom_win, ram, 0x8000, pc, breakpoints, 0);
     box(rom_win, 0, 0);
     mvwprintw(rom_win, 0, 0, "[ROM PC=%04x A=%02x X=%02x Y=%02x STATUS=%s #=%d TICKS=%d]", 
-        pc, a, x, y, _binary(status), instructions, clockticks6502);
+        pc, a, x, y, _flags(status), instructions, clockticks6502);
     wrefresh(rom_win);
 
     _mem_wshow(stack_win, ram, 0x01ff, (0x0100 | sp), NULL, 1);

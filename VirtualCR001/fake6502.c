@@ -107,6 +107,7 @@
 #include <string.h>
 #include "ui.h"
 #include "debug.h"
+#include "fake6502.h"
 
 //6502 defines
 #define DEFAULT
@@ -120,15 +121,6 @@
                      //CPU in the Nintendo Entertainment System does not
                      //support BCD operation.
 #endif
-
-#define FLAG_CARRY     0x01
-#define FLAG_ZERO      0x02
-#define FLAG_INTERRUPT 0x04
-#define FLAG_DECIMAL   0x08
-#define FLAG_BREAK     0x10
-#define FLAG_CONSTANT  0x20
-#define FLAG_OVERFLOW  0x40
-#define FLAG_SIGN      0x80
 
 #define BASE_STACK     0x100
 
