@@ -1,6 +1,7 @@
 #include "log.h"
 #include "io.h"
 #include "clock.h"
+#include <ctype.h>
 
 void setup() {
   Io.setup();
@@ -23,6 +24,9 @@ void tick(int speed) {
   Io.read();
 
   if (Io.addr_hi() == 0x40) {
-    Log.printf("I/O: addr = 0x%02x%02x, data = %02x\r\n", Io.addr_hi(), Io.addr_lo(), Io.data());
+    char cc = isprint(Io.data())?Io.data():'?';
+    if (Io.data() )
+    Log.printf("spd=%d; %s I/O: addr = 0x%02x%02x, data = %02x (%c)\r\n", 
+      speed, Io.rw()==HIGH?"read ":"write", Io.addr_hi(), Io.addr_lo(), Io.data(), cc);
   }
 }

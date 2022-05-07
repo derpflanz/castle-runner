@@ -10,6 +10,7 @@ const char INPUTS[] = {
                         23, 25, 27, 29, 31, 33, 35, 37
                     };
 
+#define RW  39
 
 // IOACTIVE is an INPUT
 #define IOACTIVE    3
@@ -19,6 +20,7 @@ class IO {
         byte _data;
         byte _addr_hi;
         byte _addr_lo;
+        byte _rw;
     public:
         void setup();
         void read();
@@ -26,6 +28,7 @@ class IO {
         byte data() { return _data; }
         byte addr_lo() { return _addr_lo; }
         byte addr_hi() { return _addr_hi; }
+        byte rw() { return _rw; }
 };
 
 extern IO Io;

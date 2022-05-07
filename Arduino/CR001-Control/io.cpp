@@ -7,6 +7,7 @@ void IO::setup() {
     }
 
     pinMode(IOACTIVE, INPUT);
+    pinMode(RW, INPUT);
 }
 
 void IO::read() {
@@ -38,6 +39,8 @@ void IO::read() {
   _addr_hi = data[1];
   _addr_lo = data[2];
   _data = data[0];
+
+  _rw = digitalRead(RW);
 }
 
 IO Io;
