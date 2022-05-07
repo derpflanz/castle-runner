@@ -9,7 +9,11 @@
 void mem_init();
 int mem_readfile(const char *hexfilename);
 void mem_show(uint16_t base_address, uint16_t length);
-void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address);
+
+uint8_t read6502(uint16_t address);
+void write6502(uint16_t address, uint8_t value);
+
+void set_io(int port, uint8_t value);
 
 extern WINDOW *run;
 

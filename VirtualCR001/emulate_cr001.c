@@ -48,6 +48,18 @@ int main(int argc, char **argv) {
             reset6502();
             ui_update_ram(MEMORY_BASE);
             break;
+        case KEY_LEFT:
+            set_io(0, JOY_LEFT);
+            break;
+        case KEY_RIGHT:
+            set_io(0, JOY_RIGHT);
+            break;
+        case KEY_UP:
+            set_io(0, JOY_UP);
+            break;
+        case KEY_DOWN:
+            set_io(0, JOY_DOWN);
+            break;
         default:
             break;
         }

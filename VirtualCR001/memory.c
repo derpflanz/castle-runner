@@ -7,6 +7,7 @@
 #include "lcd.h"
 
 uint8_t *ram;
+uint8_t io_port0;
 
 uint16_t _getresetvector(FILE *f) {
     int resb_low = fgetc(f);
@@ -72,18 +73,27 @@ uint8_t read6502(uint16_t address) {
     uint8_t value = ram[address];
     ui_writelog(MEMLOG, "%06d %06d READ   address %04x: %02x\n", instructions, clockticks6502, address, value);
 
+    if (address == 0x4000) {
+        value = io_port0;
+    }
+
     return value;
 }
 
 void write6502(uint16_t address, uint8_t value) {
     ui_writelog(MEMLOG, "%06d %06d WRITE  address %04x: %02x\n", instructions, clockticks6502, address, value);
-    ram[address] = value;
 
     // connect the 0x4000 and 0x4001 addresses to the LCD
     if (address == 0x4000) {
         lcd_io_write(value);
-    }
-    if (address == 0x4001) {
+    } else if (address == 0x4001) {
         lcd_ctrl_write(value);
+    } else {
+        ram[address] = value;
     }
+}
+
+
+void set_io(int port, uint8_t value) {
+    io_port0 = value;
 }

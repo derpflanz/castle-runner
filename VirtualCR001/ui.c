@@ -5,6 +5,7 @@
 #include "debug.h"
 #include "generic.h"
 #include "fake6502.h"
+#include "memory.h"
 
 WINDOW *memory_log, *io_log;
 WINDOW *lcd;
@@ -167,7 +168,7 @@ void ui_writelog(int target, const char *format, ...) {
 void ui_update_ram(uint16_t base_address) {
     _mem_wshow(memory_win, ram, base_address, 0, NULL, 0);
     box(memory_win, 0, 0);
-    mvwprintw(memory_win, 0, 0, "[MEMORY]");
+    mvwprintw(memory_win, 0, 0, "[MEMORY 0x4000=%02x]", read6502(0x4000));
     wrefresh(memory_win);
 
     _mem_wshow(rom_win, ram, 0x8000, pc, breakpoints, 0);
