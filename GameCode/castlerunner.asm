@@ -84,8 +84,28 @@ JSR :DisplayString
 
 BRK
 
+:MoveRunner
+LDA $f5
+AND #$fc            ; we allow 4 rows; 0b00 to 0b11
+BEQ :__DoMoveRow
+RTS
+:__DoMoveRow
+LDA $f5
+STA $f2
+
+LDA $f6
+AND #$f0            ; we allow 16 columns: 0b0000 to 0b1111
+BEQ :__DoMoveColumn
+RTS
+:__DoMoveColumn
+LDA $f6
+STA $f3
+
+DEC $f0
+RTS
+
 :GetNewLocation
-LDA $f2             ; new location = old location
+LDA $f2             ; new location = current location
 STA $f5
 LDA $f3
 STA $f6
