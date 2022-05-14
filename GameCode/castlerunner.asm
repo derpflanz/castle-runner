@@ -20,6 +20,9 @@ JSR :InitDisplay
 ; Location row      = $f2
 ; Location col      = $f3
 ; Joystick          = $f4
+; New location row  = $f5
+; New location col  = $f6
+
 
 ; Initialise memory
 LDA #$0a            ; we start with 10 steps and no gold
@@ -63,6 +66,7 @@ LDA $4000
 STA $f4
 
 JSR :ClearRunner
+JSR :GetNewLocation
 JSR :MoveRunner
 JMP :loop
 
@@ -81,58 +85,51 @@ JSR :DisplayString
 BRK
 
 :MoveRunner
+LDA $f5
+AND #$fc            ; we allow 4 rows; 0b00 to 0b11
+BEQ :__DoMoveRow
+RTS
+:__DoMoveRow
+LDA $f5
+STA $f2
+
+LDA $f6
+AND #$f0            ; we allow 16 columns: 0b0000 to 0b1111
+BEQ :__DoMoveColumn
+RTS
+:__DoMoveColumn
+LDA $f6
+STA $f3
+
+DEC $f0
+RTS
+
+:GetNewLocation
+LDA $f2             ; new location = current location
+STA $f5
+LDA $f3
+STA $f6
+
 LDA $f4
 AND #$08
 BNE :_cont1
-DEC $f3
-DEC $f0
+DEC $f6
 :_cont1
 LDA $f4
 AND #$10
 BNE :_cont2
-INC $f3
-DEC $f0
+INC $f6
 :_cont2
 LDA $f4
 AND #$02
 BNE :_cont3
-DEC $f2
-DEC $f0
+DEC $f5
 :_cont3
 LDA $f4
 AND #$04
 BNE :_cont4
-INC $f2
-DEC $f0
+INC $f5
 :_cont4
-RTS
-
-
-:__MoveRunner
-LDA $f4
-AND #$08
-BEQ :_JoyLeft
-LDA $f4
-AND #$10
-BEQ :_JoyRight
-LDA $f4
-AND #$02
-BEQ :_JoyUp
-LDA $f4
-AND #$04
-BEQ :_JoyDown
-RTS
-:_JoyLeft
-DEC $f3
-RTS
-:_JoyRight
-INC $f3
-RTS
-:_JoyDown
-INC $f2
-RTS
-:_JoyUp
-DEC $f2
 RTS
 
 :ClearRunner
