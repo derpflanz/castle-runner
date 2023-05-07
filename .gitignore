@@ -17,3 +17,7 @@ VirtualCR001/virtual_cr001
 *.exe
 *.breakpoints
 *.debug
+*~
+Arduino/.vscode/
+
+Arduino/VideoSignal/.vscode/
