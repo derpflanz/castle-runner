@@ -38,6 +38,12 @@ if [ $? -eq 1 ]; then
     exit
 fi
 
+if [ "$2" == "build" ]; then
+    green "Only build. Done."
+    exit
+fi
+
+
 LINE=`arduino-cli board list | grep $BOARD`
 
 if [ "$LINE" = "" ]; then
@@ -55,3 +61,5 @@ $CMD
 
 echo
 green "Done."
+
+#python showserial.py
