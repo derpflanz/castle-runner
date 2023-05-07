@@ -23,7 +23,7 @@ void ClockGenerator::setup() {
     Log.println("Clock setup.");
 }
 
-int ClockGenerator::loop() {
+void ClockGenerator::loop() {
     // reset counter and trigger tick
     if (counter == 0) {
         counter = (1024 - speed);
@@ -42,7 +42,6 @@ int ClockGenerator::loop() {
         timestamp = millis();
         speed = analogRead(CLOCK_SENSOR);
     }
-
 }
 
 void ClockGenerator::manual() {

@@ -18,7 +18,7 @@ class ClockGenerator {
         void external_tick();
     public:
         void setup();
-        int loop();
+        void loop();
         void manual();
 
         void onTick(void (*intr)(int));
