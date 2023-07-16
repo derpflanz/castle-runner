@@ -43,7 +43,7 @@
                 ]
             },
             "defines": [
-                "PLATFORMIO=60106",
+                "PLATFORMIO=60109",
                 "ARDUINO_AVR_ATmega2560",
                 "F_CPU=16000000L",
                 "ARDUINO_ARCH_AVR",
@@ -51,8 +51,8 @@
                 "__AVR_ATmega2560__",
                 ""
             ],
-            "cStandard": "c11",
-            "cppStandard": "c++17",
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++17",
             "compilerPath": "/home/bf/.platformio/packages/toolchain-atmelavr/bin/avr-gcc",
             "compilerArgs": [
                 "-mmcu=atmega2560",
