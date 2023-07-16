@@ -181,3 +181,17 @@ LDA $f1
 JSR :Dec2Ascii
 JSR :DisplayString
 RTS
+
+:HW_IRQ
+LDA #$01
+STA $80
+LDA #$05
+STA $81
+JSR :DisplayGotoXY
+LDA LO(@SPLASH)
+STA $80
+LDA HI(@SPLASH)
+STA $81
+JSR :DisplayString
+RTS
+
