@@ -1,6 +1,6 @@
 #include "memory.h"
 #include "communication.h"
-#include "Arduino.h"
+#include <Arduino.h>
 
 byte resb_lo = 0;
 byte resb_hi = 0;

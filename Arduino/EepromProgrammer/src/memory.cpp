@@ -1,5 +1,5 @@
 #include "memory.h"
-#include "Arduino.h"
+#include <Arduino.h>
 
 // Address pins (A0 - A7; A8 - A15 are connected to GND now)
 const char ADDR[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
