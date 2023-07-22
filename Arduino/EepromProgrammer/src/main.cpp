@@ -78,8 +78,6 @@ byte receive_header(header *the_header) {
   return command;
 }
 
-
-
 void receive_data(unsigned long data_length) {
   byte recv;
   do {

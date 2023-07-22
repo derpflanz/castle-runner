@@ -131,8 +131,8 @@ class Eeprom:
                 recv_bytes = 0
                 if received == STX:
                     self._print("Got STX, receiving data...")
-                    spc = 3 * self._print_ctr
-                    self._print(f"{self._print_ctr:04x} {' '*(spc%16)}", end='')
+                    spc = self._print_ctr % 16
+                    self._print(f"{self._print_ctr:04x} {' '*(spc*3)}", end='')
                     while recv_bytes < length:
                         received = ser.read()
                         received_data += received
