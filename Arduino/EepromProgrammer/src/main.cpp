@@ -38,8 +38,12 @@ byte receive_header(header *the_header) {
   the_header->length = 0;
   command = Communication.receiveByte();
 
-  while ( (digit = Communication.receiveByte()) != ETB) {
+  while ( (digit = Communication.receiveByte()) != US) {
     the_header->length = (the_header->length * 10) + (digit - '0');
+  }
+
+  while ( (digit = Communication.receiveByte()) != ETB) {
+    the_header->resb = (the_header->length * 10) + (digit - '0');
   }
 
   if (the_header->length <= HEXFILE_MAX_SIZE) {
