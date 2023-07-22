@@ -2,9 +2,6 @@
 #include "communication.h"
 #include <Arduino.h>
 
-byte resb_lo = 0;
-byte resb_hi = 0;
-
 struct header {
   uint16_t start_address;       // address where to start reading/writing
   uint16_t length;              // length of read/write
@@ -102,6 +99,15 @@ void receive_data(unsigned long data_length) {
   } while (recv != ETX);
 }
 
+void write_vector(uint16_t vector, uint16_t address) {
+  // the vector is a uint, so we need to make this little-endian again
+  byte vector_lo = vector & 0x00FF;
+  byte vector_hi = vector >> 8;
+
+  Memory.writeByte(address, vector_lo);
+  Memory.writeByte(address + 1, vector_hi);
+}
+
 void send_data(uint16_t start_addresss, unsigned int data_length) {
   Communication.sendByte(STX);
 
@@ -119,10 +125,7 @@ void loop() {
   byte command = receive_header(&the_header);
 
   if (command == CMD_WRITE_EEPROM) {
-    // the first two byte of the HEX file
-    // are the lo and hi bytes of the first opcode
-    // (the RESB vector); they will be valid after
-    // "receive_data"
+    write_vector(the_header.resb, 0x7ffc);
     receive_data(the_header.length);
   } else if (command == CMD_READ_EEPROM) {
     send_data(the_header.start_address, the_header.length);
