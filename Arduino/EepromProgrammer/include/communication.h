@@ -11,6 +11,7 @@
 #define NAK 0x15
 #define SYN 0x16
 #define ETB 0x17
+#define US  0x1f
 
 // Commands
 #define CMD_WRITE_EEPROM        0x31

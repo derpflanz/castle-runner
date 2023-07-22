@@ -1,13 +1,16 @@
 import serial, string, time
 
-SYN = b'\x16'
-SOH = b'\x01'
-ETB = b'\x17'
-STX = b'\x02'
-ETX = b'\x03'
-EOT = b'\x04'
-ACK = b'\x06'
-NAK = b'\x15'
+SYN   = b'\x16'
+SOH   = b'\x01'
+ETB   = b'\x17'
+STX   = b'\x02'
+ETX   = b'\x03'
+EOT   = b'\x04'
+ACK   = b'\x06'
+NAK   = b'\x15'
+US    = b'\x1f'
+READ  = b'\x32'
+WRITE = b'\x31'
 
 class Eeprom:
     _port = "/dev/ttyACM0"
@@ -22,7 +25,7 @@ class Eeprom:
         if self._verbose == True:
             print(message, end=end)
 
-    def _send_header(self, ser, command, length):
+    def _send_header(self, ser, command, start_address, length, resb):
         result = False
 
         # wait a little for the Nano to wake up
@@ -39,14 +42,20 @@ class Eeprom:
                 self._print(received.decode('iso-8859-1'), end='')
                 head_bytes_received += 1
                 
+        self._print(f"Sending header: command {command}, start_address: {start_address}, length: {length}, resb: {resb}")
+
         ser.write(SOH)
         ser.write(command)
+        ser.write(str.encode(f"{start_address}"))
+        ser.write(US)
         ser.write(str.encode(f"{length}"))
+        ser.write(US)
+        ser.write(str.encode(f"{resb}"))
         ser.write(ETB)
 
         received = ser.read()
         if received == ACK:
-            self._print("Got ACK, header was reeived correctly.")
+            self._print("Got ACK, header was received correctly.")
             result = True
         elif received == NAK:
             self._print("Got NAK, some problem with header.")
@@ -60,15 +69,14 @@ class Eeprom:
         self._print(f"Connecting to {self._port} with {self._speed} baud. Reset the reader if this blocks.")
 
         with serial.Serial(self._port, self._speed) as ser:
-            if self._send_header(ser, b'1', len(_bytes)):
+            # resb is stored little endian in file, we need it as an ascii
+            # hex address for the programmer
+            resb = f"{_bytes[1]:x}{_bytes[0]:x}"
+
+            if self._send_header(ser, WRITE, 0, len(_bytes) - 2, resb):
                 self._print("Header sent, continuing with sending data.")
                 
                 ser.write(STX)
-                self._print("RESB: ", end='')
-                for vector in _bytes[:2]:
-                    ser.write(bytes([vector]))
-                    byte_read = ser.read()
-                    self._print(f"{vector:02x} ", end='')
 
                 self._print("")
                 self._print("0000 ", end='')
@@ -85,7 +93,12 @@ class Eeprom:
 
     _print_ctr = 0
     _print_line = b''
+    _print_spc = None
     def _printByte(self, b):
+        if self._print_spc is None:
+            
+            self._print_spc = self._print_ctr
+
         filter = ''.join([['.', chr(x)][chr(x) in string.printable[:-5]] for x in range(256)])
 
         if isinstance(b, int):
@@ -96,23 +109,27 @@ class Eeprom:
 
         self._print_ctr += 1
         if self._print_ctr % 16 == 0:
-            self._print(f"[{self._print_line.decode('iso-8859-1').translate(filter)}]\n{self._print_ctr:04x} ", end='')
+            self._print(f"[{' '*(self._print_spc%16)}{self._print_line.decode('iso-8859-1').translate(filter)}]\n{self._print_ctr:04x} ", end='')
             self._print_line = b''
+            self._print_spc = 0
 
-    def read(self, length, verbose = True):
+    def read(self, start_address, length, verbose = True):
         self._verbose = verbose
+        self._print_ctr = int(start_address, 16)
         self._print(f"Connecting to {self._port} with {self._speed} baud. Reset the reader if this blocks.")
 
         received_data = b''
 
         with serial.Serial(self._port, self._speed) as ser:
-            if self._send_header(ser, b'2', length):
+            if self._send_header(ser, READ, start_address, length, 0):
                 self._print("Header sent, continuing with reading data.")
                 received = ser.read()
-                    
+
                 recv_bytes = 0
                 if received == STX:
-                    self._print("0000 ", end='')
+                    self._print("Got STX, receiving data...")
+                    spc = self._print_ctr % 16
+                    self._print(f"{self._print_ctr:04x} {' '*(spc*3)}", end='')
                     while recv_bytes < length:
                         received = ser.read()
                         received_data += received
@@ -121,6 +138,8 @@ class Eeprom:
 
                     if ser.read() == ETX:
                         self._print(f"\nGot {recv_bytes} bytes and ETX, we're done!")
+                    else:
+                        self._print(f"\nGot {recv_bytes} bytes but no ETX!")
                 
                 received = ser.read()
                 if received == EOT:

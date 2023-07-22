@@ -10,7 +10,7 @@ parser.add_argument('-c', '--opcodefile', type=str, help='Opcode file to use')
 parser.add_argument('-d', '--debuginfo', type=str, help='Where to store debug info')
 parser.add_argument('-r', '--result', action='store_true', help='Show resulting code')
 parser.add_argument('-s', '--starting-address', type=str, default='8000',
-    help='Starting address, in HEX (e.g. -s 8000). This address is stored at the beginning of the file. Default is 8000.')
+    help='Starting address, in HEX (e.g. -s 8000). The address of the first opcode is stored at the beginning of the file. Default is 8000.')
 parser.add_argument('-t', '--target', choices=['c64', 'cr1'], default='cr1', help='Type of HEX file. "c64" will put location on where to store the image, "cr1" will set the RESB vector to the first opcode.')
 
 args = parser.parse_args()
