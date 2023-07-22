@@ -38,18 +38,10 @@ byte receive_header(header *the_header) {
   the_header->length = 0;
   command = Communication.receiveByte();
 
-  while ( (digit = Communication.receiveByte()) != US) {
-    the_header->start_address = (the_header->length * 10) + (digit - '0');
-  }
-
-  while ( (digit = Communication.receiveByte()) != US) {
-    the_header->length = (the_header->length * 10) + (digit - '0');
-  }
-
-  while ( (digit = Communication.receiveByte()) != ETB) {
-    the_header->resb = (the_header->length * 10) + (digit - '0');
-  }
-
+  the_header->start_address = get_address(US);
+  the_header->length = get_decimal(US);
+  the_header->resb = get_address(ETB);
+  
   if (the_header->length <= HEXFILE_MAX_SIZE) {
     Communication.sendByte(ACK);
   } else {
@@ -58,6 +50,30 @@ byte receive_header(header *the_header) {
   }
 
   return command;
+}
+
+uint16_t get_decimal(byte separator) {
+  byte digit = 0;
+  uint16_t result = 0;
+
+  while ( (digit = Communication.receiveByte()) != separator) {
+    result = (result * 10) + (digit - '0');
+  }  
+}
+
+uint16_t get_address(byte separator) {
+  byte digit = 0;
+  uint16_t result = 0;
+  while ( (digit = Communication.receiveByte()) != separator) {
+    if (digit >= '0' && digit <= '9')
+      result = (result * 16) + (digit - '0');
+
+    digit |= 0x20;      // make lower case
+    if (digit >= 'a' && digit <= 'f') 
+      result = (result * 16) + (digit - 'a') + 10;
+  }
+
+  return result;
 }
 
 void receive_data(unsigned long data_length) {

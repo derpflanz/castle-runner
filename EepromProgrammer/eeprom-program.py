@@ -7,6 +7,7 @@ parser.add_argument('-f', '--file', dest='file', help='Filename of file to write
 parser.add_argument('-l', '--length', dest='length', type=int, help='Length of data to read or write (may be omitted when writing a HEX file')
 parser.add_argument('-o', '--overwrite', dest='overwrite', help='Overwrite file if already exists.', action='store_true')
 parser.add_argument('-p', '--port', dest='port', help='Serial port to use (probably /dev/ttyACM0)', default='/dev/ttyACM0')
+parser.add_argument('-s start_address', '--start_address', dest='start_address', help='Address to start reading (in hex, e.g. -s ff00). Default 0. Ignored for writing.', default='0')
 args = parser.parse_args()
 
 if args.action == 'read' and os.path.exists(args.file) and args.overwrite == False:
@@ -25,7 +26,7 @@ if args.action == 'read':
     print(f"Going to read {args.length} bytes into {args.file}, using {args.port}")
 
     eeprom = eeprom.Eeprom(args.port, 9600)
-    data = eeprom.read(args.length)
+    data = eeprom.read(args.start_address, args.length)
     with open(args.file, "wb") as file:
         file.write(data)        
 elif args.action == 'write':

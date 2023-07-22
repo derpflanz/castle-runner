@@ -42,6 +42,8 @@ class Eeprom:
                 self._print(received.decode('iso-8859-1'), end='')
                 head_bytes_received += 1
                 
+        self._print(f"Sending header: command {command}, start_address: {start_address}, length: {length}, resb: {resb}")
+
         ser.write(SOH)
         ser.write(command)
         ser.write(str.encode(f"{start_address}"))
@@ -108,14 +110,14 @@ class Eeprom:
             self._print(f"[{self._print_line.decode('iso-8859-1').translate(filter)}]\n{self._print_ctr:04x} ", end='')
             self._print_line = b''
 
-    def read(self, length, verbose = True):
+    def read(self, start_address, length, verbose = True):
         self._verbose = verbose
         self._print(f"Connecting to {self._port} with {self._speed} baud. Reset the reader if this blocks.")
 
         received_data = b''
 
         with serial.Serial(self._port, self._speed) as ser:
-            if self._send_header(ser, READ, 0, length, 0):
+            if self._send_header(ser, READ, start_address, length, 0):
                 self._print("Header sent, continuing with reading data.")
                 received = ser.read()
                     
