@@ -25,7 +25,7 @@ class Eeprom:
         if self._verbose == True:
             print(message, end=end)
 
-    def _send_header(self, ser, command, length, resb):
+    def _send_header(self, ser, command, start_address, length, resb):
         result = False
 
         # wait a little for the Nano to wake up
@@ -44,6 +44,8 @@ class Eeprom:
                 
         ser.write(SOH)
         ser.write(command)
+        ser.write(str.encode(f"{start_address}"))
+        ser.write(US)
         ser.write(str.encode(f"{length}"))
         ser.write(US)
         ser.write(str.encode(f"{resb}"))
@@ -65,7 +67,7 @@ class Eeprom:
         self._print(f"Connecting to {self._port} with {self._speed} baud. Reset the reader if this blocks.")
 
         with serial.Serial(self._port, self._speed) as ser:
-            if self._send_header(ser, WRITE, len(_bytes), 0):
+            if self._send_header(ser, WRITE, 0, len(_bytes), 0):
                 self._print("Header sent, continuing with sending data.")
                 
                 ser.write(STX)
@@ -113,7 +115,7 @@ class Eeprom:
         received_data = b''
 
         with serial.Serial(self._port, self._speed) as ser:
-            if self._send_header(ser, READ, length, 0):
+            if self._send_header(ser, READ, 0, length, 0):
                 self._print("Header sent, continuing with reading data.")
                 received = ser.read()
                     

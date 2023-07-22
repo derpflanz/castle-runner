@@ -39,6 +39,10 @@ byte receive_header(header *the_header) {
   command = Communication.receiveByte();
 
   while ( (digit = Communication.receiveByte()) != US) {
+    the_header->start_address = (the_header->length * 10) + (digit - '0');
+  }
+
+  while ( (digit = Communication.receiveByte()) != US) {
     the_header->length = (the_header->length * 10) + (digit - '0');
   }
 
