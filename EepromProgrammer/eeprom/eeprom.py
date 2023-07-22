@@ -8,6 +8,9 @@ ETX = b'\x03'
 EOT = b'\x04'
 ACK = b'\x06'
 NAK = b'\x15'
+RS  = b'\x1e'
+READ = b'\x32'
+WRITE = b'\x31'
 
 class Eeprom:
     _port = "/dev/ttyACM0"
@@ -46,7 +49,7 @@ class Eeprom:
 
         received = ser.read()
         if received == ACK:
-            self._print("Got ACK, header was reeived correctly.")
+            self._print("Got ACK, header was received correctly.")
             result = True
         elif received == NAK:
             self._print("Got NAK, some problem with header.")
@@ -60,7 +63,7 @@ class Eeprom:
         self._print(f"Connecting to {self._port} with {self._speed} baud. Reset the reader if this blocks.")
 
         with serial.Serial(self._port, self._speed) as ser:
-            if self._send_header(ser, b'1', len(_bytes)):
+            if self._send_header(ser, WRITE, len(_bytes)):
                 self._print("Header sent, continuing with sending data.")
                 
                 ser.write(STX)
@@ -106,7 +109,7 @@ class Eeprom:
         received_data = b''
 
         with serial.Serial(self._port, self._speed) as ser:
-            if self._send_header(ser, b'2', length):
+            if self._send_header(ser, READ, length):
                 self._print("Header sent, continuing with reading data.")
                 received = ser.read()
                     
