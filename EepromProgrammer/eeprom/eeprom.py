@@ -69,17 +69,14 @@ class Eeprom:
         self._print(f"Connecting to {self._port} with {self._speed} baud. Reset the reader if this blocks.")
 
         with serial.Serial(self._port, self._speed) as ser:
-            if self._send_header(ser, WRITE, 0, len(_bytes), 0):
+            # resb is stored little endian in file, we need it as an ascii
+            # hex address for the programmer
+            resb = f"{_bytes[1]:x}{_bytes[0]:x}"
+
+            if self._send_header(ser, WRITE, 0, len(_bytes) - 2, resb):
                 self._print("Header sent, continuing with sending data.")
                 
                 ser.write(STX)
-
-                # this needs to go into the header (TBD)
-                self._print("RESB: ", end='')
-                for vector in _bytes[:2]:
-                    ser.write(bytes([vector]))
-                    byte_read = ser.read()
-                    self._print(f"{vector:02x} ", end='')
 
                 self._print("")
                 self._print("0000 ", end='')

@@ -86,18 +86,7 @@ void receive_data(unsigned long data_length) {
 
   unsigned int address = 0;
 
-  // first read the RESB vector
-  resb_lo = Communication.receiveByte();
-  Communication.sendByte(resb_lo);
-
-  resb_hi = Communication.receiveByte();
-  Communication.sendByte(resb_hi);
-
-  // write the RESB vector
-  Memory.writeByte(0xFFFC, resb_lo);
-  Memory.writeByte(0xFFFD, resb_hi);
-
-  for (int i = 0; i < data_length - 2; i++) {
+  for (int i = 0; i < data_length; i++) {
     recv = Communication.receiveByte();
     Memory.writeByte(address, recv);
 
