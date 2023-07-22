@@ -1,7 +1,7 @@
 #ifndef __MEMORY_H__
 #define __MEMORY_H__
 
-#include "Arduino.h"
+#include <Arduino.h>
 
 // pins
 #define OE 21
