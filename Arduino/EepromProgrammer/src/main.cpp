@@ -18,6 +18,32 @@ void setup() {
   Memory.setup();
 }
 
+uint16_t get_decimal(byte separator) {
+  byte digit = 0;
+  uint16_t result = 0;
+
+  while ( (digit = Communication.receiveByte()) != separator) {
+    result = (result * 10) + (digit - '0');
+  }
+
+  return result;
+}
+
+uint16_t get_address(byte separator) {
+  byte digit = 0;
+  uint16_t result = 0;
+  while ( (digit = Communication.receiveByte()) != separator) {
+    if (digit >= '0' && digit <= '9')
+      result = (result * 16) + (digit - '0');
+
+    digit |= 0x20;      // make lower case
+    if (digit >= 'a' && digit <= 'f') 
+      result = (result * 16) + (digit - 'a') + 10;
+  }
+
+  return result;
+}
+
 void idle() {
   byte recv;
   do {
@@ -41,8 +67,8 @@ byte receive_header(header *the_header) {
   the_header->start_address = get_address(US);
   the_header->length = get_decimal(US);
   the_header->resb = get_address(ETB);
-  
-  if (the_header->length <= HEXFILE_MAX_SIZE) {
+ 
+  if ((the_header->start_address + the_header->length) <= HEXFILE_MAX_SIZE) {
     Communication.sendByte(ACK);
   } else {
     Communication.sendByte(NAK);
@@ -52,29 +78,7 @@ byte receive_header(header *the_header) {
   return command;
 }
 
-uint16_t get_decimal(byte separator) {
-  byte digit = 0;
-  uint16_t result = 0;
 
-  while ( (digit = Communication.receiveByte()) != separator) {
-    result = (result * 10) + (digit - '0');
-  }  
-}
-
-uint16_t get_address(byte separator) {
-  byte digit = 0;
-  uint16_t result = 0;
-  while ( (digit = Communication.receiveByte()) != separator) {
-    if (digit >= '0' && digit <= '9')
-      result = (result * 16) + (digit - '0');
-
-    digit |= 0x20;      // make lower case
-    if (digit >= 'a' && digit <= 'f') 
-      result = (result * 16) + (digit - 'a') + 10;
-  }
-
-  return result;
-}
 
 void receive_data(unsigned long data_length) {
   byte recv;
@@ -111,10 +115,10 @@ void receive_data(unsigned long data_length) {
   } while (recv != ETX);
 }
 
-void send_data(unsigned int data_length) {
+void send_data(uint16_t start_addresss, unsigned int data_length) {
   Communication.sendByte(STX);
 
-  for (unsigned int address = 0; address < data_length; address++) {
+  for (unsigned int address = start_addresss; address < (start_addresss + data_length); address++) {
     byte data = Memory.readByte(address);
     Communication.sendByte(data);
   }
@@ -134,7 +138,7 @@ void loop() {
     // "receive_data"
     receive_data(the_header.length);
   } else if (command == CMD_READ_EEPROM) {
-    send_data(the_header.length);
+    send_data(the_header.start_address, the_header.length);
   }
 
   Communication.sendByte(EOT);

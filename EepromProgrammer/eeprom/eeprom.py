@@ -96,7 +96,12 @@ class Eeprom:
 
     _print_ctr = 0
     _print_line = b''
+    _print_spc = None
     def _printByte(self, b):
+        if self._print_spc is None:
+            
+            self._print_spc = self._print_ctr
+
         filter = ''.join([['.', chr(x)][chr(x) in string.printable[:-5]] for x in range(256)])
 
         if isinstance(b, int):
@@ -107,11 +112,13 @@ class Eeprom:
 
         self._print_ctr += 1
         if self._print_ctr % 16 == 0:
-            self._print(f"[{self._print_line.decode('iso-8859-1').translate(filter)}]\n{self._print_ctr:04x} ", end='')
+            self._print(f"[{' '*(self._print_spc%16)}{self._print_line.decode('iso-8859-1').translate(filter)}]\n{self._print_ctr:04x} ", end='')
             self._print_line = b''
+            self._print_spc = 0
 
     def read(self, start_address, length, verbose = True):
         self._verbose = verbose
+        self._print_ctr = int(start_address, 16)
         self._print(f"Connecting to {self._port} with {self._speed} baud. Reset the reader if this blocks.")
 
         received_data = b''
@@ -120,10 +127,12 @@ class Eeprom:
             if self._send_header(ser, READ, start_address, length, 0):
                 self._print("Header sent, continuing with reading data.")
                 received = ser.read()
-                    
+
                 recv_bytes = 0
                 if received == STX:
-                    self._print("0000 ", end='')
+                    self._print("Got STX, receiving data...")
+                    spc = 3 * self._print_ctr
+                    self._print(f"{self._print_ctr:04x} {' '*(spc%16)}", end='')
                     while recv_bytes < length:
                         received = ser.read()
                         received_data += received
