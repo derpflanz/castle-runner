@@ -5,6 +5,14 @@
 byte resb_lo = 0;
 byte resb_hi = 0;
 
+struct header {
+  uint16_t start_address;       // address where to start reading/writing
+  uint16_t length;              // length of read/write
+  uint16_t resb;                // value to store in the RESB vector (0xfffc-0xfffd)
+  uint16_t irq;                 // value to store in the IRQ/BRK vector (0xfffe-0xffff)
+  uint16_t nmi;                 // value to store in the NMI vector (0xfffa-0xfffb)
+};
+
 void setup() {
   Communication.setup();
   Memory.setup();
@@ -20,21 +28,21 @@ void idle() {
   Communication.sendByte(SYN);
 }
 
-byte receive_header(unsigned long *data_length) {
+byte receive_header(header *the_header) {
   byte digit, recv, command = CMD_NOTHING;
 
   do {
     recv = Communication.receiveByte();
   } while (recv != SOH);
 
-  *data_length = 0;
+  the_header->length = 0;
   command = Communication.receiveByte();
 
   while ( (digit = Communication.receiveByte()) != ETB) {
-    *data_length = (*data_length * 10) + (digit - '0');
+    the_header->length = (the_header->length * 10) + (digit - '0');
   }
 
-  if (*data_length <= HEXFILE_MAX_SIZE) {
+  if (the_header->length <= HEXFILE_MAX_SIZE) {
     Communication.sendByte(ACK);
   } else {
     Communication.sendByte(NAK);
@@ -91,18 +99,18 @@ void send_data(unsigned int data_length) {
 }
 
 void loop() {
-  unsigned long data_length = 0;
+  header the_header;
   idle();
-  byte command = receive_header(&data_length);
+  byte command = receive_header(&the_header);
 
   if (command == CMD_WRITE_EEPROM) {
     // the first two byte of the HEX file
     // are the lo and hi bytes of the first opcode
     // (the RESB vector); they will be valid after
     // "receive_data"
-    receive_data(data_length);
+    receive_data(the_header.length);
   } else if (command == CMD_READ_EEPROM) {
-    send_data(data_length);
+    send_data(the_header.length);
   }
 
   Communication.sendByte(EOT);
