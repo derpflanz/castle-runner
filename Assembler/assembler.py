@@ -3,12 +3,17 @@ from fileprocessing import lexer, opcodes
 from directives import directives
 import sly
 
+def print_labels(labels):
+    for label,address in labels.items():
+        print(f"{label:30}: {address}")
+
 parser = argparse.ArgumentParser(description='6502 Assembler')
 parser.add_argument('inputfile', type=str, help='.asm file to process')
 parser.add_argument('outputfile', type=str, help='Binary .hex file to generate')
 parser.add_argument('-c', '--opcodefile', type=str, help='Opcode file to use')
 parser.add_argument('-d', '--debuginfo', type=str, help='Where to store debug info')
 parser.add_argument('-r', '--result', action='store_true', help='Show resulting code')
+parser.add_argument('-l', '--show-labels', action='store_true', help='Show generated label addresses')
 parser.add_argument('-s', '--starting-address', type=str, default='8000',
     help='Starting address, in HEX (e.g. -s 8000). The address of the first opcode is stored at the beginning of the file. Default is 8000.')
 parser.add_argument('-t', '--target', choices=['c64', 'cr1'], default='cr1', help='Type of HEX file. "c64" will put location on where to store the image, "cr1" will set the RESB vector to the first opcode.')
@@ -38,7 +43,7 @@ except:
     sys.exit(1)
 
 print(f"Going to create HEX file for target '{args.target}'")
-print(f"Using ${args.starting_address} as starting address")
+print(f"Using ${args.starting_address} as starting address, all labels will be calculated from here.")
 
 with open(args.inputfile, 'r') as ifile:
     # read the lines of the file into an array, so we can safely edit them
@@ -79,6 +84,15 @@ with open(args.outputfile, 'wb') as ofile:
         if first_opcode_address == None:
             raise SyntaxError('No opcodes found. This ASM file is useless.')
 
+        if args.show_labels:
+            print_labels(labels)
+
+        if ":HW_IRQ" not in labels:
+            raise SyntaxError("Assembly had no interrupt handler and no default implemented. Stop.")
+
+        irq_address = int(labels[':HW_IRQ'], 16)
+        print(f"Using ${irq_address:04x} as the interrupt vector.")
+
         # then preprocess the lines, replacing all labels and string names with their hex operand
         # this way, the assembler only needs to handle hex operands
         preprocessed_lines = []
@@ -101,6 +115,7 @@ with open(args.outputfile, 'wb') as ofile:
             ofile.write(starting_address.to_bytes(2, 'little'))
         else:
             ofile.write(first_opcode_address.to_bytes(2, 'little'))
+            ofile.write(irq_address.to_bytes(2, 'little'))
 
         linenumber = 1
         for line in preprocessed_lines:
@@ -136,4 +151,3 @@ with open(args.outputfile, 'wb') as ofile:
     finally:
         directives.Finalise()
 
-            
