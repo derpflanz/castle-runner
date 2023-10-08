@@ -194,4 +194,3 @@ LDA HI(@SPLASH)
 STA $81
 JSR :DisplayString
 RTS
-
