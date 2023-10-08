@@ -25,7 +25,7 @@ class Eeprom:
         if self._verbose == True:
             print(message, end=end)
 
-    def _send_header(self, ser, command, start_address, length, resb):
+    def _send_header(self, ser, command, start_address, length, resb = 0, irq = 0):
         result = False
 
         # wait a little for the Nano to wake up
@@ -42,7 +42,14 @@ class Eeprom:
                 self._print(received.decode('iso-8859-1'), end='')
                 head_bytes_received += 1
                 
-        self._print(f"Sending header: command {command}, start_address: {start_address}, length: {length}, resb: {resb}")
+        self._print(f"""
+                    Sending header: 
+                    command {command}
+                    start_address: {start_address} 
+                    length of data: {length} 
+                    resb vector: {resb}
+                    irq vector: {irq}
+        """)
 
         ser.write(SOH)
         ser.write(command)
@@ -51,6 +58,8 @@ class Eeprom:
         ser.write(str.encode(f"{length}"))
         ser.write(US)
         ser.write(str.encode(f"{resb}"))
+        ser.write(US)
+        ser.write(str.encode(f"{irq}"))
         ser.write(ETB)
 
         received = ser.read()
@@ -72,15 +81,16 @@ class Eeprom:
             # resb is stored little endian in file, we need it as an ascii
             # hex address for the programmer
             resb = f"{_bytes[1]:x}{_bytes[0]:x}"
+            irq =  f"{_bytes[3]:x}{_bytes[2]:x}"
 
-            if self._send_header(ser, WRITE, 0, len(_bytes) - 2, resb):
+            if self._send_header(ser, WRITE, 0, len(_bytes) - 4, resb, irq):
                 self._print("Header sent, continuing with sending data.")
                 
                 ser.write(STX)
 
                 self._print("")
                 self._print("0000 ", end='')
-                for b in _bytes[2:]:
+                for b in _bytes[4:]:
                     ser.write(bytes([b]))
 
                     byte_read = ser.read()
@@ -121,7 +131,7 @@ class Eeprom:
         received_data = b''
 
         with serial.Serial(self._port, self._speed) as ser:
-            if self._send_header(ser, READ, start_address, length, 0):
+            if self._send_header(ser, READ, start_address, length):
                 self._print("Header sent, continuing with reading data.")
                 received = ser.read()
 
