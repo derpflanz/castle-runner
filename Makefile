@@ -13,3 +13,5 @@ run: vm game
 test: vm
 	make -C GameCode test
 	
+program: game
+	make -C GameCode program

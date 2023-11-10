@@ -11,7 +11,7 @@
 ; USAGE     JSR :InitCR
 ; RESULT    Initialises the computer, needs to be called always as first statement
 :InitCR
-SEI             ; Disable interrupts
+CLI             ; Enable interrupts
 CLD             ; Clear "D" flag: use binary mode (instead of BCD)
 RTS
 

@@ -7,6 +7,8 @@
 
 @GAMEOVER    "Game Over!"
 
+@INTERRUPTS "IRQ Works!"
+
 CLD
 LDX #$ff        ; Initialise stack on 0x01ff
 TXS
@@ -183,15 +185,16 @@ JSR :DisplayString
 RTS
 
 :HW_IRQ
+SEI
 LDA #$01
 STA $80
-LDA #$05
+LDA #$03
 STA $81
 JSR :DisplayGotoXY
-LDA LO(@SPLASH)
+LDA LO(@INTERRUPTS)
 STA $80
-LDA HI(@SPLASH)
+LDA HI(@INTERRUPTS)
 STA $81
 JSR :DisplayString
-RTS
-
+CLI
+RTI

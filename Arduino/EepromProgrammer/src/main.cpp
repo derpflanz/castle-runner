@@ -63,7 +63,8 @@ byte receive_header(header *the_header) {
 
   the_header->start_address = get_address(US);
   the_header->length = get_decimal(US);
-  the_header->resb = get_address(ETB);
+  the_header->resb = get_address(US);
+  the_header->irq = get_address(ETB);
  
   if ((the_header->start_address + the_header->length) <= HEXFILE_MAX_SIZE) {
     Communication.sendByte(ACK);
@@ -125,7 +126,11 @@ void loop() {
   byte command = receive_header(&the_header);
 
   if (command == CMD_WRITE_EEPROM) {
+    // not the 0x7ffc/0x7ffe because we write onto a 32kB EEPROM
+    // these addresses translate to 0xfffc and 0xfffe on the 6502
+    // because the RAM has addresses 0x000-0x7fff
     write_vector(the_header.resb, 0x7ffc);
+    write_vector(the_header.irq, 0x7ffe);
     receive_data(the_header.length);
   } else if (command == CMD_READ_EEPROM) {
     send_data(the_header.start_address, the_header.length);
