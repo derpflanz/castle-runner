@@ -259,6 +259,7 @@ static void abso() { //absolute
 }
 
 static void absx() { //absolute,X
+    sprintf(addressing, "$%04x,X", (read6502(pc) | read6502(pc+1) << 8));
     uint16_t startpage;
     ea = ((uint16_t)read6502(pc) | ((uint16_t)read6502(pc+1) << 8));
     startpage = ea & 0xFF00;
@@ -272,6 +273,7 @@ static void absx() { //absolute,X
 }
 
 static void absy() { //absolute,Y
+    sprintf(addressing, "$%04x,Y", (read6502(pc) | read6502(pc+1) << 8));
     uint16_t startpage;
     ea = ((uint16_t)read6502(pc) | ((uint16_t)read6502(pc+1) << 8));
     startpage = ea & 0xFF00;
