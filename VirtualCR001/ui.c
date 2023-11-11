@@ -149,7 +149,7 @@ void ui_init() {
     nodelay(stdscr, TRUE);
     keypad(stdscr, TRUE);
 
-    printw("F5: start/stop; F6: reset; F8: exit; F10: step");
+    printw("F5: start/stop; F6: reset; F7: IRQ; F8: exit; F10: step");
     refresh();
 
     _init_memory_log();

@@ -6,6 +6,7 @@
 void step6502();
 void reset6502();
 void exec6502(uint32_t tickcount);
+void irq6502();
 
 #define FLAG_CARRY     0x01
 #define FLAG_ZERO      0x02
