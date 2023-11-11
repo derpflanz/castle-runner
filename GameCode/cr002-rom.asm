@@ -90,6 +90,76 @@ JMP :_LoopDisplayString
 :_EndDisplayString
 RTS
 
+; NAME      Dec2Ascii
+; USAGE     Load byte to convert into ACCU, and target address in $80-$81
+; EXAMPLE   LDA #$40
+;           STA $80
+;           LDA #$00
+;           STA $81
+;           LDA #$bf
+;           JSR :Dec2Ascii
+; RESULT    The string pointed to in $80 will have the decimal in ascii, as a zero terminated string
+:Dec2Ascii
+PHA
+LDY #$00        ; initialise target (000\0)
+LDA '0'
+STA ($80),Y
+INY
+STA ($80),Y
+INY
+STA ($80),Y
+INY
+LDA #$00
+STA ($80),Y
+LDY #$00
+PLA
+
+:__hundreds     ; subtract hundreds until we go through zero
+SEC
+SBC #$64        ; $64 = 100
+BCC :__tens_start
+PHA
+CLC
+LDA ($80),Y
+ADC #$01
+STA ($80),Y
+PLA
+JMP :__hundreds
+
+:__tens_start   ; subtract tens until we go through zero
+ADC #$64
+INY
+:__tens
+SEC
+SBC #$0A
+BCC :__ones_start
+PHA
+CLC
+LDA ($80),Y
+ADC #$01
+STA ($80),Y
+PLA
+JMP :__tens
+
+:__ones_start   ; subtract ones until we go through zero
+ADC #$0A
+INY
+:__ones
+SEC
+SBC #$01
+BCC :__done
+PHA
+CLC
+LDA ($80),Y
+ADC #$01
+STA ($80),Y
+PLA
+
+JMP :__ones
+
+:__done
+RTS
+
 ; Below is actual IO, called from the IRQ handler
 
 ; NAME      InitDisplay
