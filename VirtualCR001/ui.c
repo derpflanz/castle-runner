@@ -166,8 +166,13 @@ void ui_writelog(int target, const char *format, ...) {
     wrefresh(win);
 }
 
+extern uint16_t ea;
 void ui_update_ram(uint16_t base_address) {
-    _mem_wshow(memory_win, ram, base_address, 0, NULL, 0);
+    uint16_t epoints[2];
+    epoints[0] = ea;
+    epoints[1] = 0;
+
+    _mem_wshow(memory_win, ram, base_address, 0, epoints, 0);
     box(memory_win, 0, 0);
     mvwprintw(memory_win, 0, 0, "[MEMORY 0x4000=%02x]", read6502(0x4000));
     wrefresh(memory_win);
@@ -183,7 +188,7 @@ void ui_update_ram(uint16_t base_address) {
     mvwprintw(stack_win, 0, 0, "[STACK SP=01%02x]", sp);
     wrefresh(stack_win);
 
-    _mem_wshow(video_win, ram, 0x3000, 0x0000, NULL, 0);
+    _mem_wshow(video_win, ram, 0x3000, 0x0000, epoints, 0);
     box(video_win, 0, 0);
     mvwprintw(video_win, 0, 0, "[VIDEO]");
     wrefresh(video_win);
