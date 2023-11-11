@@ -39,16 +39,14 @@ BEQ :__add_column
 :__loop_rows
 LDA #$13
 ADC $3000           ; video_ptr += $13  (20d)
+STA $3000
 DEC $80             ; row--
 BEQ :__add_column   ; if row == 0: goto __add_column
 JMP :__loop_rows
-
 :__add_column
 LDA $3000           ; video_ptr += col
 ADC $81
 STA $3000
-
-BRK
 RTS
 
 ; NAME      DisplayChar
