@@ -9,7 +9,7 @@
 
 WINDOW *memory_log, *io_log;
 WINDOW *lcd;
-WINDOW *memory_win, *rom_win, *stack_win;
+WINDOW *memory_win, *rom_win, *stack_win, *video_win;
 
 WINDOW *_create_newwin(int height, int width, int starty, int startx)
 {	
@@ -113,12 +113,13 @@ void _init_memory_log() {
 }
 
 void _init_memory_windows() {
-    int stack_height = 10;
+    int video_height = 5, stack_height = 5;
     int rom_height = 15;
 
-    memory_win = _create_newwin(LINES - 10 - rom_height - stack_height, COLS / 2, 1, COLS / 2);
-    rom_win = _create_newwin(rom_height, COLS / 2, LINES - 9 - stack_height - rom_height, COLS / 2);
-    stack_win = _create_newwin(stack_height, COLS / 2, LINES - 9 - stack_height, COLS / 2);
+    memory_win = _create_newwin(LINES - 10 - rom_height - stack_height - video_height, COLS / 2, 1, COLS / 2);
+    rom_win = _create_newwin(rom_height, COLS / 2, LINES - 9 - stack_height - rom_height - video_height, COLS / 2);
+    stack_win = _create_newwin(stack_height, COLS / 2, LINES - 9 - stack_height - video_height, COLS / 2);
+    video_win = _create_newwin(video_height, COLS / 2, LINES - 9 - video_height, COLS / 2);
 }
 
 void ui_print_lcd(char character, int row, int column) {
@@ -181,4 +182,9 @@ void ui_update_ram(uint16_t base_address) {
     box(stack_win, 0, 0);
     mvwprintw(stack_win, 0, 0, "[STACK SP=01%02x]", sp);
     wrefresh(stack_win);
+
+    _mem_wshow(video_win, ram, 0x3000, 0x0000, NULL, 0);
+    box(video_win, 0, 0);
+    mvwprintw(video_win, 0, 0, "[VIDEO]");
+    wrefresh(video_win);
 }
