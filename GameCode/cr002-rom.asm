@@ -6,7 +6,7 @@
 ; Memory map:
 ; VIDEO  0x3000 - 0x3FFF reserved for video related stuff
 ;        0x3000: Video ptr (i.e. cursor)
-;        0x3100: Start of video data
+;        0x3010: Start of video data
 ; OUTPUT 0x4000 - 0x4001 are connected to the display
 ; $80 - $8F     - used for parameters
 
@@ -54,7 +54,7 @@ RTS
 ; RESULT    The cursor is placed on location <location>
 ; NOTE      This call is unnecessary but included for completeness
 ;           as it just stores the video pointer
-:DisplayGotoRowCol
+:DisplayGotoLocation
 STA $3000
 RTS
 
@@ -65,9 +65,30 @@ RTS
 ;           JSR :DisplayChar
 ; RESULT    The character in ACCU put put on display
 :DisplayChar
+LDX $3000
+STA $3010,X
+RTS
 
-
-
+; NAME      DisplayString
+; USAGE     Load lo-byte of start address of string in $80, hibyte in $81
+; EXAMPLE   LDA LO(@INFO)
+;           STA $80
+;           LDA HI(@INFO)
+;           STA $81
+;           JSR :DisplayString
+; RESULT    The string pointed to in $0010-$0011 will put put on display
+:DisplayString
+LDY #$00            ; y = 0
+:_LoopDisplayString
+LDA ($80),Y
+BEQ :_EndDisplayString
+LDX $3000
+STA $3010,X
+INY
+INC $3000
+JMP :_LoopDisplayString
+:_EndDisplayString
+RTS
 
 ; Below is actual IO, called from the IRQ handler
 
