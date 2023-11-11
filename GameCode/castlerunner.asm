@@ -14,7 +14,6 @@ LDX #$ff        ; Initialise stack on 0x01ff
 TXS
 
 JSR :InitCR
-JSR :InitDisplay
 
 ; Initialise memory
 ; Steps left        = $f0          -> when this is 0: Game Over!
