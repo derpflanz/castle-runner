@@ -6,6 +6,7 @@
 #include "generic.h"
 #include "fake6502.h"
 #include "memory.h"
+#include <ctype.h>
 
 WINDOW *memory_log, *io_log;
 WINDOW *lcd;
@@ -65,7 +66,7 @@ char *_flags(uint8_t value) {
 /* Shows memory in a window, "highlight" will be set blue, the list of addresses in 
    "extra_highlight" will be set red
 */
-void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highlight, uint16_t *extra_highlights, int stack) {
+void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highlight, uint16_t *extra_highlights, int stack, int printable) {
     int width, height;
     int direction = stack?-1:1;
 
@@ -86,7 +87,11 @@ void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highl
             if (pointer == highlight) {
                 wbkgdset(win, COLOR_PAIR(1));
             }
-            wprintw(win, "%02x", mem[pointer]);
+            if (printable == 1 && isprint(mem[pointer])) {
+                wprintw(win, "%c ", mem[pointer]);
+            } else {
+                wprintw(win, "%02x", mem[pointer]);
+            }
             wbkgdset(win, COLOR_PAIR(2));
             wprintw(win, " ");
             pointer += direction;
@@ -113,8 +118,8 @@ void _init_memory_log() {
 }
 
 void _init_memory_windows() {
-    int video_height = 5, stack_height = 5;
-    int rom_height = 15;
+    int video_height = 10, stack_height = 5;
+    int rom_height = 10;
 
     memory_win = _create_newwin(LINES - 10 - rom_height - stack_height - video_height, COLS / 2, 1, COLS / 2);
     rom_win = _create_newwin(rom_height, COLS / 2, LINES - 9 - stack_height - rom_height - video_height, COLS / 2);
@@ -172,23 +177,23 @@ void ui_update_ram(uint16_t base_address) {
     epoints[0] = ea;
     epoints[1] = 0;
 
-    _mem_wshow(memory_win, ram, base_address, 0, epoints, 0);
+    _mem_wshow(memory_win, ram, base_address, 0, epoints, 0, 0);
     box(memory_win, 0, 0);
     mvwprintw(memory_win, 0, 0, "[MEMORY 0x4000=%02x]", read6502(0x4000));
     wrefresh(memory_win);
 
-    _mem_wshow(rom_win, ram, 0x8000, pc, breakpoints, 0);
+    _mem_wshow(rom_win, ram, 0x8000, pc, breakpoints, 0, 0);
     box(rom_win, 0, 0);
     mvwprintw(rom_win, 0, 0, "[ROM PC=%04x A=%02x X=%02x Y=%02x STATUS=%s #=%d TICKS=%d]", 
         pc, a, x, y, _flags(status), instructions, clockticks6502);
     wrefresh(rom_win);
 
-    _mem_wshow(stack_win, ram, 0x01ff, (0x0100 | sp), NULL, 1);
+    _mem_wshow(stack_win, ram, 0x01ff, (0x0100 | sp), NULL, 1, 0);
     box(stack_win, 0, 0);
     mvwprintw(stack_win, 0, 0, "[STACK SP=01%02x]", sp);
     wrefresh(stack_win);
 
-    _mem_wshow(video_win, ram, 0x3000, 0x0000, epoints, 0);
+    _mem_wshow(video_win, ram, 0x3000, 0x0000, epoints, 0, 1);
     box(video_win, 0, 0);
     mvwprintw(video_win, 0, 0, "[VIDEO]");
     wrefresh(video_win);
