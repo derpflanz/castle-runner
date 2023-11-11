@@ -77,7 +77,7 @@ LDA #$01
 STA $80
 LDA #$05
 STA $81
-JSR :DisplayGotoXY
+JSR :DisplayGotoRowCol
 LDA LO(@GAMEOVER)
 STA $80
 LDA HI(@GAMEOVER)
@@ -139,7 +139,7 @@ LDA $f2
 STA $80
 LDA $f3
 STA $81
-JSR :DisplayGotoXY
+JSR :DisplayGotoRowCol
 LDA ' '
 JSR :DisplayChar
 RTS
@@ -149,7 +149,7 @@ LDA $f2
 STA $80
 LDA $f3
 STA $81
-JSR :DisplayGotoXY
+JSR :DisplayGotoRowCol
 LDA 'X'
 JSR :DisplayChar
 RTS
@@ -159,7 +159,7 @@ LDA #$00
 STA $80
 LDA #$11
 STA $81
-JSR :DisplayGotoXY
+JSR :DisplayGotoRowCol
 LDA #$40
 STA $80
 LDA #$00
@@ -174,7 +174,7 @@ LDA #$01
 STA $80
 LDA #$11
 STA $81
-JSR :DisplayGotoXY
+JSR :DisplayGotoRowCol
 LDA #$40
 STA $80
 LDA #$00
@@ -190,7 +190,7 @@ LDA #$01
 STA $80
 LDA #$03
 STA $81
-JSR :DisplayGotoXY
+JSR :DisplayGotoRowCol
 LDA LO(@INTERRUPTS)
 STA $80
 LDA HI(@INTERRUPTS)
