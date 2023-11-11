@@ -35,17 +35,15 @@ STA $f2
 LDA #$0a
 STA $f3
 
-
 ; Draw fixed content on screen
 LDA #$10
-JSR :DisplaySetAddress
+JSR :DisplayGotoLocation
 LDA 'S'
 JSR :DisplayChar
-LDA #$50
-JSR :DisplaySetAddress
+LDA #$24
+JSR :DisplayGotoLocation
 LDA 'G'
 JSR :DisplayChar
-
 
 ; Main loop
 ; 1. Draw scores

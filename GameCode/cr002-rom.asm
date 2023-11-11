@@ -29,7 +29,6 @@ RTS
 ;           JSR :DisplayGotoRowCol
 ; RESULT    The cursor is placed on location <row>,<col>
 ;           Row and column are 0-based
-; NOTE      This call is unnecessary but included for completeness
 :DisplayGotoRowCol
 LDA #$00
 STA $3000           ; video_ptr = 0
@@ -48,6 +47,17 @@ LDA $3000           ; video_ptr += col
 ADC $81
 STA $3000
 RTS
+
+; NAME      DisplayGotoLocation
+; USAGE     LDA <location>
+;           JSR :DisplayGotoLocation
+; RESULT    The cursor is placed on location <location>
+; NOTE      This call is unnecessary but included for completeness
+;           as it just stores the video pointer
+:DisplayGotoRowCol
+STA $3000
+RTS
+
 
 ; NAME      DisplayChar
 ; USAGE     Load character to display in ACCU
