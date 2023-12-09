@@ -1,16 +1,20 @@
 ; This is the CR002 ROM
 ; 
 ; This ROM provides routines to use the CR002 computer
-; - Video now runs in an interrupt
+; - Video now runs in an interrupt and is 320x240 pixels big
 ;
 ; Memory map:
-; VIDEO  0x3000 - 0x3FFF reserved for video related stuff
-;        0x3000: Video ptr (i.e. cursor)
-;        0x3001: LCD init (00 = not initalised, 01 = initialised)
-;        0x3010: Start of video data
-; OUTPUT 0x4000 - 0x4001 are connected to the display
+; VIDEO  0x0200 - 0x2FFF reserved for video related stuff (12kB)
+;        0x0200: Video ptr (i.e. cursor)
+;        0x0201: LCD init (00 = not initalised, 01 = initialised)
+;        0x0202: Control register to be sent
+;        0x0210: Start of video data
+; OUTPUT 0x4000 is display data (D0-D7)
+;        0x4001 is display control:
+;                   bit0: /WR
+;                   bit1: RS (1=cmd, 0=data)
+;                   bit2: /RESET
 ; $80 - $8F     - used for parameters
-
 
 ; NAME      InitCR
 ; USAGE     JSR :InitCR
@@ -20,6 +24,40 @@ CLI             ; Enable interrupts
 CLD             ; Clear "D" flag: use binary mode (instead of BCD)
 LDA #$00        ; one shot to init LCD
 STA $3001
+RTS
+
+:InitDisplay
+; #### Display INIT
+LDA #$00
+STA $4000       ; DATA = 0
+STA $4001       ; CTRL = 0
+
+; First, set the RESET
+LDA #$01        ; WR=1, RS=0, RES=0
+STA $0202
+STA $4001
+
+LDA #$ff        ; number of full cycles to make $ff = 8ms
+STA $80
+
+:__delay
+LDA #$ff
+:_aa
+DEC
+BNE :_aa
+LDA $80
+DEC
+STA $80
+BNE :__delay
+
+LDA #$05        ; WR=1, RS=0, RES=1
+STA $4001
+
+
+
+
+LDA #$01        ; Display is initialised
+STA $0201
 RTS
 
 ; Public display calls
@@ -166,25 +204,6 @@ RTS
 ; Below is actual IO, called from the IRQ handler
 :HW_IRQ
 SEI
-LDA $3001
-BNE :_UpdateDisplay
-
-LDA #$01
-STA $3001
-
-; #### Display INIT
-LDA #$00
-STA $4000       ; DATA = 0
-STA $4001       ; CTRL = 0
-
-LDA #$38        ; set 8 bit mode; 2 line display; 5x8 dot char
-JSR :_DisplayInstruction
-LDA #$01        ; clear display
-JSR :_DisplayInstruction
-LDA #$0C        ; display on, cursor off, blinking off
-JSR :_DisplayInstruction
-LDA #$06        ; increase on write, no display shift
-JSR :_DisplayInstruction
 
 :_UpdateDisplay
 

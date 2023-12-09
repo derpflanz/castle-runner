@@ -12,6 +12,7 @@ LDX #$ff        ; Initialise stack on 0x01ff
 TXS
 
 JSR :InitCR
+JSR :InitDisplay
 
 ; Initialise memory
 ; Steps left        = $f0          -> when this is 0: Game Over!
@@ -78,7 +79,7 @@ BRK
 
 :MoveRunner
 LDA $f5
-AND #$fc            ; we allow 4 rows; 0b00 to 0b11
+AND #$fc            ; we allow 4 rows: 0b00 to 0b11
 BEQ :__DoMoveRow
 RTS
 :__DoMoveRow
