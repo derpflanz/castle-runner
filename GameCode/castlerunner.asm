@@ -2,11 +2,9 @@
 ; It uses the cr001-rom.asm library
 
 ; DATA
-@SPLASH   "Castle Runner"       ; 13 characters, X=3 to middle it
-@COPYRIGHT "2021"
-
-@GAMEOVER    "Game Over!"
-
+@SPLASH     "Castle Runner"       ; 13 characters, X=3 to middle it
+@COPYRIGHT  "2021"
+@GAMEOVER   "Game Over!"
 @INTERRUPTS "IRQ Works!"
 
 CLD
@@ -45,10 +43,6 @@ JSR :DisplayGotoLocation
 LDA 'G'
 JSR :DisplayChar
 
-; Main loop
-; 1. Draw scores
-; 2. Draw x
-
 :loop
 JSR :DrawRunner
 JSR :PrintGold
@@ -80,7 +74,6 @@ STA $80
 LDA HI(@GAMEOVER)
 STA $81
 JSR :DisplayString
-
 BRK
 
 :MoveRunner
@@ -180,18 +173,3 @@ LDA $f1
 JSR :Dec2Ascii
 JSR :DisplayString
 RTS
-
-:HW_IRQ
-SEI
-LDA #$01
-STA $80
-LDA #$03
-STA $81
-JSR :DisplayGotoRowCol
-LDA LO(@INTERRUPTS)
-STA $80
-LDA HI(@INTERRUPTS)
-STA $81
-JSR :DisplayString
-CLI
-RTI

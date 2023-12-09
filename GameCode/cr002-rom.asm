@@ -6,6 +6,7 @@
 ; Memory map:
 ; VIDEO  0x3000 - 0x3FFF reserved for video related stuff
 ;        0x3000: Video ptr (i.e. cursor)
+;        0x3001: LCD init (00 = not initalised, 01 = initialised)
 ;        0x3010: Start of video data
 ; OUTPUT 0x4000 - 0x4001 are connected to the display
 ; $80 - $8F     - used for parameters
@@ -17,6 +18,8 @@
 :InitCR
 CLI             ; Enable interrupts
 CLD             ; Clear "D" flag: use binary mode (instead of BCD)
+LDA #$00        ; one shot to init LCD
+STA $3001
 RTS
 
 ; Public display calls
@@ -161,11 +164,15 @@ JMP :__ones
 RTS
 
 ; Below is actual IO, called from the IRQ handler
+:HW_IRQ
+SEI
+LDA $3001
+BNE :_UpdateDisplay
 
-; NAME      InitDisplay
-; USAGE     JSR :InitDisplay
-; RESULT    Initialises the display. It will be set to 8-bit mode, cleared and switched on.
-:InitDisplay
+LDA #$01
+STA $3001
+
+; #### Display INIT
 LDA #$00
 STA $4000       ; DATA = 0
 STA $4001       ; CTRL = 0
@@ -178,7 +185,15 @@ LDA #$0C        ; display on, cursor off, blinking off
 JSR :_DisplayInstruction
 LDA #$06        ; increase on write, no display shift
 JSR :_DisplayInstruction
-RTS             ; /InitDisplay
+
+:_UpdateDisplay
+
+; 0-row1 40-row2 14-row3 54-row4
+
+
+CLI             ; Enable intterupts
+RTI             ; And we're done
+
 
 ; NAME      DisplayHome
 ; USAGE     JSR :DisplayHome           
