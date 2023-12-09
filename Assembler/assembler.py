@@ -136,16 +136,16 @@ with open(args.outputfile, 'wb') as ofile:
             linenumber += 1
 
     except opcodes.OpcodeError as err:
-        print(f"ERROR: {err} in line {linenumber}")
+        print(f"OPCODE ERROR: {err} in line {linenumber}")
         print(f"Hex file {args.outputfile} was not written correctly.")
         sys.exit(1)
     except SyntaxError as err:
-        print(f"ERROR: {err}")
+        print(f"SYNTAX ERROR: {err}")
         print(f"Hex file {args.outputfile} was not written correctly.")
         sys.exit(1)
     except sly.lex.LexError as err:
         print(f"[{linenumber:5}:    ] {line.strip()}")
-        print(f"ERROR: {err}")
+        print(f"LEXER ERROR: {err}")
         print(f"Hex file {args.outputfile} was not written correctly.")
         sys.exit(1)
     finally:

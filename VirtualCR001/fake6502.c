@@ -259,6 +259,7 @@ static void abso() { //absolute
 }
 
 static void absx() { //absolute,X
+    sprintf(addressing, "$%04x,X", (read6502(pc) | read6502(pc+1) << 8));
     uint16_t startpage;
     ea = ((uint16_t)read6502(pc) | ((uint16_t)read6502(pc+1) << 8));
     startpage = ea & 0xFF00;
@@ -272,6 +273,7 @@ static void absx() { //absolute,X
 }
 
 static void absy() { //absolute,Y
+    sprintf(addressing, "$%04x,Y", (read6502(pc) | read6502(pc+1) << 8));
     uint16_t startpage;
     ea = ((uint16_t)read6502(pc) | ((uint16_t)read6502(pc+1) << 8));
     startpage = ea & 0xFF00;
@@ -965,9 +967,9 @@ void step6502() {
     (*optable[opcode])();
     if (addressing[0] == '\0' || addressing[0] == '#') {
         // immediate and implied have no EA
-        ui_writelog(IOLOG, "%s %s\n", mnemonics[opcode], addressing);
+        ui_writelog(IOLOG, "#%02x %s %s\n", opcode, mnemonics[opcode], addressing);
     } else {
-        ui_writelog(IOLOG, "%s %s\t[ea=%04x]\n", mnemonics[opcode], addressing, ea);
+        ui_writelog(IOLOG, "#%02x %s %s\t[ea=%04x]\n", opcode, mnemonics[opcode], addressing, ea);
     }
 
     clockticks6502 += ticktable[opcode];

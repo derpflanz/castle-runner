@@ -1,6 +1,7 @@
 # assembler stuff
 ASM_BASE=../Assembler/
 ASM_FILES=castlerunner.asm cr001-rom.asm 
+ASM2_FILES=castlerunner.asm cr002-rom.asm
 DEBUGFILE=castlerunner.debug
 ASM_FLAGS=-s8000 --opcodefile $(ASM_BASE)w65c02s_opcodes.txt --debuginfo=$(DEBUGFILE) 
 ASSEMBLER=python $(ASM_BASE)assembler.py
@@ -24,6 +25,10 @@ TMP_FILE=/tmp/__program__.asm
 
 all: $(ASM_FILES)
 	cat $(ASM_FILES) > $(TMP_FILE)
+	$(ASSEMBLER) $(ASM_FLAGS) $(TMP_FILE) $(OUTPUT)
+
+cr002: $(ASM2_FILES)
+	cat $(ASM2_FILES) > $(TMP_FILE)
 	$(ASSEMBLER) $(ASM_FLAGS) $(TMP_FILE) $(OUTPUT)
 
 $(OUTPUT): all

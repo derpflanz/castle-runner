@@ -9,10 +9,10 @@
 uint8_t *ram;
 uint8_t io_port0;
 
-uint16_t _getresetvector(FILE *f) {
-    int resb_low = fgetc(f);
-    int resb_hi  = fgetc(f);
-    return resb_hi << 8 | resb_low;
+uint16_t _getvector(FILE *f) {
+    int low = fgetc(f);
+    int hi  = fgetc(f);
+    return hi << 8 | low;
 }
 
 long _getsize(FILE *f) {
@@ -28,6 +28,13 @@ void setresb(uint16_t address) {
     ram[0xfffc] = (uint8_t) (address & 0x00ff);
     ram[0xfffd] = (uint8_t) (address >> 8);
 }
+
+void setirq(uint16_t address) {
+    // write the address into 0xfffe and 0xffff
+    ram[0xfffe] = (uint8_t) (address & 0x00ff);
+    ram[0xffff] = (uint8_t) (address >> 8);
+}
+
 
 void mem_init() {    
     ram = malloc(sizeof(uint8_t) * _64K);
@@ -50,9 +57,11 @@ void mem_show(uint16_t base_address, uint16_t length) {
 int mem_readfile(const char *hexfilename) {
     FILE *f = fopen(hexfilename, "rb");
     long image_size = _getsize(f) - 2;           // minus 2 to accomodate for the RESB vector the image starts with
-    uint16_t reset_vector = _getresetvector(f);
+    uint16_t reset_vector = _getvector(f);
+    uint16_t irq_vector = _getvector(f);                              // read and ignore for now (VM has no IRQ support yet)
     uint16_t base_address = 0x8000;             // CR001 start of ROM
     setresb(reset_vector);
+    setirq(irq_vector);
 
     long available_size = _64K - base_address;
 
@@ -92,7 +101,6 @@ void write6502(uint16_t address, uint8_t value) {
         ram[address] = value;
     }
 }
-
 
 void set_io(int port, uint8_t value) {
     io_port0 = value;

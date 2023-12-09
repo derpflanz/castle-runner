@@ -46,11 +46,11 @@ class AsmLexer(Lexer):
     OPCODE          = r'[A-Z]{3}[0-9]?'
 
     # operands
-    ABSOLUTE        = r'\$[0-9a-fA-F]{4}'                                   # ex. $4fe4             a       Absolute (1)
-    ABSINDIND       = r'\$\([0-9a-fA-F]{4},[Xx]\)'                          # ex. ($4fe4,x)         (a,x)   Absolute Indexed Indirect (2)
     ABSINDEXX       = r'\$[0-9a-fA-F]{4},[Xx]'                              # ex. $7fe4,X           a,x     Absolute Indexed with X (3)
     ABSINDEXY       = r'\$[0-9a-fA-F]{4},[Yy]'                              # ex. $7fe4,Y           a,y     Absolute Indexed with Y (4)
+    ABSINDIND       = r'\$\([0-9a-fA-F]{4},[Xx]\)'                          # ex. ($4fe4,x)         (a,x)   Absolute Indexed Indirect (2)    
     INDIRECT        = r'\(\$[0-9a-fA-F]{4}\)'                               # ex. ($1000)           (a)     Absolute Indirect (5)
+    ABSOLUTE        = r'\$[0-9a-fA-F]{4}'                                   # ex. $4fe4             a       Absolute (1)    
   # ACCU                                                                    #                       A       Accumulator (6)
     IMMEDIATE       = r'\#\$[0-9a-fA-F]{1,2}|(LO|HI)\(\$[0-9a-fA-F]{4}\)'   # ex. #$1 or LO($8000)  #       Immediate (7)
   # IMPLIED                                                                 #                       i       Implied (8)

@@ -48,6 +48,9 @@ int main(int argc, char **argv) {
             reset6502();
             ui_update_ram(MEMORY_BASE);
             break;
+        case KEY_F(7):
+            irq6502();
+            break;
         case KEY_LEFT:
             set_io(0, JOY_LEFT);
             break;

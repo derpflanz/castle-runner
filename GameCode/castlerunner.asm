@@ -2,11 +2,9 @@
 ; It uses the cr001-rom.asm library
 
 ; DATA
-@SPLASH   "Castle Runner"       ; 13 characters, X=3 to middle it
-@COPYRIGHT "2021"
-
-@GAMEOVER    "Game Over!"
-
+@SPLASH     "Castle Runner"       ; 13 characters, X=3 to middle it
+@COPYRIGHT  "2021"
+@GAMEOVER   "Game Over!"
 @INTERRUPTS "IRQ Works!"
 
 CLD
@@ -14,7 +12,6 @@ LDX #$ff        ; Initialise stack on 0x01ff
 TXS
 
 JSR :InitCR
-JSR :InitDisplay
 
 ; Initialise memory
 ; Steps left        = $f0          -> when this is 0: Game Over!
@@ -36,21 +33,15 @@ STA $f2
 LDA #$0a
 STA $f3
 
-
 ; Draw fixed content on screen
 LDA #$10
-JSR :DisplaySetAddress
+JSR :DisplayGotoLocation
 LDA 'S'
 JSR :DisplayChar
-LDA #$50
-JSR :DisplaySetAddress
+LDA #$24
+JSR :DisplayGotoLocation
 LDA 'G'
 JSR :DisplayChar
-
-
-; Main loop
-; 1. Draw scores
-; 2. Draw x
 
 :loop
 JSR :DrawRunner
@@ -77,13 +68,12 @@ LDA #$01
 STA $80
 LDA #$05
 STA $81
-JSR :DisplayGotoXY
+JSR :DisplayGotoRowCol
 LDA LO(@GAMEOVER)
 STA $80
 LDA HI(@GAMEOVER)
 STA $81
 JSR :DisplayString
-
 BRK
 
 :MoveRunner
@@ -139,7 +129,7 @@ LDA $f2
 STA $80
 LDA $f3
 STA $81
-JSR :DisplayGotoXY
+JSR :DisplayGotoRowCol
 LDA ' '
 JSR :DisplayChar
 RTS
@@ -149,7 +139,7 @@ LDA $f2
 STA $80
 LDA $f3
 STA $81
-JSR :DisplayGotoXY
+JSR :DisplayGotoRowCol
 LDA 'X'
 JSR :DisplayChar
 RTS
@@ -159,7 +149,7 @@ LDA #$00
 STA $80
 LDA #$11
 STA $81
-JSR :DisplayGotoXY
+JSR :DisplayGotoRowCol
 LDA #$40
 STA $80
 LDA #$00
@@ -174,7 +164,7 @@ LDA #$01
 STA $80
 LDA #$11
 STA $81
-JSR :DisplayGotoXY
+JSR :DisplayGotoRowCol
 LDA #$40
 STA $80
 LDA #$00
@@ -183,18 +173,3 @@ LDA $f1
 JSR :Dec2Ascii
 JSR :DisplayString
 RTS
-
-:HW_IRQ
-SEI
-LDA #$01
-STA $80
-LDA #$03
-STA $81
-JSR :DisplayGotoXY
-LDA LO(@INTERRUPTS)
-STA $80
-LDA HI(@INTERRUPTS)
-STA $81
-JSR :DisplayString
-CLI
-RTI
