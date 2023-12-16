@@ -32,7 +32,7 @@ LDA #$00
 STA $4000       ; DATA = 0
 STA $4001       ; CTRL = 0
 
-; First, set the RESET
+; 1. RESET ROUTINE
 LDA #$01        ; WR=1, RS=0, RES=0
 STA $0202
 STA $4001
@@ -53,12 +53,104 @@ BNE :__delay
 LDA #$05        ; WR=1, RS=0, RES=1
 STA $4001
 
+; 2. Display initialisation
+LDA #$40            ; Initializes device and display
+JSR :__comm_out
+
+LDA #$30            ; Memory Configuration Register        0x8000, 0x03   --> Config: Origin Comp = 1, Single Panel, Char Height = 8 pixels, CGROM selected
+JSR :__data_out
+LDA #$87            ; Horizontal Character Size            0x8001, 0x07   --> HCS  =   8
+JSR :__data_out
+LDA #$07            ; Vertical Character Size              0x8002, 0x07   --> VCS  =   8
+JSR :__data_out
+LDA #$27            ; Character Bytes Per Row              0x8003, 0x27   --> C/R  =  40 chars
+JSR :__data_out
+LDA #$50            ; Total Character Bytes Per Row        0x8004, 0x50   --> TC/R =  79
+JSR :__data_out
+LDA #$EF            ; Frame Height Register                0x8005, 0xEF   --> FHR  = 240 pixels
+JSR :__data_out
+LDA #$28            ; Horizontal Address Range 0           0x8006
+JSR :__data_out
+LDA #$00            ; Horizontal Address Range 1           0x8007, 0x0028 --> HAR  =  40 addresses
+JSR :__data_out
+
+LDA #$44            ; Sets screen block start addresses and sizes
+JSR :__comm_out
+LDA #$00            ; Screen Block 1 Start Address 0       0x800b
+JSR :__data_out
+LDA #$00            ; Screen Block 1 Start Address 1       0x800c, 0x0000 --> SB1A = 0x0000
+JSR :__data_out
+LDA #$EF            ; Screen Block 1 Size                  0x800d, 0xef   --> SB1S = 240 pixels
+JSR :__data_out
+LDA #$B0            ; Screen Block 2 Start Address 0       0x800e
+JSR :__data_out
+LDA #$04            ; Screen Block 2 Start Address 1       0x800f, 0x04b0 --> SB2A = 0x04b0
+JSR :__data_out
+LDA #$EF            ; Screen Block 2 Size                  0x8010, 0xef   --> SB2S = 240 pixels
+JSR :__data_out
+LDA #$00            ; Screen Block 3 Start Address 0       0x8011
+JSR :__data_out
+LDA #$00            ; Screen Block 3 Start Address 1       0x8012, 0x0000 --> SB3A = 0x0000
+JSR :__data_out
+LDA #$00            ; Screen Block 4 Start Address 0       0x8013
+JSR :__data_out
+LDA #$00            ; Screen Block 4 Start Address 1       0x8014, 0x0000 --> SB4A = 0x0000
+JSR :__data_out
+
+LDA #$5A            ; Sets horizontal scroll position
+JSR :__comm_out
+LDA #$00            ; Horizontal Pixel Scroll              0x801b, 0x00   --> HPS  =   0  
+JSR :__data_out
+
+LDA #$5B            ; Sets display overlay format
+JSR :__comm_out
+LDA #$00            ; Overlay                              0x8018, 0x00   --> two layers, SB3 is text, SB1 is text, layers are OR'd
+JSR :__data_out
+
+LDA #$5D            ; Sets Cursor Type
+JSR :__comm_out
+LDA #$04            ; Cursor Width                         0x8015, 0x04   --> CW   =   4
+JSR :__data_out
+LDA #$86            ; Cursor Height                        0x8016, 0x86   --> CH   =   6, mode = block
+JSR :__data_out
+
+LDA #$4C            ; Sets direction of cursor movement,   0x8017, 0x4c   --> bits 00 --> Direction Right
+JSR :__comm_out
+
+LDA #$58            ; Enable / disable display
+JSR :__comm_out
+LDA #$01            ; Display Enable                       0x8009, 0x01   --> DE   = 1
+JSR :__data_out
+
+LDA #$59            ; Display attributes
+JSR :__comm_out
+LDA #$55            ; Display Attribute                    0x800a, 0x55   --> SAD3 ON, No flash; SAD2 ON, No Flash, SAD1 ON, No Flash, Cursor ON, No Flash
+JSR :__data_out
+
 
 
 
 LDA #$01        ; Display is initialised
 STA $0201
 RTS
+
+
+:__comm_out
+STA $4000       ; Data = ACCU
+LDA #$07        ; WR=1 (read), RS=1 (cmd), RES=1 (not reset)
+STA $4001
+DEC $4001
+INC $4001       ; WR=0 --> WR=1
+RTS
+
+:__data_out
+STA $4000       ; Data = ACCU
+LDA #$05        ; WR=1 (read), RS=0 (data), RES=1 (not reset)
+STA $4001
+DEC $4001
+INC $4001       ; WR=0 --> WR=1
+RTS
+
 
 ; Public display calls
 
