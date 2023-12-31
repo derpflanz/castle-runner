@@ -7,7 +7,6 @@
 ; VIDEO  0x0200 - 0x2FFF reserved for video related stuff (12kB)
 ;        0x0200: Video ptr (i.e. cursor)
 ;        0x0201: LCD init (00 = not initalised, 01 = initialised)
-;        0x0202: Control register to be sent
 ;        0x0210: Start of video data
 ; OUTPUT 0x4000 is display data (D0-D7)
 ;        0x4001 is display control:
@@ -16,25 +15,10 @@
 ;                   bit2: /RESET
 ; $80 - $8F     - used for parameters
 
-; NAME      InitCR
-; USAGE     JSR :InitCR
-; RESULT    Initialises the computer, needs to be called always as first statement
-:InitCR
-CLI             ; Enable interrupts
-CLD             ; Clear "D" flag: use binary mode (instead of BCD)
-LDA #$00        ; one shot to init LCD
-STA $3001
-RTS
 
-:InitDisplay
-; #### Display INIT
-LDA #$00
-STA $4000       ; DATA = 0
-STA $4001       ; CTRL = 0
-
+:ResetDisplay
 ; 1. RESET ROUTINE
 LDA #$01        ; WR=1, RS=0, RES=0
-STA $0202
 STA $4001
 
 LDA #$ff        ; number of full cycles to make $ff = 8ms
@@ -45,14 +29,14 @@ LDA #$ff
 :_aa
 DEC
 BNE :_aa
-LDA $80
-DEC
-STA $80
+DEC $80
 BNE :__delay
 
 LDA #$05        ; WR=1, RS=0, RES=1
 STA $4001
+RTS
 
+:InitDisplay
 ; 2. Display initialisation
 LDA #$40            ; Initializes device and display
 JSR :__comm_out
@@ -127,11 +111,32 @@ JSR :__comm_out
 LDA #$55            ; Display Attribute                    0x800a, 0x55   --> SAD3 ON, No flash; SAD2 ON, No Flash, SAD1 ON, No Flash, Cursor ON, No Flash
 JSR :__data_out
 
+RTS                 ; END INIT DISPLAY
 
+; 3. Clear display
+:ClearDisplay
+LDA #$46            ; Set cursor to 0
+JSR :__comm_out
+LDA #$00
+JSR :__data_out
+LDA #$00
+JSR :__data_out
+LDA #$42
+JSR :__comm_out
 
+LDA #$2a            ; 0x2a = 42 x 256 = 10800 bytes to be cleared
+STA $80
 
-LDA #$01        ; Display is initialised
-STA $0201
+:__clr_outer
+LDA #$ff
+STA $81
+:__clr_inner
+LDA #$00
+JSR :__data_out
+DEC $81
+BNE :__clr_inner
+DEC $80
+BNE :__clr_outer
 RTS
 
 
@@ -139,16 +144,20 @@ RTS
 STA $4000       ; Data = ACCU
 LDA #$07        ; WR=1 (read), RS=1 (cmd), RES=1 (not reset)
 STA $4001
-DEC $4001
-INC $4001       ; WR=0 --> WR=1
+DEC
+STA $4001
+INC
+STA $4001       ; WR=0 --> WR=1
 RTS
 
 :__data_out
 STA $4000       ; Data = ACCU
 LDA #$05        ; WR=1 (read), RS=0 (data), RES=1 (not reset)
 STA $4001
-DEC $4001
-INC $4001       ; WR=0 --> WR=1
+DEC
+STA $4001
+INC
+STA $4001       ; WR=0 --> WR=1
 RTS
 
 
@@ -297,7 +306,7 @@ RTS
 :HW_IRQ
 SEI
 
-:_UpdateDisplay
+JSR :InitDisplay
 
 ; 0-row1 40-row2 14-row3 54-row4
 
