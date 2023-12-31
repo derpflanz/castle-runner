@@ -13,34 +13,30 @@
 ;                   bit0: /WR
 ;                   bit1: RS (1=cmd, 0=data)
 ;                   bit2: /RESET
-; $80 - $8F     - used for parameters
-
+; $80 - $8F     - used for parameters in function calls
+; $40 - $7f     - used as local variables in function calls
 
 :ResetDisplay
-; 1. RESET ROUTINE
+; To reset, we pull de /RES pin low for at least 3ms
 LDA #$01        ; WR=1, RS=0, RES=0
 STA $4001
-
 LDA #$ff        ; number of full cycles to make $ff = 8ms
-STA $80
-
-:__delay
+STA $40
+:__reset_outer
 LDA #$ff
-:_aa
+:__reset_inner
 DEC
-BNE :_aa
-DEC $80
-BNE :__delay
-
+BNE :__reset_inner
+DEC $40
+BNE :__reset_outer
 LDA #$05        ; WR=1, RS=0, RES=1
 STA $4001
-RTS
+RTS             ; ResetDisplay
 
 :InitDisplay
-; 2. Display initialisation
+; Display initialisation is a whole sequence of bytes
 LDA #$40            ; Initializes device and display
 JSR :__comm_out
-
 LDA #$30            ; Memory Configuration Register        0x8000, 0x03   --> Config: Origin Comp = 1, Single Panel, Char Height = 8 pixels, CGROM selected
 JSR :__data_out
 LDA #$87            ; Horizontal Character Size            0x8001, 0x07   --> HCS  =   8
@@ -57,7 +53,6 @@ LDA #$28            ; Horizontal Address Range 0           0x8006
 JSR :__data_out
 LDA #$00            ; Horizontal Address Range 1           0x8007, 0x0028 --> HAR  =  40 addresses
 JSR :__data_out
-
 LDA #$44            ; Sets screen block start addresses and sizes
 JSR :__comm_out
 LDA #$00            ; Screen Block 1 Start Address 0       0x800b
@@ -80,41 +75,34 @@ LDA #$00            ; Screen Block 4 Start Address 0       0x8013
 JSR :__data_out
 LDA #$00            ; Screen Block 4 Start Address 1       0x8014, 0x0000 --> SB4A = 0x0000
 JSR :__data_out
-
 LDA #$5A            ; Sets horizontal scroll position
 JSR :__comm_out
 LDA #$00            ; Horizontal Pixel Scroll              0x801b, 0x00   --> HPS  =   0  
 JSR :__data_out
-
 LDA #$5B            ; Sets display overlay format
 JSR :__comm_out
 LDA #$00            ; Overlay                              0x8018, 0x00   --> two layers, SB3 is text, SB1 is text, layers are OR'd
 JSR :__data_out
-
 LDA #$5D            ; Sets Cursor Type
 JSR :__comm_out
 LDA #$04            ; Cursor Width                         0x8015, 0x04   --> CW   =   4
 JSR :__data_out
 LDA #$86            ; Cursor Height                        0x8016, 0x86   --> CH   =   6, mode = block
 JSR :__data_out
-
 LDA #$4C            ; Sets direction of cursor movement,   0x8017, 0x4c   --> bits 00 --> Direction Right
 JSR :__comm_out
-
 LDA #$58            ; Enable / disable display
 JSR :__comm_out
 LDA #$01            ; Display Enable                       0x8009, 0x01   --> DE   = 1
 JSR :__data_out
-
 LDA #$59            ; Display attributes
 JSR :__comm_out
 LDA #$55            ; Display Attribute                    0x800a, 0x55   --> SAD3 ON, No flash; SAD2 ON, No Flash, SAD1 ON, No Flash, Cursor ON, No Flash
 JSR :__data_out
+RTS                 ; InitDisplay
 
-RTS                 ; END INIT DISPLAY
-
-; 3. Clear display
 :ClearDisplay
+; To clear the display, we write all 0 bytes
 LDA #$46            ; Set cursor to 0
 JSR :__comm_out
 LDA #$00
@@ -123,22 +111,19 @@ LDA #$00
 JSR :__data_out
 LDA #$42
 JSR :__comm_out
-
-LDA #$2a            ; 0x2a = 42 x 256 = 10800 bytes to be cleared
-STA $80
-
+LDA #$6c            ; 0x6c x 0x64 = 108 x 100 = 10800 bytes
+STA $40
 :__clr_outer
-LDA #$ff
-STA $81
+LDA #$64
+STA $41
 :__clr_inner
 LDA #$00
 JSR :__data_out
-DEC $81
+DEC $41
 BNE :__clr_inner
-DEC $80
+DEC $40
 BNE :__clr_outer
-RTS
-
+RTS             ; ClearDisplay
 
 :__comm_out
 STA $4000       ; Data = ACCU
