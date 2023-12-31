@@ -1,7 +1,8 @@
 # assembler stuff
 ASM_BASE=../Assembler/
-ASM_FILES=castlerunner.asm cr001-rom.asm 
-ASM2_FILES=castlerunner.asm cr002-rom.asm
+ASM1_FILES=castlerunner.asm cr001-rom.asm 
+ASM_FILES=castlerunner.asm cr002-rom.asm
+ASM3_FILES=io_test.asm 
 DEBUGFILE=castlerunner.debug
 ASM_FLAGS=-s8000 --opcodefile $(ASM_BASE)w65c02s_opcodes.txt --debuginfo=$(DEBUGFILE) 
 ASSEMBLER=python $(ASM_BASE)assembler.py
