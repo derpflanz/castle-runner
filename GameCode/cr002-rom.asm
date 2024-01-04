@@ -10,7 +10,8 @@
 ; Memory map:
 ; VIDEO  0x0200 - 0x2FFF reserved for video related stuff (12kB)
 ;        0x0200 - 0x06AF Character display
-;        0x06B0 - 0x0C30 Graphics display
+;        0x06B0 - 0x2C30 Graphics display
+;          0x90 -   0x91 Character cursor pointer (little endian, so we can use ($90),Y to address)
 ;
 ;
 ; OUTPUT 0x4000 is display data (D0-D7)
@@ -184,12 +185,45 @@ BNE :__wcs_loop
 RTS                 ; WriteCharScreen
 
 ; GotoCharXY
-; Params: LDX, LDY
-; Result: The character screen pointer is set to (x,y)
+; Params: LDX. LDY
+; Result: The character screen pointer at ($90) is set to (x,y)
 ; Display is 40 character wide, 30 high
 :GotoCharXY
+STX $80
+STY $81
+LDA #$00        ; ($90) = $0200
+STA $90
+LDA #$02
+STA $91
 
+:__gxy_loop
+LDA $81         ; ($90) += 40 * Y
+BEQ :__gxy_cols
+CLC
+LDA $90
+ADC #$28
+STA $90
+LDA $91
+ADC #$00
+STA $91
+DEC $81
+JMP :__gxy_loop
+:__gxy_cols
+CLC
+LDA $90         ; ($90) += X
+ADC $80
+STA $90
+LDA $91
+ADC #$00
+STA $91
 RTS             ; GotoCharXY
+
+; WriteChar
+; Writes character in ACCU into video memory ($90)
+:WriteChar
+LDY #$00
+STA ($90),Y
+RTS
 
 :__comm_out
 STA $4000       ; Data = ACCU
