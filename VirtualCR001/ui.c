@@ -118,13 +118,13 @@ void _init_memory_log() {
 }
 
 void _init_memory_windows() {
-    int video_height = 10, stack_height = 5;
+    int video_height = 25, stack_height = 5;
     int rom_height = 10;
 
-    memory_win = _create_newwin(LINES - 10 - rom_height - stack_height - video_height, COLS / 2, 1, COLS / 2);
-    rom_win = _create_newwin(rom_height, COLS / 2, LINES - 9 - stack_height - rom_height - video_height, COLS / 2);
-    stack_win = _create_newwin(stack_height, COLS / 2, LINES - 9 - stack_height - video_height, COLS / 2);
-    video_win = _create_newwin(video_height, COLS / 2, LINES - 9 - video_height, COLS / 2);
+    memory_win = _create_newwin(LINES - 2 - rom_height - stack_height - video_height, COLS / 2, 1, COLS / 2);
+    rom_win = _create_newwin(rom_height, COLS / 2, LINES - 1 - stack_height - rom_height - video_height, COLS / 2);
+    stack_win = _create_newwin(stack_height, COLS / 2, LINES - 1 - stack_height - video_height, COLS / 2);
+    video_win = _create_newwin(video_height, COLS / 2, LINES - 1 - video_height, COLS / 2);
 }
 
 void ui_print_lcd(char character, int row, int column) {
