@@ -184,6 +184,18 @@ CMP #$06            ; $06 = MSB of end address
 BNE :__wcs_loop
 RTS                 ; WriteCharScreen
 
+; WriteString
+; Params: pointer to string in ($80)
+; Result: the string is printed on screen at where ($90) was pointing at
+:WriteString
+LDY #$ff        ; display counter (we start with an INY, so the BNE looks at ACCU)
+:__ws_loop
+INY
+LDA ($80),Y
+STA ($90),Y
+BNE :__ws_loop
+RTS             ; WriteString
+
 ; GotoCharXY
 ; Params: LDX. LDY
 ; Result: The character screen pointer at ($90) is set to (x,y)
@@ -195,7 +207,6 @@ LDA #$00        ; ($90) = $0200
 STA $90
 LDA #$02
 STA $91
-
 :__gxy_loop
 LDA $81         ; ($90) += 40 * Y
 BEQ :__gxy_cols
