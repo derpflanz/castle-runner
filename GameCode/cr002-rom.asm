@@ -101,6 +101,29 @@ LDA #$55            ; Display Attribute                    0x800a, 0x55   --> SA
 JSR :__data_out
 RTS                 ; InitDisplay
 
+; InitVideoRam will zero all bytes between $0200 and $0C30
+:InitVideoRam
+LDA #$0C        ; MSB of $0C30 (top of video ram)
+STA $41
+LDA #$00
+STA $40
+LDY #$30        ; LSB+1 of addr in $40-$41 --> start addr = $0C30
+:__ivr_loop
+LDA $42
+STA ($40),Y
+INC $42
+CPY #$00
+BNE :__ivr_decy
+DEC $41
+LDA $41
+CMP #$01        ; MSB-1 of end address $0200
+BEQ :__ivr_end
+:__ivr_decy
+DEY
+JMP :__ivr_loop
+:__ivr_end
+RTS             ; InitVideoRam
+
 :ClearDisplay
 ; To clear the display, we write all 0 bytes
 LDA #$46            ; Set cursor to 0
@@ -124,6 +147,39 @@ BNE :__clr_inner
 DEC $40
 BNE :__clr_outer
 RTS             ; ClearDisplay
+
+; Writes $0200 - $06AF to display, starting at cursor 0
+:WriteCharScreen
+LDA #$46            ; Set cursor to 0
+JSR :__comm_out
+LDA #$00
+JSR :__data_out
+LDA #$00
+JSR :__data_out
+LDA #$42
+JSR :__comm_out
+LDA #$00            ; ($40) = $0200 (start addr of video)
+STA $41
+LDA #$02
+STA $40
+LDY #$00            ; y = 0
+LDX #$50            ; x = $ff - $af ($af is LSB of end address)
+:__wcs_loop
+LDA ($40),Y
+JSR :__data_out
+CPY #$ff
+BNE :__wcs_incy
+INC $41
+:__wcs_incy
+INY
+INX
+CPX #$ff
+BNE :__wcs_loop
+LDA $41
+CMP #$06            ; $06 = MSB of end address
+BEQ :__wcs_end
+JMP :__wcs_loop
+RTS             ; WriteCharScreen
 
 :__comm_out
 STA $4000       ; Data = ACCU
