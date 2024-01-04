@@ -3,18 +3,21 @@
 ; This ROM provides routines to use the CR002 computer
 ; - Video now runs in an interrupt and is 320x240 pixels big
 ;
+; Generic
+; $80 - $8F     - used for parameters in function calls
+; $40 - $7f     - used as local variables in function calls
+;
 ; Memory map:
 ; VIDEO  0x0200 - 0x2FFF reserved for video related stuff (12kB)
-;        0x0200: Video ptr (i.e. cursor)
-;        0x0201: LCD init (00 = not initalised, 01 = initialised)
-;        0x0210: Start of video data
+;        0x0200 - 0x06AF Character display
+;        0x06B0 - 0x0C30 Graphics display
+;
+;
 ; OUTPUT 0x4000 is display data (D0-D7)
 ;        0x4001 is display control:
 ;                   bit0: /WR
 ;                   bit1: RS (1=cmd, 0=data)
 ;                   bit2: /RESET
-; $80 - $8F     - used for parameters in function calls
-; $40 - $7f     - used as local variables in function calls
 
 :ResetDisplay
 ; To reset, we pull de /RES pin low for at least 3ms
@@ -103,20 +106,19 @@ RTS                 ; InitDisplay
 
 ; InitVideoRam will zero all bytes between $0200 and $0C30
 :InitVideoRam
-LDA #$0C        ; MSB of $0C30 (top of video ram)
+LDA #$2C        ; MSB of $2C30 (top of video ram)
 STA $41
 LDA #$00
 STA $40
-LDY #$30        ; LSB+1 of addr in $40-$41 --> start addr = $0C30
+LDY #$30        ; LSB of start addr $2C30 (MSB is in $40)
 :__ivr_loop
-LDA $42
+LDA #$00
 STA ($40),Y
-INC $42
 CPY #$00
 BNE :__ivr_decy
 DEC $41
 LDA $41
-CMP #$01        ; MSB-1 of end address $0200
+CMP #$01        ; MSB minus 1 of end address $0200
 BEQ :__ivr_end
 :__ivr_decy
 DEY
@@ -124,6 +126,7 @@ JMP :__ivr_loop
 :__ivr_end
 RTS             ; InitVideoRam
 
+; This might become deprecated if WriteCharScreen and WriteGraphScreen are finalised
 :ClearDisplay
 ; To clear the display, we write all 0 bytes
 LDA #$46            ; Set cursor to 0
@@ -159,9 +162,9 @@ JSR :__data_out
 LDA #$42
 JSR :__comm_out
 LDA #$00            ; ($40) = $0200 (start addr of video)
-STA $41
-LDA #$02
 STA $40
+LDA #$02
+STA $41
 LDY #$00            ; y = 0
 LDX #$50            ; x = $ff - $af ($af is LSB of end address)
 :__wcs_loop
@@ -177,9 +180,16 @@ CPX #$ff
 BNE :__wcs_loop
 LDA $41
 CMP #$06            ; $06 = MSB of end address
-BEQ :__wcs_end
-JMP :__wcs_loop
-RTS             ; WriteCharScreen
+BNE :__wcs_loop
+RTS                 ; WriteCharScreen
+
+; GotoCharXY
+; Params: LDX, LDY
+; Result: The character screen pointer is set to (x,y)
+; Display is 40 character wide, 30 high
+:GotoCharXY
+
+RTS             ; GotoCharXY
 
 :__comm_out
 STA $4000       ; Data = ACCU
@@ -199,78 +209,6 @@ DEC
 STA $4001
 INC
 STA $4001       ; WR=0 --> WR=1
-RTS
-
-
-; Public display calls
-
-; NAME      DisplayGotoRowCol
-; USAGE     LDA <row>
-;           STA $80
-;           LDA <column>
-;           STA $81
-;           JSR :DisplayGotoRowCol
-; RESULT    The cursor is placed on location <row>,<col>
-;           Row and column are 0-based
-:DisplayGotoRowCol
-LDA #$00
-STA $3000           ; video_ptr = 0
-LDA $80
-CMP #$00            ; if row == 0: goto __add_column
-BEQ :__add_column
-:__loop_rows
-LDA #$13
-ADC $3000           ; video_ptr += $13  (20d)
-STA $3000
-DEC $80             ; row--
-BEQ :__add_column   ; if row == 0: goto __add_column
-JMP :__loop_rows
-:__add_column
-LDA $3000           ; video_ptr += col
-ADC $81
-STA $3000
-RTS
-
-; NAME      DisplayGotoLocation
-; USAGE     LDA <location>
-;           JSR :DisplayGotoLocation
-; RESULT    The cursor is placed on location <location>
-; NOTE      This call is unnecessary but included for completeness
-;           as it just stores the video pointer
-:DisplayGotoLocation
-STA $3000
-RTS
-
-
-; NAME      DisplayChar
-; USAGE     Load character to display in ACCU
-;           LDA 'X'
-;           JSR :DisplayChar
-; RESULT    The character in ACCU put put on display
-:DisplayChar
-LDX $3000
-STA $3010,X
-RTS
-
-; NAME      DisplayString
-; USAGE     Load lo-byte of start address of string in $80, hibyte in $81
-; EXAMPLE   LDA LO(@INFO)
-;           STA $80
-;           LDA HI(@INFO)
-;           STA $81
-;           JSR :DisplayString
-; RESULT    The string pointed to in $0010-$0011 will put put on display
-:DisplayString
-LDY #$00            ; y = 0
-:_LoopDisplayString
-LDA ($80),Y
-BEQ :_EndDisplayString
-LDX $3000
-STA $3010,X
-INY
-INC $3000
-JMP :_LoopDisplayString
-:_EndDisplayString
 RTS
 
 ; NAME      Dec2Ascii
@@ -296,7 +234,6 @@ LDA #$00
 STA ($80),Y
 LDY #$00
 PLA
-
 :__hundreds     ; subtract hundreds until we go through zero
 SEC
 SBC #$64        ; $64 = 100
@@ -308,7 +245,6 @@ ADC #$01
 STA ($80),Y
 PLA
 JMP :__hundreds
-
 :__tens_start   ; subtract tens until we go through zero
 ADC #$64
 INY
@@ -323,7 +259,6 @@ ADC #$01
 STA ($80),Y
 PLA
 JMP :__tens
-
 :__ones_start   ; subtract ones until we go through zero
 ADC #$0A
 INY
@@ -337,48 +272,12 @@ LDA ($80),Y
 ADC #$01
 STA ($80),Y
 PLA
-
 JMP :__ones
-
 :__done
-RTS
+RTS             ; Dec2Ascii
 
 ; Below is actual IO, called from the IRQ handler
 :HW_IRQ
 SEI
-
-JSR :InitDisplay
-
-; 0-row1 40-row2 14-row3 54-row4
-
-
 CLI             ; Enable intterupts
 RTI             ; And we're done
-
-
-; NAME      DisplayHome
-; USAGE     JSR :DisplayHome           
-; RESULT    The cursor is put to the upper left corner
-:DisplayHome
-LDA #$02        ; Return home
-JSR :_DisplayInstruction
-RTS             ; /DisplayHome
-
-; NAME      DisplaySetAddress
-; USAGE     Load address in ACCU (max 80 bytes $00 - $50)
-;           JSR :DisplaySetAddress
-; RESULT    The cursor is set to the address, subsequent 
-;           writes start there
-:DisplaySetAddress
-ORA #$80        ; MSB should be set (see p191 in datasheet)
-JSR :_DisplayInstruction
-RTS
-
-; Private functions
-:_DisplayInstruction
-STA $4000           ; DATA = ACCU
-LDA #$01            ; RS=0, RW=0, EN=1
-STA $4001           ; CTRL = $01
-DEC                 ; EN = 0
-STA $4001           ; edge it in
-RTS
