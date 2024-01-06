@@ -5,7 +5,7 @@ ASM_FILES=castlerunner.asm cr002-rom.asm
 ASM3_FILES=io_test.asm 
 DEBUGFILE=castlerunner.debug
 PROGDATA=castlerunner-data.hex
-PROGDATA_START=4000
+PROGDATA_START=4000				# 0x4000 in ROM is 0xC000 in Cr002 memory map
 ASM_FLAGS=-s8000 --opcodefile $(ASM_BASE)w65c02s_opcodes.txt --debuginfo=$(DEBUGFILE) 
 ASSEMBLER=python $(ASM_BASE)assembler.py
 OUTPUT=castlerunner.hex
@@ -47,4 +47,4 @@ program: $(OUTPUT)
 	$(PROGRAMMER) write-code -f $(OUTPUT) -p $(PORT)
 
 program-data: $(PROGDATA)
-	$(PROGRAMMER) 
+	$(PROGRAMMER) write-data -s $(PROGDATA_START) -f $(PROGDATA) -p $(PORT)

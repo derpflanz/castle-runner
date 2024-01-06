@@ -90,13 +90,14 @@ class Eeprom:
                 irq =  f"{_bytes[3]:02x}{_bytes[2]:02x}"
                 start_offset_in_file = 4
 
-            if self._send_header(ser, _type, start_address, len(_bytes) - 4, resb, irq):
+            if self._send_header(ser, _type, start_address, len(_bytes) - start_offset_in_file, resb, irq):
                 self._print("Header sent, continuing with sending data.")
                 
                 ser.write(STX)
 
                 self._print("")
-                self._print("0000 ", end='')
+                self._print(f"{start_address} ", end='')
+                self._print_ctr = int(start_address, 16)
                 for b in _bytes[start_offset_in_file:]:
                     ser.write(bytes([b]))
 
@@ -113,7 +114,6 @@ class Eeprom:
     _print_spc = None
     def _printByte(self, b):
         if self._print_spc is None:
-            
             self._print_spc = self._print_ctr
 
         filter = ''.join([['.', chr(x)][chr(x) in string.printable[:-5]] for x in range(256)])
