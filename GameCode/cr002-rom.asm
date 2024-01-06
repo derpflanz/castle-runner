@@ -152,7 +152,39 @@ DEC $40
 BNE :__clr_outer
 RTS             ; ClearDisplay
 
-; Writes $0200 - $06AF to display, starting at cursor 0
+; Writes $06B0 - $2C30 to display, starting at address 0x04b0
+:WriteGraphScreen
+LDA #$46            ; Set cursor to $04b0
+JSR :__comm_out
+LDA #$B0
+JSR :__data_out
+LDA #$04
+JSR :__data_out
+LDA #$42
+JSR :__comm_out
+LDA #$b0            ; ($40) = $06b0 (start addr of graph video)
+STA $40
+LDA #$06
+STA $41
+LDY #$00            ; y = 0
+LDX #$CF            ; x = $ff - $30 ($30 is LSB of end address)
+:__wgs_loop
+LDA ($40),Y
+JSR :__data_out
+CPY #$FF
+BNE :__wgs_incy
+INC $41
+:__wgs_incy
+INY
+INX
+CPX #$FF
+BNE :__wgs_loop
+LDA $41
+CMP #$2C            ; $2c = MSB of end address
+BNE :__wgs_loop
+RTS                 ; WriteGraphScreen
+
+; Writes $0200 - $06AF to display, starting at address 0
 :WriteCharScreen
 LDA #$46            ; Set cursor to 0
 JSR :__comm_out
@@ -162,7 +194,7 @@ LDA #$00
 JSR :__data_out
 LDA #$42
 JSR :__comm_out
-LDA #$00            ; ($40) = $0200 (start addr of video)
+LDA #$00            ; ($40) = $0200 (start addr of char video)
 STA $40
 LDA #$02
 STA $41
@@ -200,40 +232,76 @@ RTS             ; WriteString
 ; Params: LDX. LDY
 ; Result: The character screen pointer at ($90) is set to (x,y)
 ; Display is 40 character wide, 30 high
+; Works in the video ram
 :GotoCharXY
 STX $80
 STY $81
-LDA #$00        ; ($90) = $0200
-STA $90
+LDA #$00        ; ($82) = $0200 + (40 * Y) + X
+STA $82
 LDA #$02
-STA $91
-:__gxy_loop
-LDA $81         ; ($90) += 40 * Y
-BEQ :__gxy_cols
-CLC
-LDA $90
-ADC #$28
+STA $83
+JSR :__GotoXY
+LDA $82         ; ($90) = ($82)
 STA $90
-LDA $91
-ADC #$00
-STA $91
-DEC $81
-JMP :__gxy_loop
-:__gxy_cols
-CLC
-LDA $90         ; ($90) += X
-ADC $80
-STA $90
-LDA $91
-ADC #$00
+LDA $83
 STA $91
 RTS             ; GotoCharXY
 
+; GotoGraphXY
+; Params: LDX. LDY
+; Result: The graph screen pointer at ($92) is set to (x,y)
+; Display is 40 character wide, 30 high
+; Works in the video ram
+:GotoGraphXY
+STX $80
+STY $81
+LDA #$B0        ; ($82) = $06B0 + (40 * Y) + X
+STA $82
+LDA #$06
+STA $83
+JSR :__GotoXY
+LDA $82         ; ($92) = ($82)
+STA $92
+LDA $83
+STA $93
+RTS             ; GotoGraphXY
+
+; Generic internal goto XY
+; Params: X=$80, Y=$81, Offset=($82), result will be in ($82)
+:__GotoXY
+LDA $81         ; ($90) += 40 * Y
+BEQ :__gxy_cols
+CLC
+LDA $82
+ADC #$28
+STA $82
+LDA $83
+ADC #$00
+STA $83
+DEC $81
+JMP :__GotoXY
+:__gxy_cols
+CLC
+LDA $82         ; ($90) += X
+ADC $80
+STA $82
+LDA $83
+ADC #$00
+STA $83
+RTS             ; GotoCharXY
+
 ; WriteChar
-; Writes character in ACCU into video memory ($90)
+; Writes character in ACCU into char video memory ($90)
 :WriteChar
 LDY #$00
 STA ($90),Y
+RTS
+
+; WriteGraph
+; Writes character in ACCU into graph video memory ($92)
+:WriteGraph
+LDY #$00
+STA ($92),Y
 RTS
 
 :__comm_out
