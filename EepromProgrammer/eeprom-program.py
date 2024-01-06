@@ -42,8 +42,12 @@ elif args.action == 'write-code' or args.action == 'write-data':
     with open(args.file, "rb") as file:
         data = file.read()
         
+    type = eeprom.CODE
+    if (args.action == "write-data"):
+        type = eeprom.DATA
+
     eeprom = eeprom.Eeprom(args.port, 9600)
-    eeprom.write(args.start_address, data)
+    eeprom.write(args.start_address, data, type)
 
     print(f"Wrote {len(data)} bytes.")
 

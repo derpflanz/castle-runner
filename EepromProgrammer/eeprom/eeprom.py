@@ -11,6 +11,8 @@ NAK   = b'\x15'
 US    = b'\x1f'
 READ  = b'\x32'
 WRITE = b'\x31'
+CODE  = "code"
+DATA  = "data"
 
 class Eeprom:
     _port = "/dev/ttyACM0"
@@ -73,17 +75,21 @@ class Eeprom:
 
         return result
 
-    def write(self, start_address, _bytes, verbose = True):
+    def write(self, start_address, _bytes, _type = CODE, verbose = True):
         self._verbose = verbose
         self._print(f"Connecting to {self._port} with {self._speed} baud. Reset the reader if this blocks.")
 
         with serial.Serial(self._port, self._speed) as ser:
-            # resb is stored little endian in file, we need it as an ascii
-            # hex address for the programmer
-            resb = f"{_bytes[1]:02x}{_bytes[0]:02x}"
-            irq =  f"{_bytes[3]:02x}{_bytes[2]:02x}"
+            resb = "0000"
+            irq = "0000"
 
-            if self._send_header(ser, WRITE, 0, len(_bytes) - 4, resb, irq):
+            if _type == CODE:
+                # resb is stored little endian in code file, we need it as an ascii
+                # hex address for the programmer
+                resb = f"{_bytes[1]:02x}{_bytes[0]:02x}"
+                irq =  f"{_bytes[3]:02x}{_bytes[2]:02x}"
+
+            if self._send_header(ser, WRITE, start_address, len(_bytes) - 4, resb, irq):
                 self._print("Header sent, continuing with sending data.")
                 
                 ser.write(STX)
