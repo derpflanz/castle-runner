@@ -80,8 +80,8 @@ class Eeprom:
         with serial.Serial(self._port, self._speed) as ser:
             # resb is stored little endian in file, we need it as an ascii
             # hex address for the programmer
-            resb = f"{_bytes[1]:x}{_bytes[0]:x}"
-            irq =  f"{_bytes[3]:x}{_bytes[2]:x}"
+            resb = f"{_bytes[1]:02x}{_bytes[0]:02x}"
+            irq =  f"{_bytes[3]:02x}{_bytes[2]:02x}"
 
             if self._send_header(ser, WRITE, 0, len(_bytes) - 4, resb, irq):
                 self._print("Header sent, continuing with sending data.")
