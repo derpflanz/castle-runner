@@ -125,7 +125,7 @@ void loop() {
   idle();
   byte command = receive_header(&the_header);
 
-  if (command == CMD_WRITE_EEPROM) {
+  if (command == CMD_WRITE_CODE_EEPROM) {
     // not the 0x7ffc/0x7ffe because we write onto a 32kB EEPROM
     // these addresses translate to 0xfffc and 0xfffe on the 6502
     // because the RAM has addresses 0x000-0x7fff
@@ -134,6 +134,9 @@ void loop() {
     receive_data(the_header.start_address, the_header.length);
   } else if (command == CMD_READ_EEPROM) {
     send_data(the_header.start_address, the_header.length);
+  } else if (command == CMD_WRITE_DATA_EEPROM) {
+    // when writing plain data, we do not touch the RESB and IRQ vectors
+    receive_data(the_header.start_address, the_header.length);
   }
 
   Communication.sendByte(EOT);
