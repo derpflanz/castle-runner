@@ -42,9 +42,9 @@ elif args.action == 'write-code' or args.action == 'write-data':
     with open(args.file, "rb") as file:
         data = file.read()
         
-    type = eeprom.CODE
+    type = eeprom.WRITE_CODE
     if (args.action == "write-data"):
-        type = eeprom.DATA
+        type = eeprom.WRITE_DATA
 
     eeprom = eeprom.Eeprom(args.port, 9600)
     eeprom.write(args.start_address, data, type)
