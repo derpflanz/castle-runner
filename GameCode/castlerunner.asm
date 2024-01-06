@@ -13,9 +13,9 @@ LDX #$ff        ; Initialise stack on 0x01ff
 TXS
 
 ; init lcd
-JSR :ResetDisplay
-JSR :InitDisplay
-JSR :ClearDisplay
+JSR :VIO_ResetDisplay
+JSR :VIO_InitDisplay
+JSR :VIO_ClearDisplay
 JSR :InitVideoRam
 
 LDX #$09
@@ -28,10 +28,17 @@ LDA #$C0
 STA $81
 JSR :WriteString
 
-LDA 'X'
-STA $0200
+LDX #$0F            ; (x,y) = (15,100)
+LDY #$64
+JSR :GotoGraphXY
 
-JSR :WriteCharScreen
+LDA #$FF            ; test: a black line at (100,15)
+JSR :WriteGraph
+
+
+JSR :VIO_WriteCharScreen
+JSR :VIO_WriteGraphScreen
+
 CLI             ; Enable interrupts
 
 :stop
