@@ -18,22 +18,44 @@ JSR :VIO_InitDisplay
 JSR :VIO_ClearDisplay
 JSR :InitVideoRam
 
-LDX #$09
-LDY #$09
+LDX #$01
+LDY #$01
 JSR :GotoCharXY
 
-LDA #$00
+LDA LO(@SPLASH)
 STA $80
-LDA #$C0
+LDA HI(@SPLASH)
 STA $81
 JSR :WriteString
 
-LDX #$0F            ; (x,y) = (15,100)
-LDY #$64
-JSR :GotoGraphXY
+; LDA #$00            ; ($10) = $C000 (data section)
+; STA $10
+; LDA #$C0
+; STA $11
 
-LDA #$FF            ; test: a black line at (100,15)
-JSR :WriteGraph
+; LDX #$00            ; (x,y) = (0,0)
+; LDY #$00
+; JSR :GotoGraphXY
+
+; LDY #$00
+; :firstloop
+; LDA ($10),y
+; JSR :WriteGraph
+; INY
+; CPY #$0f
+; BNE :firstloop
+
+; LDX #$01            ; (x,y) = (1,0)
+; LDY #$00
+; JSR :GotoGraphXY
+; LDY #$10
+; :secondloop
+; LDA ($10),y
+; JSR :WriteGraph
+; INY
+; CPY #$1f
+; BNE :secondloop
+
 
 
 JSR :VIO_WriteCharScreen
