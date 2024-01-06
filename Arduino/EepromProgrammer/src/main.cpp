@@ -76,13 +76,13 @@ byte receive_header(header *the_header) {
   return command;
 }
 
-void receive_data(unsigned long data_length) {
+void receive_data(uint16_t start_address, unsigned long data_length) {
   byte recv;
   do {
     recv = Communication.receiveByte();
   } while (recv != STX);
 
-  unsigned int address = 0;
+  unsigned int address = start_address;
 
   for (int i = 0; i < data_length; i++) {
     recv = Communication.receiveByte();
@@ -131,7 +131,7 @@ void loop() {
     // because the RAM has addresses 0x000-0x7fff
     write_vector(the_header.resb, 0x7ffc);
     write_vector(the_header.irq, 0x7ffe);
-    receive_data(the_header.length);
+    receive_data(the_header.start_address, the_header.length);
   } else if (command == CMD_READ_EEPROM) {
     send_data(the_header.start_address, the_header.length);
   }
