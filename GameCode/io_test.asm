@@ -1,40 +1,32 @@
-SEI         ; 78
+@TEST "Dit is een test"
+
+SEI             ; 78
 CLD             ; Clear "D" flag: use binary mode (instead of BCD)
 LDX #$ff        ; Initialise stack on 0x01ff
 TXS
 CLI
 
 LDA #$00
-STA $4000
+STA $90
+LDA #$30
+STA $91
 
-LDA #$00
-STA $4001
+LDA LO(@TEST)
+STA $80
+LDA HI(@TEST)
+STA $81
+
+LDY #$ff
 
 :loop
-LDA #$01
-STA $4000
+INY
+LDA ($80),Y
+STA ($90),Y
+BNE :loop
 
-LDA #$ff        ; number of full cycles to make $ff = 8ms
-STA $80
-JSR :__delay1
 
-LDA #$00
-STA $4000
-
-LDA #$ff        ; number of full cycles to make $ff = 8ms
-STA $80
-JSR :__delay1
-
-JMP :loop
-
-:__delay1
-LDA #$ff
-:_inner1
-DEC
-BNE :_inner1
-DEC $80
-BNE :__delay1
-RTS
+:end
+BRK
 
 :HW_IRQ
 RTI
