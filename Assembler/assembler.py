@@ -57,11 +57,15 @@ with open(args.outputfile, 'wb') as ofile:
     lineno = 1
     address = starting_address
     line = ''
+    phase = ''
+    rawline = ''
     labels = {}
     linenumber = 1
 
     try:
         first_opcode_address = None
+
+        phase = 'Lexing'
 
         # first process labels and string names
         for line in lines:
@@ -93,16 +97,20 @@ with open(args.outputfile, 'wb') as ofile:
         irq_address = int(labels[':HW_IRQ'], 16)
         print(f"Using ${irq_address:04x} as the interrupt vector.")
 
+        phase = 'Preprocess'
+
         # then preprocess the lines, replacing all labels and string names with their hex operand
         # this way, the assembler only needs to handle hex operands
         preprocessed_lines = []
         linenumber = 1
-        for line in lines:
+        for line in lines:            
             line = line.strip()
             for label,address in labels.items():
                 if line.startswith(label):
                     line = line.strip(label)
 
+                # FIXME: when 'label' exists inside another label, this goes wrong
+                # the replace should be "whole word"
                 line = line.replace(label, '$' + address)
 
             preprocessed_lines.append(line)
@@ -117,8 +125,10 @@ with open(args.outputfile, 'wb') as ofile:
             ofile.write(first_opcode_address.to_bytes(2, 'little'))
             ofile.write(irq_address.to_bytes(2, 'little'))
 
+        phase = 'Assemble'
         linenumber = 1
         for line in preprocessed_lines:
+            print(line)
             result = list(mylexer.tokenize(line))
 
             codes = opcodes.Opcodes(result, address)
@@ -144,8 +154,9 @@ with open(args.outputfile, 'wb') as ofile:
         print(f"Hex file {args.outputfile} was not written correctly.")
         sys.exit(1)
     except sly.lex.LexError as err:
-        print(f"[{linenumber:5}:    ] {line.strip()}")
+        print(f"[{linenumber:5}:    ] {rawline.strip()}")
         print(f"LEXER ERROR: {err}")
+        print(f"In file {args.inputfile}, during {phase} phase")
         print(f"Hex file {args.outputfile} was not written correctly.")
         sys.exit(1)
     finally:

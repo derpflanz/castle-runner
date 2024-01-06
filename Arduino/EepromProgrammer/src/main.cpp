@@ -76,13 +76,13 @@ byte receive_header(header *the_header) {
   return command;
 }
 
-void receive_data(unsigned long data_length) {
+void receive_data(uint16_t start_address, unsigned long data_length) {
   byte recv;
   do {
     recv = Communication.receiveByte();
   } while (recv != STX);
 
-  unsigned int address = 0;
+  unsigned int address = start_address;
 
   for (int i = 0; i < data_length; i++) {
     recv = Communication.receiveByte();
@@ -125,15 +125,18 @@ void loop() {
   idle();
   byte command = receive_header(&the_header);
 
-  if (command == CMD_WRITE_EEPROM) {
+  if (command == CMD_WRITE_CODE_EEPROM) {
     // not the 0x7ffc/0x7ffe because we write onto a 32kB EEPROM
     // these addresses translate to 0xfffc and 0xfffe on the 6502
     // because the RAM has addresses 0x000-0x7fff
     write_vector(the_header.resb, 0x7ffc);
     write_vector(the_header.irq, 0x7ffe);
-    receive_data(the_header.length);
+    receive_data(the_header.start_address, the_header.length);
   } else if (command == CMD_READ_EEPROM) {
     send_data(the_header.start_address, the_header.length);
+  } else if (command == CMD_WRITE_DATA_EEPROM) {
+    // when writing plain data, we do not touch the RESB and IRQ vectors
+    receive_data(the_header.start_address, the_header.length);
   }
 
   Communication.sendByte(EOT);

@@ -9,8 +9,9 @@ EOT   = b'\x04'
 ACK   = b'\x06'
 NAK   = b'\x15'
 US    = b'\x1f'
+WRITE_CODE = b'\x31'
 READ  = b'\x32'
-WRITE = b'\x31'
+WRITE_DATA = b'\x33'
 
 class Eeprom:
     _port = "/dev/ttyACM0"
@@ -73,24 +74,31 @@ class Eeprom:
 
         return result
 
-    def write(self, _bytes, verbose = True):
+    def write(self, start_address, _bytes, _type, verbose = True):
         self._verbose = verbose
         self._print(f"Connecting to {self._port} with {self._speed} baud. Reset the reader if this blocks.")
 
         with serial.Serial(self._port, self._speed) as ser:
-            # resb is stored little endian in file, we need it as an ascii
-            # hex address for the programmer
-            resb = f"{_bytes[1]:x}{_bytes[0]:x}"
-            irq =  f"{_bytes[3]:x}{_bytes[2]:x}"
+            resb = "0000"
+            irq = "0000"
+            start_offset_in_file = 0
 
-            if self._send_header(ser, WRITE, 0, len(_bytes) - 4, resb, irq):
+            if _type == WRITE_CODE:
+                # resb is stored little endian in code file, we need it as an ascii
+                # hex address for the programmer
+                resb = f"{_bytes[1]:02x}{_bytes[0]:02x}"
+                irq =  f"{_bytes[3]:02x}{_bytes[2]:02x}"
+                start_offset_in_file = 4
+
+            if self._send_header(ser, _type, start_address, len(_bytes) - start_offset_in_file, resb, irq):
                 self._print("Header sent, continuing with sending data.")
                 
                 ser.write(STX)
 
                 self._print("")
-                self._print("0000 ", end='')
-                for b in _bytes[4:]:
+                self._print(f"{start_address} ", end='')
+                self._print_ctr = int(start_address, 16)
+                for b in _bytes[start_offset_in_file:]:
                     ser.write(bytes([b]))
 
                     byte_read = ser.read()
@@ -106,7 +114,6 @@ class Eeprom:
     _print_spc = None
     def _printByte(self, b):
         if self._print_spc is None:
-            
             self._print_spc = self._print_ctr
 
         filter = ''.join([['.', chr(x)][chr(x) in string.printable[:-5]] for x in range(256)])

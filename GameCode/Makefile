@@ -1,8 +1,11 @@
 # assembler stuff
 ASM_BASE=../Assembler/
-ASM_FILES=castlerunner.asm cr001-rom.asm 
-ASM2_FILES=castlerunner.asm cr002-rom.asm
+ASM1_FILES=castlerunner.asm cr001-rom.asm 
+ASM_FILES=castlerunner.asm cr002-rom.asm
+ASM3_FILES=io_test.asm 
 DEBUGFILE=castlerunner.debug
+PROGDATA=castlerunner-data.hex
+PROGDATA_START=4000				# 0x4000 in ROM is 0xC000 in Cr002 memory map
 ASM_FLAGS=-s8000 --opcodefile $(ASM_BASE)w65c02s_opcodes.txt --debuginfo=$(DEBUGFILE) 
 ASSEMBLER=python $(ASM_BASE)assembler.py
 OUTPUT=castlerunner.hex
@@ -13,7 +16,7 @@ VM_EXEC=virtual_cr001
 
 # eeprom stuff
 PROG_BASE=../EepromProgrammer/
-PROGRAMMER=python $(PROG_BASE)eeprom-program.py write 
+PROGRAMMER=python $(PROG_BASE)eeprom-program.py 
 BOARD=arduino:megaavr:nona4809
 PORT=$(shell arduino-cli board list | grep $(BOARD) | awk '{ print $$1; }')
 
@@ -41,4 +44,7 @@ test: $(TEST_ASM)
 	$(VM_BASE)$(VM_EXEC) $(TEST_HEX)
 
 program: $(OUTPUT)
-	$(PROGRAMMER) -f $(OUTPUT) -p $(PORT)
+	$(PROGRAMMER) write-code -f $(OUTPUT) -p $(PORT)
+
+program-data: $(PROGDATA)
+	$(PROGRAMMER) write-data -s $(PROGDATA_START) -f $(PROGDATA) -p $(PORT)

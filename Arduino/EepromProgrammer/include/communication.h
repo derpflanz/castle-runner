@@ -14,9 +14,10 @@
 #define US  0x1f
 
 // Commands
-#define CMD_WRITE_EEPROM        0x31
-#define CMD_READ_EEPROM         0x32
 #define CMD_NOTHING             0x30
+#define CMD_WRITE_CODE_EEPROM   0x31
+#define CMD_READ_EEPROM         0x32
+#define CMD_WRITE_DATA_EEPROM   0x33
 #define CMD_ERROR               0x39
 #define HEXFILE_MAX_SIZE        32768
 

@@ -7,11 +7,33 @@
 @GAMEOVER   "Game Over!"
 @INTERRUPTS "IRQ Works!"
 
-CLD
+; init
+SEI             ; Disable interrupts
+CLD             ; Clear "D" flag: use binary mode (instead of BCD)
 LDX #$ff        ; Initialise stack on 0x01ff
 TXS
 
-JSR :InitCR
+; init lcd
+JSR :ResetDisplay
+JSR :InitDisplay
+JSR :ClearDisplay
+
+LDA #$46            ; Set cursor to 0
+JSR :__comm_out
+LDA #$00
+JSR :__data_out
+LDA #$00
+JSR :__data_out
+LDA #$42
+JSR :__comm_out
+
+LDA 'X'
+JSR :__data_out
+
+CLI             ; Enable interrupts
+
+:stop
+JMP :stop
 
 ; Initialise memory
 ; Steps left        = $f0          -> when this is 0: Game Over!
@@ -78,7 +100,7 @@ BRK
 
 :MoveRunner
 LDA $f5
-AND #$fc            ; we allow 4 rows; 0b00 to 0b11
+AND #$fc            ; we allow 4 rows: 0b00 to 0b11
 BEQ :__DoMoveRow
 RTS
 :__DoMoveRow
