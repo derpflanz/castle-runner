@@ -158,6 +158,8 @@ RTS             ; ClearDisplay
 
 ; Writes $06B0 - $2C30 to display, starting at address 0x04b0
 :VIO_WriteGraphScreen
+    LDA #$4f            ; cursor direction down
+    JSR :__vio_comm_out
     LDA #$B0            ; video cursor = 0x04b0
     STA $80
     LDA #$04
@@ -176,6 +178,8 @@ RTS                 ; VIO_WriteGraphScreen
 
 ; Writes $0200 - $06AF to display, starting at address 0
 :VIO_WriteCharScreen
+    LDA #$4c            ; cursor direction right
+    JSR :__vio_comm_out
     LDA #$00            ; cursor = 0x0000
     STA $80
     LDA #$00
@@ -245,15 +249,13 @@ RTS             ; GotoGraphXY
 ; WriteChar
 ; Writes character in ACCU into char video memory ($90)
 :WriteChar
-    LDY #$00
-    STA ($90),Y
+    STA ($90)
 RTS
 
 ; WriteGraph
 ; Writes character in ACCU into graph video memory ($92)
 :WriteGraph
-    LDY #$00
-    STA ($92),Y
+    STA ($92)
 RTS
 
 ; NAME      Dec2Ascii
