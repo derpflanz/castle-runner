@@ -73,7 +73,7 @@ class Eeprom:
 
         return result
 
-    def write(self, _bytes, verbose = True):
+    def write(self, start_address, _bytes, verbose = True):
         self._verbose = verbose
         self._print(f"Connecting to {self._port} with {self._speed} baud. Reset the reader if this blocks.")
 
