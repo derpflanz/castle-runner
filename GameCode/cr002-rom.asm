@@ -158,12 +158,12 @@ RTS             ; ClearDisplay
 
 ; Writes $06B0 - $2C30 to display, starting at address 0x04b0
 :VIO_WriteGraphScreen
-    LDA #$B0
+    LDA #$B0            ; video cursor = 0x04b0
     STA $80
     LDA #$04
     STA $81
     JSR :__vio_set_cursor
-    LDA #$b0            ; ($40) = $06b0 (start addr of graph video)
+    LDA #$b0            ; ($80) = $06b0 (start addr of graph video)
     STA $80
     LDA #$06
     STA $81
@@ -172,54 +172,25 @@ RTS             ; ClearDisplay
     LDA #$2C            ; MSB of end address
     STA $83
     JSR :__vio_write_memblock
-RTS
-
-:__vio_write_memblock
-    LDX $82             ; $82 = ($ff-LSB of end address)
-    LDY #$00            ; y = 0
-    :__wgs_loop
-    LDA ($80),Y
-    JSR :__vio_data_out
-    CPY #$FF
-    BNE :__wgs_incy
-    INC $81
-    :__wgs_incy
-    INY
-    INX
-    CPX #$FF
-    BNE :__wgs_loop
-    LDA $81
-    CMP $83            ; $83 = MSB of end address
-    BNE :__wgs_loop
-RTS                 ; WriteGraphScreen
+RTS                 ; VIO_WriteGraphScreen
 
 ; Writes $0200 - $06AF to display, starting at address 0
 :VIO_WriteCharScreen
-    LDA #$00            ; cursor = $0000
+    LDA #$00            ; cursor = 0x0000
     STA $80
+    LDA #$00
     STA $81
     JSR :__vio_set_cursor
-    LDA #$00            ; ($40) = $0200 (start addr of char video)
-    STA $40
+    LDA #$00            ; ($80) = $0200 (start addr of char video)
+    STA $80
     LDA #$02
-    STA $41
-    LDY #$00            ; y = 0
-    LDX #$50            ; x = $ff - $af ($af is LSB of end address)
-    :__wcs_loop
-    LDA ($40),Y
-    JSR :__vio_data_out
-    CPY #$ff
-    BNE :__wcs_incy
-    INC $41
-    :__wcs_incy
-    INY
-    INX
-    CPX #$ff
-    BNE :__wcs_loop
-    LDA $41
-    CMP #$06            ; $06 = MSB of end address
-    BNE :__wcs_loop
-RTS                 ; WriteCharScreen
+    STA $81
+    LDA #$5            ; $ff minus (LSB of end address) --> ($ff-$af=$50)
+    STA $82
+    LDA #$06            ; MSB of end address
+    STA $83
+    JSR :__vio_write_memblock
+RTS                 ; VIO_WriteCharScreen
 
 ; WriteString
 ; Params: pointer to string in ($80)
@@ -285,72 +256,6 @@ RTS
     STA ($92),Y
 RTS
 
-;----------------------------------- INTERNALS -------------------------------------------------
-
-
-
-; Generic internal goto XY
-; Params: X=$80, Y=$81, Offset=($82), result will be in ($82)
-; X can be 0 to 39
-; Y can be 0 to 29 for char screen
-; Y can be 0 to 239 for graph screen
-; Works in video RAM
-:__GotoXY
-    LDA $81         ; ($90) += 40 * Y
-    BEQ :__gxy_cols
-    CLC
-    LDA $82
-    ADC #$28
-    STA $82
-    LDA $83
-    ADC #$00
-    STA $83
-    DEC $81
-    JMP :__GotoXY
-    :__gxy_cols
-    CLC
-    LDA $82         ; ($90) += X
-    ADC $80
-    STA $82
-    LDA $83
-    ADC #$00
-    STA $83
-RTS             ; GotoCharXY
-
-;--------- VIDEO IO CALLS -----------------------------
-; prepended with __vio they do actual Video IO
-:__vio_set_cursor
-LDA #$46            ; Set cursor to 0
-    JSR :__vio_comm_out
-    LDA $80             ; LSB of internal display address (0000 = begin of char, 04b0 is begin of graph)
-    JSR :__vio_data_out
-    LDA $81
-    JSR :__vio_data_out
-    LDA #$42
-    JSR :__vio_comm_out
-RTS
-
-:__vio_comm_out
-    STA $4000       ; Data = ACCU
-    LDA #$07        ; WR=1 (read), RS=1 (cmd), RES=1 (not reset)
-    STA $4001
-    DEC
-    STA $4001
-    INC
-    STA $4001       ; WR=0 --> WR=1
-RTS
-
-:__vio_data_out
-    STA $4000       ; Data = ACCU
-    LDA #$05        ; WR=1 (read), RS=0 (data), RES=1 (not reset)
-    STA $4001
-    DEC
-    STA $4001
-    INC
-    STA $4001       ; WR=0 --> WR=1
-RTS
-
-
 ; NAME      Dec2Ascii
 ; USAGE     Load byte to convert into ACCU, and target address in $80-$81
 ; EXAMPLE   LDA #$40
@@ -414,10 +319,104 @@ RTS
     PLA
     JMP :__ones
     :__done
-    RTS             ; Dec2Ascii
+RTS             ; Dec2Ascii
 
-; Below is actual IO, called from the IRQ handler
+
+
+
+
+
+
+;----------------------------------- INTERNALS -------------------------------------------------
+;
+; Those should only be called from the ROM itself and never from the user program
+;
+;
+
+; Generic internal goto XY
+; Params: X=$80, Y=$81, Offset=($82), result will be in ($82)
+; X can be 0 to 39
+; Y can be 0 to 29 for char screen
+; Y can be 0 to 239 for graph screen
+; Works in video RAM
+:__GotoXY
+    LDA $81         ; ($90) += 40 * Y
+    BEQ :__gxy_cols
+    CLC
+    LDA $82
+    ADC #$28
+    STA $82
+    LDA $83
+    ADC #$00
+    STA $83
+    DEC $81
+    JMP :__GotoXY
+    :__gxy_cols
+    CLC
+    LDA $82         ; ($90) += X
+    ADC $80
+    STA $82
+    LDA $83
+    ADC #$00
+    STA $83
+RTS             ; GotoCharXY
+
+; calls prepended with __vio they do actual Video IO
+:__vio_write_memblock
+    LDX $82             ; $82 = ($ff-LSB of end address)
+    LDY #$00            ; y = 0
+    :__wgs_loop
+    LDA ($80),Y
+    JSR :__vio_data_out
+    CPY #$FF
+    BNE :__wgs_incy
+    INC $81
+    :__wgs_incy
+    INY
+    INX
+    CPX #$FF
+    BNE :__wgs_loop
+    LDA $81
+    CMP $83            ; $83 = MSB of end address
+    BNE :__wgs_loop
+RTS                 ; __vio_write_memblock
+
+:__vio_set_cursor
+    LDA #$46            ; Set cursor to 0
+    JSR :__vio_comm_out
+    LDA $80             ; LSB of internal display address (0000 = begin of char, 04b0 is begin of graph)
+    JSR :__vio_data_out
+    LDA $81
+    JSR :__vio_data_out
+    LDA #$42
+    JSR :__vio_comm_out
+RTS
+
+:__vio_comm_out
+    STA $4000       ; Data = ACCU
+    LDA #$07        ; WR=1 (read), RS=1 (cmd), RES=1 (not reset)
+    STA $4001
+    DEC
+    STA $4001
+    INC
+    STA $4001       ; WR=0 --> WR=1
+RTS
+
+:__vio_data_out
+    STA $4000       ; Data = ACCU
+    LDA #$05        ; WR=1 (read), RS=0 (data), RES=1 (not reset)
+    STA $4001
+    DEC
+    STA $4001
+    INC
+    STA $4001       ; WR=0 --> WR=1
+RTS
+
+
+
+
 :HW_IRQ
-SEI
-CLI             ; Enable intterupts
+SEI             ; Disable interrupts
+; ... put interrupt code here ...
+CLI             ; Enable interrupts
 RTI             ; And we're done
