@@ -160,20 +160,63 @@ RTS             ; ClearDisplay
 :VIO_WriteGraphScreen
     LDA #$4f            ; cursor direction down
     JSR :__vio_comm_out
-    LDA #$B0            ; video cursor = 0x04b0
-    STA $80
+    LDA #$B0            ; cursor ($40) = $04b0  (start of graph memory in screen)
+    STA $40
     LDA #$04
+    STA $41
+    LDA #$b0            ; block_begin ($42) = 0x06b0 (start of graph memory in ram)
+    STA $42
+    LDA #$06
+    STA $43
+    LDA #$00            ; col = 0
+    STA $46
+
+    :__wps_start_col
+    LDA $40
+    STA $80
+    LDA $41
     STA $81
     JSR :__vio_set_cursor
-    LDA #$b0            ; ($80) = $06b0 (start addr of graph video)
+    LDA $42            ; block_end = block_begin
+    STA $44
+    LDA $43
+    STA $45
+    CLC
+    LDA $44           ; block_end = block_end + $ef   ($ef=239=last line of screen)
+    ADC #$EF
+    STA $44
+    LDA $45
+    ADC #$00
+    STA $45
+
+    LDA $42            ; __vio_write_memblock(block_begin, block_end)
     STA $80
-    LDA #$06
+    LDA $43
     STA $81
-    LDA #$CF            ; $ff minus (LSB of end address) --> ($ff-$30=$cf)
+    LDA $44            ; $ff minus (LSB of end address) == LSB XOR $FF
+    EOR #$FF
     STA $82
-    LDA #$2C            ; MSB of end address
+    LDA $45
     STA $83
     JSR :__vio_write_memblock
+
+    LDA $44             ; block_begin = block_end
+    STA $42
+    LDA $45
+    STA $43
+
+    CLC                 ; cursor = cursor + 1 (move right 1 column)
+    LDA $40
+    ADC #$01
+    STA $40
+    LDA $41
+    ADC #$00
+    STA $41
+
+    INC $46             ; col = col + 1
+    LDA $46
+    CMP #$28            ; if col == 40: return
+    BNE :__wps_start_col
 RTS                 ; VIO_WriteGraphScreen
 
 ; Writes $0200 - $06AF to display, starting at address 0
@@ -189,7 +232,7 @@ RTS                 ; VIO_WriteGraphScreen
     STA $80
     LDA #$02
     STA $81
-    LDA #$5            ; $ff minus (LSB of end address) --> ($ff-$af=$50)
+    LDA #$50            ; $ff minus (LSB of end address) --> ($ff-$af=$50)
     STA $82
     LDA #$06            ; MSB of end address
     STA $83
