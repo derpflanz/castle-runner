@@ -200,9 +200,16 @@ RTS             ; ClearDisplay
     STA $83
     JSR :__vio_write_memblock
 
-    LDA $44             ; block_begin = block_end
+    LDA $44             ; block_begin = block_end + 1
     STA $42
     LDA $45
+    STA $43
+    CLC
+    LDA $42
+    ADC #$01
+    STA $42
+    LDA $43
+    ADC #$00
     STA $43
 
     CLC                 ; cursor = cursor + 1 (move right 1 column)
