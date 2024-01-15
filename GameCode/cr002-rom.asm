@@ -304,8 +304,16 @@ RTS
 
 ; WriteGraph
 ; Writes character in ACCU into graph video memory ($92)
+; Increases the graph pointer by 1
 :WriteGraph
     STA ($92)
+    CLC
+    LDA $92
+    ADC #$01
+    STA $92
+    LDA $93
+    ADC #$00
+    STA $93
 RTS
 
 ; NAME      Dec2Ascii
