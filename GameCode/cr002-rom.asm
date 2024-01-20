@@ -258,48 +258,86 @@ RTS                 ; VIO_WriteCharScreen
     BNE :__ws_loop
 RTS             ; WriteString
 
-; GotoCharXY
-; Params: LDX. LDY
-; Result: The character screen pointer at ($90) is set to (x,y)
+; CalcCharPtr
+; Params: col = $94, row = $95
+; Result: The character screen pointer at ($90) is set to (row,col)
 ; Display is 40 character wide, 30 high
 ; Works in the video ram
-:GotoCharXY
-    STX $80
-    STY $81
-    LDA #$00        ; ($82) = $0200 + (40 * Y) + X
-    STA $82
-    LDA #$02
-    STA $83
-    JSR :__GotoXY
-    LDA $82         ; ($90) = ($82)
+:CalcCharPtr
+    LDA #$00        ; ($90) = $0200 = char base 
     STA $90
-    LDA $83
+    LDA #$02
     STA $91
-RTS             ; GotoCharXY
 
-; GotoGraphXY
-; Params: LDX. LDY
-; Result: The graph screen pointer at ($92) is set to (x,y)
-; Display is 40 character wide, 240 lines high
+    LDY $94
+    :__ccp_loop
+    TYA             ; ($90) += 40 * $93
+    BEQ :__ccp_cols
+    CLC
+    LDA $90
+    ADC #$28
+    STA $90
+    LDA $91
+    ADC #$00
+    STA $91
+    DEY
+    JMP :__ccp_loop
+    :__ccp_cols
+    CLC
+    LDA $90         ; ($90) += $95
+    ADC $95
+    STA $90
+    LDA $91
+    ADC #$00
+    STA $91
+RTS
+
+; CalcGraphPtr
+; Params: x = $96, y = $97
+; Result: The character screen pointer at ($90) is set to (row,col)
+; Display is 40 character wide, 30 high
 ; Works in the video ram
-:GotoGraphXY
-    STX $80
-    STY $81
-    LDA #$B0        ; ($82) = $06B0 + (40 * Y) + X
-    STA $82
-    LDA #$06
-    STA $83
-    JSR :__GotoXY
-    LDA $82         ; ($92) = ($82)
+:CalcGraphPtr
+    LDA #$b0        ; ($92) = $06b0 = graph base 
     STA $92
-    LDA $83
+    LDA #$06
     STA $93
-RTS             ; GotoGraphXY
+
+    LDX $96
+    :__cgp_loop
+    TXA             ; ($92) += 240 * $96
+    BEQ :__cgp_y
+    CLC
+    LDA $92
+    ADC #$F0
+    STA $92
+    LDA $93
+    ADC #$00
+    STA $93
+    DEX
+    JMP :__cgp_loop
+    :__cgp_y
+    CLC
+    LDA $92         ; ($92) += $97
+    ADC $97
+    STA $92
+    LDA $93
+    ADC #$00
+    STA $93
+RTS
 
 ; WriteChar
 ; Writes character in ACCU into char video memory ($90)
+; Increases the char pointer by 1
 :WriteChar
     STA ($90)
+    CLC
+    LDA $90
+    ADC #$01
+    STA $90
+    LDA $91
+    ADC #$00
+    STA $91
 RTS
 
 ; WriteGraph
@@ -392,34 +430,6 @@ RTS             ; Dec2Ascii
 ; Those should only be called from the ROM itself and never from the user program
 ;
 ;
-
-; Generic internal goto XY
-; Params: X=$80, Y=$81, Offset=($82), result will be in ($82)
-; X can be 0 to 39
-; Y can be 0 to 29 for char screen
-; Y can be 0 to 239 for graph screen
-; Works in video RAM
-:__GotoXY
-    LDA $81         ; ($90) += 40 * Y
-    BEQ :__gxy_cols
-    CLC
-    LDA $82
-    ADC #$28
-    STA $82
-    LDA $83
-    ADC #$00
-    STA $83
-    DEC $81
-    JMP :__GotoXY
-    :__gxy_cols
-    CLC
-    LDA $82         ; ($90) += X
-    ADC $80
-    STA $82
-    LDA $83
-    ADC #$00
-    STA $83
-RTS             ; GotoCharXY
 
 ; calls prepended with __vio they do actual Video IO
 :__vio_write_memblock
