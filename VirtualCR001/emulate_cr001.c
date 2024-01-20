@@ -6,6 +6,7 @@
 #include "debug.h"
 #include <curses.h>
 #include "generic.h"
+#include "tests.h"
 
 // base for the mem-view
 #define MEMORY_BASE 0x0000
@@ -63,6 +64,8 @@ int main(int argc, char **argv) {
         case KEY_DOWN:
             set_io(0, JOY_DOWN);
             break;
+        case KEY_F(9):
+            run_tests();
         default:
             break;
         }
