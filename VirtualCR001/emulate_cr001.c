@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
             set_io(0, JOY_DOWN);
             break;
         case KEY_F(9):
-            run_tests();
+            test_run(argv[1]);
         default:
             break;
         }

@@ -1,6 +1,6 @@
 #ifndef __TESTS_H
 #define __TESTS_H
 
-void run_tests();
+void test_run(const char *hexfile);
 
 #endif
