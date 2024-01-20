@@ -2,7 +2,7 @@
 ; It uses the cr001-rom.asm library
 
 ; DATA
-@SPLASH     "Castle Runner"       ; 13 characters, X=3 to middle it
+@SPLASH     "123456789ABCDEF0123456789"       ; 13 characters, X=3 to middle it
 @COPYRIGHT  "2023"
 @GAMEOVER   "Game Over!"
 
@@ -28,22 +28,22 @@ LDA HI(@SPLASH)
 STA $81
 JSR :WriteString
 
-; LDA #$00            ; ($10) = $C000 (data section)
-; STA $10
-; LDA #$C0
-; STA $11
+LDA #$00            ; ($10) = $C000 (data section)
+STA $10
+LDA #$C0
+STA $11
 
-; LDX #$00            ; (x,y) = (0,0)
-; LDY #$00
-; JSR :GotoGraphXY
+LDX #$00            ; (x,y) = (0,0)
+LDY #$00
+JSR :GotoGraphXY
 
-; LDY #$00
-; :firstloop
-; LDA ($10),y
-; JSR :WriteGraph
-; INY
-; CPY #$0f
-; BNE :firstloop
+LDY #$00
+:firstloop
+LDA ($10),y
+JSR :WriteGraph
+INY
+CPY #$0f
+BNE :firstloop
 
 ; LDX #$01            ; (x,y) = (1,0)
 ; LDY #$00
@@ -55,6 +55,24 @@ JSR :WriteString
 ; INY
 ; CPY #$1f
 ; BNE :secondloop
+
+
+LDX #$10
+LDY #$78
+JSR :GotoGraphXY
+
+LDA #$30
+JSR :WriteGraph
+LDA #$48
+JSR :WriteGraph
+LDA #$84
+JSR :WriteGraph
+LDA #$84
+JSR :WriteGraph
+LDA #$48
+JSR :WriteGraph
+LDA #$30
+JSR :WriteGraph
 
 
 
