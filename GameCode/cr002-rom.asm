@@ -109,7 +109,7 @@ RTS             ; ResetDisplay
     JSR :__vio_data_out
 RTS                 ; InitDisplay
 
-; InitVideoRam will zero all bytes between $0200 and $0C30
+; InitVideoRam will zero all bytes between $0200 and $2C30
 :InitVideoRam
     LDA #$2C        ; MSB of $2C30 (top of video ram)
     STA $41

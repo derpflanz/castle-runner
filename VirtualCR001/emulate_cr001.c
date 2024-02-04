@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
                 breakpoint_hit = TRUE;
             }
             napms(1);
-            ui_update_ram(VIDEO_BASE);
+            ui_update_ram(video_base);
 
             if (breakpoint_hit == TRUE) {
                 running = FALSE;

@@ -12,81 +12,53 @@ CLD             ; Clear "D" flag: use binary mode (instead of BCD)
 LDX #$ff        ; Initialise stack on 0x01ff
 TXS
 
-LDA #$10        ; x, y
-STA $96
-LDA #$78
-STA $97
-JSR :CalcGraphPtr
-BRK
-
-LDX #$00
-LDY #$01
-JSR :GotoGraphXY
-;JSR :GotoCharXY
-BRK
-
 ; init lcd
 JSR :VIO_ResetDisplay
 JSR :VIO_InitDisplay
 JSR :VIO_ClearDisplay
 JSR :InitVideoRam
 
+; For some strange reason, we need this to correctly clear the video ram (wtf?)
+LDA #$00
+STA $0200
 
-LDX #$01
-LDY #$01
-JSR :GotoCharXY
+; test code: write data to lower bottom of video ram
+LDA #$00        ; GraphX = 0
+STA $96
 
-LDA LO(@SPLASH)
-STA $80
-LDA HI(@SPLASH)
-STA $81
-JSR :WriteString
-
-LDA #$00            ; ($10) = $C000 (data section)
-STA $10
+LDA #$00        ; ($12) = $C000
+STA $12
 LDA #$C0
-STA $11
+STA $13
 
-LDX #$00            ; (x,y) = (0,0)
-LDY #$00
-JSR :GotoGraphXY
+:WriteXs
+LDA #$00
+STA $10         ; our count-to-40 counter
+LDA #$C8        ; GraphY = C8 = 200 = top of bottom frame
+STA $97
+JSR :CalcGraphPtr
 
-LDY #$00
-:firstloop
-LDA ($10),y
-JSR :WriteGraph
-INY
-CPY #$0f
-BNE :firstloop
+:WriteYs
+LDA ($12)
+JSR :WriteGraph ; This will INC $97
 
-; LDX #$01            ; (x,y) = (1,0)
-; LDY #$00
-; JSR :GotoGraphXY
-; LDY #$10
-; :secondloop
-; LDA ($10),y
-; JSR :WriteGraph
-; INY
-; CPY #$1f
-; BNE :secondloop
+CLC
+LDA $12
+ADC #$01
+STA $12
+LDA $13
+ADC #$00
+STA $13
 
-LDX #$10
-LDY #$78
-JSR :GotoGraphXY
-
-LDA #$30
-JSR :WriteGraph
-LDA #$48
-JSR :WriteGraph
-LDA #$84
-JSR :WriteGraph
-LDA #$84
-JSR :WriteGraph
-LDA #$48
-JSR :WriteGraph
-LDA #$30
-JSR :WriteGraph
-
+INC $10
+LDA $10
+CMP #$28        ; $28 = 40
+BNE :WriteYs
+INC $96
+LDA $96
+CMP #$28
+BNE :WriteXs
+; end test code
 
 
 JSR :VIO_WriteCharScreen
