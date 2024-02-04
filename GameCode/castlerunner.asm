@@ -12,11 +12,25 @@ CLD             ; Clear "D" flag: use binary mode (instead of BCD)
 LDX #$ff        ; Initialise stack on 0x01ff
 TXS
 
+LDA #$10        ; x, y
+STA $96
+LDA #$78
+STA $97
+JSR :CalcGraphPtr
+BRK
+
+LDX #$00
+LDY #$01
+JSR :GotoGraphXY
+;JSR :GotoCharXY
+BRK
+
 ; init lcd
 JSR :VIO_ResetDisplay
 JSR :VIO_InitDisplay
 JSR :VIO_ClearDisplay
 JSR :InitVideoRam
+
 
 LDX #$01
 LDY #$01
@@ -55,7 +69,6 @@ BNE :firstloop
 ; INY
 ; CPY #$1f
 ; BNE :secondloop
-
 
 LDX #$10
 LDY #$78
