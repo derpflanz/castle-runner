@@ -1,6 +1,7 @@
 import argparse, os, sys
 from fileprocessing import lexer, opcodes
 from directives import directives
+from symbols import symbols
 import sly
 
 def print_labels(labels):
@@ -14,6 +15,7 @@ parser.add_argument('-c', '--opcodefile', type=str, help='Opcode file to use')
 parser.add_argument('-d', '--debuginfo', type=str, help='Where to store debug info')
 parser.add_argument('-r', '--result', action='store_true', help='Show resulting code')
 parser.add_argument('-l', '--show-labels', action='store_true', help='Show generated label addresses')
+parser.add_argument('-y', '--symbolfile', type=str, help='Symbol file to be generated')
 parser.add_argument('-s', '--starting-address', type=str, default='8000',
     help='Starting address, in HEX (e.g. -s 8000). The address of the first opcode is stored at the beginning of the file. Default is 8000.')
 parser.add_argument('-t', '--target', choices=['c64', 'cr1'], default='cr1', help='Type of HEX file. "c64" will put location on where to store the image, "cr1" will set the RESB vector to the first opcode.')
@@ -85,6 +87,9 @@ with open(args.outputfile, 'wb') as ofile:
 
             linenumber += 1
 
+        symbols = symbols.Symbols(args.symbolfile)
+        symbols.write_labels(labels)
+
         if first_opcode_address == None:
             raise SyntaxError('No opcodes found. This ASM file is useless.')
 
@@ -128,7 +133,6 @@ with open(args.outputfile, 'wb') as ofile:
         phase = 'Assemble'
         linenumber = 1
         for line in preprocessed_lines:
-            print(line)
             result = list(mylexer.tokenize(line))
 
             codes = opcodes.Opcodes(result, address)

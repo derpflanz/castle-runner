@@ -49,7 +49,5 @@ void test_run(const char *hexfile) {
         return;
     }
 
-    
-
     free(testfile);
 }
