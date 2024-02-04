@@ -193,7 +193,7 @@ void ui_update_ram(uint16_t base_address) {
     mvwprintw(stack_win, 0, 0, "[STACK SP=01%02x]", sp);
     wrefresh(stack_win);
 
-    _mem_wshow(video_win, ram, 0x3000, 0x0000, epoints, 0, 1);
+    _mem_wshow(video_win, ram, 0x0200, 0x0000, epoints, 0, 1);
     box(video_win, 0, 0);
     mvwprintw(video_win, 0, 0, "[VIDEO]");
     wrefresh(video_win);
