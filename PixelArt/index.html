@@ -7,10 +7,17 @@
     </head>
     <body>
         <button id="btnSave" class="btn btn-primary">Save</button>
-        <button id="btnClear" class="btn btn-primary">Clear</button>
+        <button id="btnClear" class="btn btn-primary" disabled>Clear</button>
         <button id="btnHex" class="btn btn-primary">Hex Codes</button>
+        <button id="btnCopy" class="btn btn-primary">Copy to clipboard</button>
+        <div class="d-inline">
+            <b>X</b><span id="x"></span>
+            <b>Y</b><span id="y"></span>
+        </div>
         <table id="table">
-
         </table>
+        <code id="txtResult" cols="100" rows="20">
+
+        </code>
     </body>
 </html>
