@@ -2,10 +2,9 @@
 ; It uses the cr001-rom.asm library
 
 ; DATA
-@SPLASH     "Castle Runner"       ; 13 characters, X=3 to middle it
-@COPYRIGHT  "2021"
+@SPLASH     "123456789ABCDEF0123456789"       ; 13 characters, X=3 to middle it
+@COPYRIGHT  "2023"
 @GAMEOVER   "Game Over!"
-@INTERRUPTS "IRQ Works!"
 
 ; init
 SEI             ; Disable interrupts
@@ -14,184 +13,145 @@ LDX #$ff        ; Initialise stack on 0x01ff
 TXS
 
 ; init lcd
-JSR :ResetDisplay
-JSR :InitDisplay
-JSR :ClearDisplay
+JSR :VIO_ResetDisplay
+JSR :VIO_InitDisplay
+JSR :VIO_ClearDisplay
+JSR :InitVideoRam
 
-LDA #$46            ; Set cursor to 0
-JSR :__comm_out
+; For some strange reason, we need this to correctly clear the video ram (wtf?)
 LDA #$00
-JSR :__data_out
-LDA #$00
-JSR :__data_out
-LDA #$42
-JSR :__comm_out
+STA $0200
 
-LDA 'X'
-JSR :__data_out
+JSR :LoadBackdrop
+JSR :VIO_WriteGraphScreen
 
 CLI             ; Enable interrupts
 
-:stop
-JMP :stop
+; ======================= INITIALISATION ==================================
+; initialise location of our runner
+LDA #$0F
+STA $C0
+LDA #$14
+STA $C1
 
-; Initialise memory
-; Steps left        = $f0          -> when this is 0: Game Over!
-; Gold collected    = $f1
-; Location row      = $f2
-; Location col      = $f3
-; Joystick          = $f4
-; New location row  = $f5
-; New location col  = $f6
-
-
-; Initialise memory
-LDA #$0a            ; we start with 10 steps and no gold
-STA $f0
-LDA #$00
-STA $f1
-LDA #$02
-STA $f2
-LDA #$0a
-STA $f3
-
-; Draw fixed content on screen
 LDA #$10
-JSR :DisplayGotoLocation
-LDA 'S'
-JSR :DisplayChar
-LDA #$24
-JSR :DisplayGotoLocation
-LDA 'G'
-JSR :DisplayChar
+STA $C2
 
-:loop
-JSR :DrawRunner
-JSR :PrintGold
-JSR :PrintSteps
-LDA $f0
-BEQ :GameOver
+LDA $4000       ; Joystick shadow
+STA $D0
 
-; Read Joystick
+; ======================= GAME LOOP ==================================
+:GameLoop
+; Read joystick value and store in temp
 LDA $4000
-CMP $f4
-BEQ :loop               ; joy was not changed
+STA $D1
 
-LDA $4000
-STA $f4
-
-JSR :ClearRunner
-JSR :GetNewLocation
-JSR :MoveRunner
-JMP :loop
-
-:GameOver
-LDA #$01
+; Read joystick value and output to screen (for debug)
+LDA #$29
 STA $80
-LDA #$05
+LDA #$02
 STA $81
-JSR :DisplayGotoRowCol
-LDA LO(@GAMEOVER)
+LDA $D1
+JSR :Dec2Ascii
+
+; Print steps
+LDA #$4E
 STA $80
-LDA HI(@GAMEOVER)
+LDA #$06
 STA $81
-JSR :DisplayString
-BRK
+LDA $C2
+JSR :Dec2Ascii
 
-:MoveRunner
-LDA $f5
-AND #$fc            ; we allow 4 rows: 0b00 to 0b11
-BEQ :__DoMoveRow
-RTS
-:__DoMoveRow
-LDA $f5
-STA $f2
+; Read joystick and change XY for character
+LDA $D1           ; When joystick hasn't changed, do nothing
+CMP $D0
+BEQ :GameLoop
 
-LDA $f6
-AND #$f0            ; we allow 16 columns: 0b0000 to 0b1111
-BEQ :__DoMoveColumn
-RTS
-:__DoMoveColumn
-LDA $f6
-STA $f3
+LDA $D1
+STA $D0
 
-DEC $f0
-RTS
+LDA $D1             ; When joy in (or back to) middle, don't do anything
+CMP #$FF
+BEQ :GameLoop
 
-:GetNewLocation
-LDA $f2             ; new location = current location
-STA $f5
-LDA $f3
-STA $f6
-
-LDA $f4
-AND #$08
-BNE :_cont1
-DEC $f6
-:_cont1
-LDA $f4
-AND #$10
-BNE :_cont2
-INC $f6
-:_cont2
-LDA $f4
-AND #$02
-BNE :_cont3
-DEC $f5
-:_cont3
-LDA $f4
-AND #$04
-BNE :_cont4
-INC $f5
-:_cont4
-RTS
-
-:ClearRunner
-LDA $f2
-STA $80
-LDA $f3
-STA $81
-JSR :DisplayGotoRowCol
+LDA $C0             ; Remove old Runner
+STA $94
+LDA $C1
+STA $95
+JSR :CalcCharPtr
 LDA ' '
-JSR :DisplayChar
-RTS
+JSR :WriteChar
 
-:DrawRunner
-LDA $f2
-STA $80
-LDA $f3
-STA $81
-JSR :DisplayGotoRowCol
+LDA $D1
+AND #$02            ; UP
+BNE :Joy1
+DEC $C0
+:Joy1
+LDA $D1
+AND #$04            ; DOWN
+BNE :Joy2
+INC $C0
+:Joy2
+LDA $D1
+AND #$08            ; LEFT
+BNE :Joy3
+DEC $C1
+:Joy3
+LDA $D1
+AND #$10            ; RIGHT
+BNE :Joy4
+INC $C1
+:Joy4
+
+LDA $C0             ; Write new Runner
+STA $94
+LDA $C1
+STA $95
+JSR :CalcCharPtr
 LDA 'X'
-JSR :DisplayChar
-RTS
+JSR :WriteChar
 
-:PrintSteps
-LDA #$00
-STA $80
-LDA #$11
-STA $81
-JSR :DisplayGotoRowCol
-LDA #$40
-STA $80
-LDA #$00
-STA $81
-LDA $f0
-JSR :Dec2Ascii
-JSR :DisplayString
-RTS
+DEC $C2
 
-:PrintGold
-LDA #$01
-STA $80
-LDA #$11
-STA $81
-JSR :DisplayGotoRowCol
-LDA #$40
-STA $80
-LDA #$00
-STA $81
-LDA $f1
-JSR :Dec2Ascii
-JSR :DisplayString
+JSR :VIO_WriteCharScreen
+JMP :GameLoop
+
+:LoadBackdrop
+    ; Data starting in $C000 is our game backdrop
+    ; Load it into the Video RAM
+    LDA #$00        ; GraphX = 0
+    STA $96
+
+    LDA #$00        ; ($12) = $C000
+    STA $12
+    LDA #$C0
+    STA $13
+
+    :WriteXs
+    LDA #$00
+    STA $10         ; our count-to-40 counter
+    LDA #$C8        ; GraphY = C8 = 200 = top of bottom frame
+    STA $97
+    JSR :CalcGraphPtr
+
+    :WriteYs
+    LDA ($12)
+    JSR :WriteGraph ; This will INC $97
+
+    CLC
+    LDA $12
+    ADC #$01
+    STA $12
+    LDA $13
+    ADC #$00
+    STA $13
+
+    INC $10
+    LDA $10
+    CMP #$28        ; $28 = 40
+    BNE :WriteYs
+    INC $96
+    LDA $96
+    CMP #$28
+    BNE :WriteXs
 RTS

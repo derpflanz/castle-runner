@@ -107,6 +107,7 @@ void disp() {
   data_out(0x41);
   data_out(0xFF);
 
+  // cursor movement right
   comm_out(0x4c);
 }
 

@@ -8,9 +8,10 @@
 #include "generic.h"
 
 // base for the mem-view
-#define MEMORY_BASE 0x0000
+#define VIDEO_BASE 0x0200
 
 int main(int argc, char **argv) {
+    uint16_t video_base = VIDEO_BASE;
     if (argc < 2) {
         printf("Usage: %s <hexfile> [<debugfile>]\n", argv[0]);
         return -1;
@@ -31,7 +32,7 @@ int main(int argc, char **argv) {
     ui_init_lcd();
     lcd_init();
 
-    ui_update_ram(MEMORY_BASE);
+    ui_update_ram(VIDEO_BASE);
 
     int ch;
     int running = FALSE;
@@ -39,14 +40,14 @@ int main(int argc, char **argv) {
         switch (ch) {
         case KEY_F(10):
             step6502();
-            ui_update_ram(MEMORY_BASE);
+            ui_update_ram(video_base);
             break;
         case KEY_F(5):
             running = !running;
             break;
         case KEY_F(6):
             reset6502();
-            ui_update_ram(MEMORY_BASE);
+            ui_update_ram(video_base);
             break;
         case KEY_F(7):
             irq6502();
@@ -63,6 +64,14 @@ int main(int argc, char **argv) {
         case KEY_DOWN:
             set_io(0, JOY_DOWN);
             break;
+        case KEY_NPAGE:
+            video_base += 0x0200;
+            ui_update_ram(video_base);
+            break;
+        case KEY_PPAGE:
+            video_base -= 0x0200;
+            ui_update_ram(video_base);
+            break;
         default:
             break;
         }
@@ -73,7 +82,7 @@ int main(int argc, char **argv) {
                 breakpoint_hit = TRUE;
             }
             napms(1);
-            ui_update_ram(MEMORY_BASE);
+            ui_update_ram(video_base);
 
             if (breakpoint_hit == TRUE) {
                 running = FALSE;
