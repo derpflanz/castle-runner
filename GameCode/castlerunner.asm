@@ -40,6 +40,25 @@ STA $C2
 LDA $4000       ; Joystick shadow
 STA $D0
 
+LDA #$00
+STA $C3
+
+; ============= LEVEL INIT
+LDA #$0A
+STA $94
+LDA #$06
+STA $95
+JSR :CalcCharPtr
+LDA '$'
+JSR :WriteChar
+LDA #$0C
+STA $94
+LDA #$1C
+STA $95
+JSR :CalcCharPtr
+LDA '$'
+JSR :WriteChar
+
 ; ======================= GAME LOOP ==================================
 :GameLoop
 ; Read joystick value and store in temp
@@ -61,6 +80,15 @@ LDA #$06
 STA $81
 LDA $C2
 JSR :Dec2Ascii
+
+; Print gold
+LDA #$45
+STA $80
+LDA #$06
+STA $81
+LDA $C3
+JSR :Dec2Ascii
+
 
 ; Read joystick and change XY for character
 LDA $D1           ; When joystick hasn't changed, do nothing
@@ -108,6 +136,12 @@ STA $94
 LDA $C1
 STA $95
 JSR :CalcCharPtr
+LDA ($90)
+CMP '$'
+BNE :Walk
+INC $C3
+
+:Walk
 LDA 'X'
 JSR :WriteChar
 
