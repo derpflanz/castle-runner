@@ -125,6 +125,15 @@ class Opcodes:
 
     def as_bytes(self):
         return self._binary
+    
+    def is_jsr(self):
+        return len(self._binary) > 0 and self._binary[0] == 0x20
+    
+    def operand(self):
+        if len(self._binary) > 1:
+            return self._binary[1:]
+        
+        return None
 
     # the process method takes the tokens and
     # translates them to 6502 assembly binary

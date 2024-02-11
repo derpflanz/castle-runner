@@ -14,6 +14,7 @@ parser.add_argument('-c', '--opcodefile', type=str, help='Opcode file to use')
 parser.add_argument('-d', '--debuginfo', type=str, help='Where to store debug info')
 parser.add_argument('-r', '--result', action='store_true', help='Show resulting code')
 parser.add_argument('-l', '--show-labels', action='store_true', help='Show generated label addresses')
+parser.add_argument('-i', '--ignore', type=str, default='', help='Comma separated list of subroutines to ignore')
 parser.add_argument('-s', '--starting-address', type=str, default='8000',
     help='Starting address, in HEX (e.g. -s 8000). The address of the first opcode is stored at the beginning of the file. Default is 8000.')
 parser.add_argument('-t', '--target', choices=['c64', 'cr1'], default='cr1', help='Type of HEX file. "c64" will put location on where to store the image, "cr1" will set the RESB vector to the first opcode.')
@@ -51,6 +52,9 @@ with open(args.inputfile, 'r') as ifile:
     for line in ifile:
         lines.append(line)
 
+if args.ignore != '':
+    ignores = args.ignore.split(',')
+
 with open(args.outputfile, 'wb') as ofile:
     mylexer = lexer.AsmLexer()
     directives = directives.Directives(args.debuginfo)
@@ -73,6 +77,9 @@ with open(args.outputfile, 'wb') as ofile:
             codes = opcodes.Opcodes(result)
 
             if len(result) > 0 and (result[0].type == lexer.TOK_LABEL or result[0].type == lexer.TOK_STRINGNAME):
+                if result[0].value in labels:
+                    raise SyntaxError(f"Label '{result[0].value}' already exists.")
+
                 labels[result[0].value] = f"{address:04x}"
 
             if len(result) > 0 and result[0].type == lexer.TOK_OPCODE and first_opcode_address == None:
@@ -132,7 +139,21 @@ with open(args.outputfile, 'wb') as ofile:
             result = list(mylexer.tokenize(line))
 
             codes = opcodes.Opcodes(result, address)
-            ofile.write(codes.as_bytes())
+            skip = False
+            if codes.is_jsr():
+                for ignore in ignores:
+                    if ignore in labels:
+                        ignore_addr = labels[ignore]
+                        jmpaddr = codes.operand()
+                        hexjmpaddr = f"{jmpaddr[1]:02x}{jmpaddr[0]:02x}"
+                        if ignore_addr == hexjmpaddr:
+                            skip = True
+
+            if skip:
+                # when skipping write 3 bytes to make sure all addressing stays intact
+                ofile.write(b'\xea\xea\xea')
+            else:                
+                ofile.write(codes.as_bytes())
 
             if args.result:
                 a = "    " if codes.length() == 0 else f"{address:04x}"
@@ -146,11 +167,11 @@ with open(args.outputfile, 'wb') as ofile:
             linenumber += 1
 
     except opcodes.OpcodeError as err:
-        print(f"OPCODE ERROR: {err} in line {linenumber}")
+        print(f"OPCODE ERROR in line {linenumber}: {err}")
         print(f"Hex file {args.outputfile} was not written correctly.")
         sys.exit(1)
     except SyntaxError as err:
-        print(f"SYNTAX ERROR: {err}")
+        print(f"SYNTAX ERROR in line {linenumber}: {err}")
         print(f"Hex file {args.outputfile} was not written correctly.")
         sys.exit(1)
     except sly.lex.LexError as err:
