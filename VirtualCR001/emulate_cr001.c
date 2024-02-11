@@ -9,6 +9,7 @@
 
 // base for the mem-view
 #define VIDEO_BASE 0x0200
+#define VCHAR_BASE 0x0200
 
 int main(int argc, char **argv) {
     uint16_t video_base = VIDEO_BASE;
@@ -83,6 +84,7 @@ int main(int argc, char **argv) {
             }
             napms(1);
             ui_update_ram(video_base);
+            lcd_update(VCHAR_BASE, ram);
 
             if (breakpoint_hit == TRUE) {
                 running = FALSE;

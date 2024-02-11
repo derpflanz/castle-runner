@@ -8,4 +8,6 @@ void lcd_init();
 void lcd_io_write(uint8_t value);
 void lcd_ctrl_write(uint8_t value);
 
+void lcd_update(uint16_t base_addr, uint8_t *mem);
+
 #endif

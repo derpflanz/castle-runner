@@ -1,4 +1,5 @@
 #include "ui.h"
+#include <ctype.h>
 
 int pointer;
 uint8_t io_buffer;
@@ -50,6 +51,19 @@ void lcd_io_write(uint8_t value) {
     io_buffer = value;
 }
 
+void lcd_update(uint16_t base_addr, uint8_t *mem) {
+    int ptr = base_addr;
+
+    for (int row = 0; row < 30; row++) {
+        for (int col = 0; col < 40; col++) {
+            char c = mem[ptr++];
+            if (isprint(c)) {
+                ui_print_lcd(c, row, col);
+            }
+        }
+    }
+}
+
 void lcd_ctrl_write(uint8_t value) {
     // ctrl_buffer is not a real buffer, but three 
     // control lines E, RS and !RW
@@ -77,6 +91,5 @@ void lcd_ctrl_write(uint8_t value) {
             lcd_put_character(data_register);
             ui_writelog(IOLOG, "DATA VAL=%02x; DATA=%02x\n", value, data_register);
         }
-
     }
 }

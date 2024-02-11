@@ -102,7 +102,7 @@ void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highl
 }
 
 void _init_io_log() {
-    io_log = _create_newwin(LINES - 10, COLS / 4, 1, COLS / 4);
+    io_log = _create_newwin(LINES - 36, COLS / 4, 1, COLS / 4);
     scrollok(io_log, TRUE);
     wprintw(io_log, "\n");
     ui_writelog(IOLOG, "Opcode log ready\n");
@@ -110,7 +110,7 @@ void _init_io_log() {
 }
 
 void _init_memory_log() {
-    memory_log = _create_newwin(LINES - 10, COLS / 4, 1, 0);
+    memory_log = _create_newwin(LINES - 36, COLS / 4, 1, 0);
     scrollok(memory_log, TRUE);
     wprintw(memory_log, "\n");
     ui_writelog(MEMLOG, "Memory log ready\n");
@@ -133,8 +133,8 @@ void ui_print_lcd(char character, int row, int column) {
 }
 
 void ui_init_lcd() {
-    lcd = newwin(4, 20, LINES - 8, 1);
-    wbkgd(lcd, COLOR_PAIR(1));
+    lcd = newwin(30, 40, LINES - 31, 1);
+    wbkgd(lcd, COLOR_PAIR(4));
     wrefresh(lcd);
 }
 
@@ -144,6 +144,7 @@ void ui_init() {
     init_pair(1, COLOR_WHITE, COLOR_BLUE);
     init_pair(2, COLOR_WHITE, COLOR_BLACK);
     init_pair(3, COLOR_WHITE, COLOR_RED);
+    init_pair(4, COLOR_BLACK, COLOR_WHITE);
     cbreak();
     noecho();
     nodelay(stdscr, TRUE);
