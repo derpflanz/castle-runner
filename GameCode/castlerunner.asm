@@ -12,23 +12,19 @@ CLD             ; Clear "D" flag: use binary mode (instead of BCD)
 LDX #$ff        ; Initialise stack on 0x01ff
 TXS
 
-; EMULATOR INIT
-    JMP :InitDone
-
 ; HARDWARE INIT
-    JSR :VIO_ResetDisplay
-    JSR :VIO_InitDisplay
-    JSR :VIO_ClearDisplay
-    JSR :InitVideoRam
+JSR :VIO_ResetDisplay
+JSR :VIO_InitDisplay
+JSR :VIO_ClearDisplay
+JSR :InitVideoRam
 
-    ; For some strange reason, we need this to correctly clear the video ram (wtf?)
-    LDA #$00
-    STA $0200
+; For some strange reason, we need this to correctly clear the video ram (wtf?)
+LDA #$00
+STA $0200
 
-    JSR :LoadBackdrop
-    JSR :VIO_WriteGraphScreen
+JSR :LoadBackdrop
+JSR :VIO_WriteGraphScreen
 
-:InitDone
 CLI             ; Enable interrupts
 
 ; ======================= INITIALISATION ==================================
@@ -65,6 +61,7 @@ JSR :WriteChar
 
 ; ======================= GAME LOOP ==================================
 :GameLoop
+
 ; Read joystick value and store in temp
 LDA $4000
 STA $D1
@@ -93,6 +90,7 @@ STA $81
 LDA $C3
 JSR :Dec2Ascii
 
+
 ; Read joystick and change XY for character
 LDA $D1           ; When joystick hasn't changed, do nothing
 CMP $D0
@@ -110,6 +108,7 @@ STA $94
 LDA $C1
 STA $95
 JSR :CalcCharPtr
+
 LDA 'o'
 JSR :WriteChar
 
