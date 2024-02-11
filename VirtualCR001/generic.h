@@ -8,7 +8,9 @@
 #define JOY_UP      253  // = FD = 1111 1101 = bit 1 = 0x02 mask
 #define JOY_DOWN    251  // = FB = 1111 1011 = bit 2 = 0x04 mask
 #define JOY_FIRE    191  // = BF = 1011 1111 = bit 6 = 0x40 mask
+#define JOY_NONE    255  // = BF = 1111 1111
 
 int array_contains(uint16_t needle, uint16_t *haystack);
+void array_print(uint16_t *arr);
 
 #endif

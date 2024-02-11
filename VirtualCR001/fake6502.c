@@ -966,6 +966,7 @@ uint8_t callexternal = 0;
 void (*loopexternal)();
 
 void step6502() {
+    uint16_t opcode_addr = pc;
     opcode = read6502(pc++);
     status |= FLAG_CONSTANT;
 
@@ -976,9 +977,9 @@ void step6502() {
     (*optable[opcode])();
     if (addressing[0] == '\0' || addressing[0] == '#') {
         // immediate and implied have no EA
-        ui_writelog(IOLOG, "#%02x %s %s\n", opcode, mnemonics[opcode], addressing);
+        ui_writelog(IOLOG, "[%04x] #%02x %s %s\n", opcode_addr, opcode, mnemonics[opcode], addressing);
     } else {
-        ui_writelog(IOLOG, "#%02x %s %s\t[ea=%04x]\n", opcode, mnemonics[opcode], addressing, ea);
+        ui_writelog(IOLOG, "[%04x] #%02x %s %s\t[ea=%04x]\n", opcode_addr, opcode, mnemonics[opcode], addressing, ea);
     }
 
     clockticks6502 += ticktable[opcode];

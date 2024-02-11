@@ -11,6 +11,27 @@
 #define VIDEO_BASE 0x0200
 #define VCHAR_BASE 0x0200
 
+int dostep(uint16_t video_base) {
+    uint16_t opcode_addr = pc;
+    int running = TRUE;    
+    step6502();
+
+    if (array_contains(opcode_addr, breakpoints)) {
+        ui_writelog(MEMLOG, "BP Hit: %04x\n", opcode_addr);
+        breakpoint_hit = TRUE;
+    }
+    napms(1);
+    ui_update_ram(video_base);
+    lcd_update(VCHAR_BASE, ram);
+
+    if (breakpoint_hit == TRUE) {
+        running = FALSE;
+        breakpoint_hit = FALSE;
+    }
+
+    return running;
+}
+
 int main(int argc, char **argv) {
     uint16_t video_base = VIDEO_BASE;
     if (argc < 2) {
@@ -35,13 +56,15 @@ int main(int argc, char **argv) {
 
     ui_update_ram(VIDEO_BASE);
 
+    ui_writelog(MEMLOG, "Breakpoints found:\n");
+    array_print(breakpoints);
+
     int ch;
     int running = FALSE;
     while ((ch = getch()) != KEY_F(8)) {
         switch (ch) {
         case KEY_F(10):
-            step6502();
-            ui_update_ram(video_base);
+            dostep(video_base);
             break;
         case KEY_F(5):
             running = !running;
@@ -65,6 +88,9 @@ int main(int argc, char **argv) {
         case KEY_DOWN:
             set_io(0, JOY_DOWN);
             break;
+        case KEY_END:
+            set_io(0, JOY_NONE);
+            break;
         case KEY_NPAGE:
             video_base += 0x0200;
             ui_update_ram(video_base);
@@ -78,18 +104,7 @@ int main(int argc, char **argv) {
         }
 
         if (running) {
-            step6502();
-            if (array_contains(pc, breakpoints)) {
-                breakpoint_hit = TRUE;
-            }
-            napms(1);
-            ui_update_ram(video_base);
-            lcd_update(VCHAR_BASE, ram);
-
-            if (breakpoint_hit == TRUE) {
-                running = FALSE;
-                breakpoint_hit = FALSE;
-            }
+            running = dostep(video_base);
         } else {
             napms(100);
         }

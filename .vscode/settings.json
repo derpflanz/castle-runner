@@ -1,6 +1,10 @@
 {
     "files.associations": {
         "chrono": "cpp",
-        "mutex": "cpp"
+        "mutex": "cpp",
+        "*.tcc": "c",
+        "string": "c",
+        "istream": "c",
+        "streambuf": "c"
     }
 }

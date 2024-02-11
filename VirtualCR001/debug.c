@@ -14,11 +14,12 @@ uint16_t breakpoints[MAX_BREAKPOINTS];
 void read_breakpoints(FILE *debug_file) {
     char *line = NULL;
     size_t len = 0;
-    ssize_t read;
+    size_t read;
     int breakpoint_ctr = 0;
 
-    while ((read = getline(&line, &len, debug_file)) != -1) {
+    while ((read = getline(&line, &len, debug_file)) != -1) {        
         uint16_t address = strtoul(line, NULL, 16);
+        printf("Reading breakpoint address: %04x\n", address);
         breakpoints[breakpoint_ctr++] = address;
 
         if (breakpoint_ctr == MAX_BREAKPOINTS) {
