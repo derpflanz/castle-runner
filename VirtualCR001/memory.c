@@ -91,15 +91,7 @@ uint8_t read6502(uint16_t address) {
 
 void write6502(uint16_t address, uint8_t value) {
     ui_writelog(MEMLOG, "%06d %06d WRITE  address %04x: %02x\n", instructions, clockticks6502, address, value);
-
-    // connect the 0x4000 and 0x4001 addresses to the LCD
-    if (address == 0x4000) {
-        lcd_io_write(value);
-    } else if (address == 0x4001) {
-        lcd_ctrl_write(value);
-    } else {
-        ram[address] = value;
-    }
+    ram[address] = value;
 }
 
 void set_io(int port, uint8_t value) {

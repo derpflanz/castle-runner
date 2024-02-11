@@ -15,6 +15,10 @@ int dostep(uint16_t video_base) {
     uint16_t opcode_addr = pc;
     int running = TRUE;    
     step6502();
+    if (fatal == 1) {
+        running = FALSE;
+        fatal = 0;
+    }
 
     if (array_contains(opcode_addr, breakpoints)) {
         ui_writelog(MEMLOG, "BP Hit: %04x\n", opcode_addr);
@@ -53,6 +57,7 @@ int main(int argc, char **argv) {
     ui_init();
     ui_init_lcd();
     lcd_init();
+    set_io(0, JOY_NONE);
 
     ui_update_ram(VIDEO_BASE);
 
