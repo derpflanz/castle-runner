@@ -24,7 +24,6 @@ int dostep(uint16_t video_base) {
         ui_writelog(MEMLOG, "BP Hit: %04x\n", opcode_addr);
         breakpoint_hit = TRUE;
     }
-    napms(1);
     ui_update_ram(video_base);
     lcd_update(VCHAR_BASE, ram);
 
@@ -56,11 +55,9 @@ int main(int argc, char **argv) {
     reset6502();    
     ui_init();
     ui_init_lcd();
-    lcd_init();
     set_io(0, JOY_NONE);
 
     ui_update_ram(VIDEO_BASE);
-
     ui_writelog(MEMLOG, "Breakpoints found:\n");
     array_print(breakpoints);
 
