@@ -52,6 +52,7 @@ with open(args.inputfile, 'r') as ifile:
     for line in ifile:
         lines.append(line)
 
+ignores = []
 if args.ignore != '':
     ignores = args.ignore.split(',')
 
