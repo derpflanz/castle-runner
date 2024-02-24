@@ -37,17 +37,18 @@ class Opcodes:
     _tokens = None
     _binary = b''
     _length = 0
+    _variables = {}
 
     def _construct_statement(self, opcode, addressing_mode, operand):
         opcode_record = _opcode_matrix[opcode]
-        opcode_mnemonic = None
+        opcode_binary = None
 
         if addressing_mode is None:
             # no operand given, this is either Accu, Implied or Stack
             for mode in ['ACCU', 'IMPLIED', 'STACK']:
                 addressing_mode_idx = _addressing_mode_map[mode]
-                opcode_mnemonic = opcode_record[addressing_mode_idx]
-                if opcode_mnemonic != _invalid_addressing_mode:
+                opcode_binary = opcode_record[addressing_mode_idx]
+                if opcode_binary != _invalid_addressing_mode:
                     addressing_mode = mode
                     break
         else:
@@ -55,19 +56,19 @@ class Opcodes:
                 # operand with two bytes (e.g. $0400) given, this is either Absolute or Relative
                 for mode in ['ABSOLUTE', 'RELATIVE']:
                     addressing_mode_idx = _addressing_mode_map[mode]
-                    opcode_mnemonic = opcode_record[addressing_mode_idx]
-                    if opcode_mnemonic != _invalid_addressing_mode:
+                    opcode_binary = opcode_record[addressing_mode_idx]
+                    if opcode_binary != _invalid_addressing_mode:
                         addressing_mode = mode
                         break
             else: 
                 addressing_mode_idx = _addressing_mode_map[addressing_mode]
-                opcode_mnemonic = opcode_record[addressing_mode_idx]
+                opcode_binary = opcode_record[addressing_mode_idx]
 
-        if opcode_mnemonic == _invalid_addressing_mode:
+        if opcode_binary == _invalid_addressing_mode:
             raise OpcodeError(f'Addressing mode {addressing_mode} not supported for {opcode}')
 
         # write mnemonc
-        self._binary += opcode_mnemonic
+        self._binary += opcode_binary
 
         if addressing_mode is not None:
             if addressing_mode == 'RELATIVE':
@@ -141,6 +142,7 @@ class Opcodes:
                 opcode = token.value
             elif token.type in (TOK_OPER_ABSOLUTE, TOK_OPER_ABSINDIND, TOK_OPER_ABSX, TOK_OPER_ABSY, TOK_OPER_INDIRECT, TOK_OPER_IMMEDIATE,
                                     TOK_OPER_ZP, TOK_OPER_ZPINDIND, TOK_OPER_ZPINDX, TOK_OPER_ZPINDY, TOK_OPER_ZPIND, TOK_OPER_ZPINDINDY):
+
                 if opcode is None:
                     raise SyntaxError("Operand without OPCODE")
 
@@ -161,11 +163,14 @@ class Opcodes:
                 addressing_method = TOK_OPER_IMMEDIATE
                 operand = b'\x00'
             elif token.type == TOK_ASCII:
-                value = ord(token.value.strip("'"))       # remove ' from the token and translate to number
+                value = ord(token.value.strip("'"))                     # remove ' from the token and translate to number
                 operand = self._to_bytes(f"{value:02x}")                # translate to two-letter hex code
                 addressing_method = TOK_OPER_IMMEDIATE
             elif token.type in (TOK_COMMENT, TOK_DIRECTIVE):
                 pass
+            elif token.type in (TOK_VARIABLE):
+                if opcode is None:
+                    break
             else:
                 raise SyntaxError(f"Unknown token type: {token.type}. This shouldn't happen.")
 

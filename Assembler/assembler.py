@@ -1,11 +1,7 @@
 import argparse, os, sys
 from fileprocessing import lexer, opcodes
 from directives import directives
-import sly
-
-def print_labels(labels):
-    for label,address in labels.items():
-        print(f"{label:30}: {address}")
+from assembler import assembler
 
 parser = argparse.ArgumentParser(description='6502 Assembler')
 parser.add_argument('inputfile', type=str, help='.asm file to process')
@@ -27,8 +23,6 @@ if not os.path.exists(args.inputfile):
 if args.opcodefile is None or not os.path.exists(args.opcodefile):
     print(f"Opcode file {args.opcodefile} not found. Cannot assemble.")
     sys.exit(1)
-else:
-    opcodes.opcode_init(args.opcodefile)
 
 if os.path.exists(args.outputfile):
     print(f"Output file '{args.outputfile}' already exists, will be overwritten.")
@@ -39,126 +33,21 @@ try:
     if starting_address < 0 or starting_address > 0xffff:
         raise Exception()
 except:
-    print(f"Address '{args.starting_address}' is not a valid address.")
+    print(f"Address '{args.starting_address}' is not a valid address. Must be hex and between 0x0000 and 0xFFFF")
     sys.exit(1)
 
 print(f"Going to create HEX file for target '{args.target}'")
 print(f"Using ${args.starting_address} as starting address, all labels will be calculated from here.")
 
-with open(args.inputfile, 'r') as ifile:
-    # read the lines of the file into an array, so we can safely edit them
-    lines = []
-    for line in ifile:
-        lines.append(line)
-
-with open(args.outputfile, 'wb') as ofile:
+with open(args.inputfile, "r") as ifile, open(args.outputfile, 'wb') as ofile:    
+    opcodes.opcode_init(args.opcodefile)
     mylexer = lexer.AsmLexer()
     directives = directives.Directives(args.debuginfo)
-    lineno = 1
-    address = starting_address
-    line = ''
-    phase = ''
-    rawline = ''
-    labels = {}
-    linenumber = 1
 
-    try:
-        first_opcode_address = None
+    assembler = assembler.Assembler(mylexer, directives)
+    assembler.starting_address = starting_address
+    assembler.show_labels = args.show_labels
+    assembler.target = args.target
+    assembler.show_result = args.result
 
-        phase = 'Lexing'
-
-        # first process labels and string names
-        for line in lines:
-            result = list(mylexer.tokenize(line))
-            codes = opcodes.Opcodes(result)
-
-            if len(result) > 0 and (result[0].type == lexer.TOK_LABEL or result[0].type == lexer.TOK_STRINGNAME):
-                labels[result[0].value] = f"{address:04x}"
-
-            if len(result) > 0 and result[0].type == lexer.TOK_OPCODE and first_opcode_address == None:
-                first_opcode_address = address
-
-            if len(result) > 0 and result[0].type == lexer.TOK_DIRECTIVE:
-                directives.Process(result[0].value, address)
-
-            address += codes.length()
-
-            linenumber += 1
-
-        if first_opcode_address == None:
-            raise SyntaxError('No opcodes found. This ASM file is useless.')
-
-        if args.show_labels:
-            print_labels(labels)
-
-        if ":HW_IRQ" not in labels:
-            raise SyntaxError("Assembly had no interrupt handler and no default implemented. Stop.")
-
-        irq_address = int(labels[':HW_IRQ'], 16)
-        print(f"Using ${irq_address:04x} as the interrupt vector.")
-
-        phase = 'Preprocess'
-
-        # then preprocess the lines, replacing all labels and string names with their hex operand
-        # this way, the assembler only needs to handle hex operands
-        preprocessed_lines = []
-        linenumber = 1
-        for line in lines:            
-            line = line.strip()
-            for label,address in labels.items():
-                if line.startswith(label):
-                    line = line.strip(label)
-
-                # FIXME: when 'label' exists inside another label, this goes wrong
-                # the replace should be "whole word"
-                line = line.replace(label, '$' + address)
-
-            preprocessed_lines.append(line)
-
-            linenumber += 1
-
-        address = starting_address
-
-        if args.target == 'c64':
-            ofile.write(starting_address.to_bytes(2, 'little'))
-        else:
-            ofile.write(first_opcode_address.to_bytes(2, 'little'))
-            ofile.write(irq_address.to_bytes(2, 'little'))
-
-        phase = 'Assemble'
-        linenumber = 1
-        for line in preprocessed_lines:
-            print(line)
-            result = list(mylexer.tokenize(line))
-
-            codes = opcodes.Opcodes(result, address)
-            ofile.write(codes.as_bytes())
-
-            if args.result:
-                a = "    " if codes.length() == 0 else f"{address:04x}"
-                s = f"[{lineno:5}:{a}] {line.strip()}"
-                h = codes.as_bytes().hex(' ', 1)
-                print(f"{s:80} {h}")
-            
-            lineno += 1
-            address += codes.length()
-
-            linenumber += 1
-
-    except opcodes.OpcodeError as err:
-        print(f"OPCODE ERROR: {err} in line {linenumber}")
-        print(f"Hex file {args.outputfile} was not written correctly.")
-        sys.exit(1)
-    except SyntaxError as err:
-        print(f"SYNTAX ERROR: {err}")
-        print(f"Hex file {args.outputfile} was not written correctly.")
-        sys.exit(1)
-    except sly.lex.LexError as err:
-        print(f"[{linenumber:5}:    ] {rawline.strip()}")
-        print(f"LEXER ERROR: {err}")
-        print(f"In file {args.inputfile}, during {phase} phase")
-        print(f"Hex file {args.outputfile} was not written correctly.")
-        sys.exit(1)
-    finally:
-        directives.Finalise()
-
+    assembler.assemble(ifile, ofile)
