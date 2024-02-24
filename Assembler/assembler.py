@@ -2,7 +2,6 @@ import argparse, os, sys
 from fileprocessing import lexer, opcodes
 from directives import directives
 from assembler import assembler
-import sly
 
 parser = argparse.ArgumentParser(description='6502 Assembler')
 parser.add_argument('inputfile', type=str, help='.asm file to process')
@@ -24,8 +23,6 @@ if not os.path.exists(args.inputfile):
 if args.opcodefile is None or not os.path.exists(args.opcodefile):
     print(f"Opcode file {args.opcodefile} not found. Cannot assemble.")
     sys.exit(1)
-else:
-    opcodes.opcode_init(args.opcodefile)
 
 if os.path.exists(args.outputfile):
     print(f"Output file '{args.outputfile}' already exists, will be overwritten.")
@@ -36,31 +33,21 @@ try:
     if starting_address < 0 or starting_address > 0xffff:
         raise Exception()
 except:
-    print(f"Address '{args.starting_address}' is not a valid address.")
+    print(f"Address '{args.starting_address}' is not a valid address. Must be hex and between 0x0000 and 0xFFFF")
     sys.exit(1)
 
 print(f"Going to create HEX file for target '{args.target}'")
 print(f"Using ${args.starting_address} as starting address, all labels will be calculated from here.")
 
-with open(args.inputfile, "r") as ifile, open(args.outputfile, 'wb') as ofile:
+with open(args.inputfile, "r") as ifile, open(args.outputfile, 'wb') as ofile:    
+    opcodes.opcode_init(args.opcodefile)
     mylexer = lexer.AsmLexer()
     directives = directives.Directives(args.debuginfo)
 
-    try:
-        assembler = assembler.Assembler(mylexer, directives)
-        assembler.starting_address = starting_address
-        assembler.show_labels = args.show_labels
-        assembler.target = args.target
-        assembler.show_result = args.result
-        assembler.assemble(ifile, ofile)
-    except opcodes.OpcodeError as err:
-        print(f"Hex file {args.outputfile} was not written correctly.")
-        sys.exit(1)
-    except SyntaxError as err:
-        print(f"SYNTAX ERROR: {err}")
-        print(f"Hex file {args.outputfile} was not written correctly.")
-        sys.exit(1)
-    except sly.lex.LexError as err:
-        print(f"Hex file {args.outputfile} was not written correctly.")
-        sys.exit(1)
+    assembler = assembler.Assembler(mylexer, directives)
+    assembler.starting_address = starting_address
+    assembler.show_labels = args.show_labels
+    assembler.target = args.target
+    assembler.show_result = args.result
 
+    assembler.assemble(ifile, ofile)

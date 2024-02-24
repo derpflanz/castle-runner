@@ -142,10 +142,8 @@ class Assembler:
         except sly.lex.LexError as err:
             print(f"LEXER ERROR: {err} in phase {self.phase}")
             print(f"[{self.linenumber:5}:    ] {self.current_line.strip()}")
-            raise
         except opcodes.OpcodeError as err:
             print(f"OPCODE ERROR: {err} in line {self.linenumber}")
-            raise
         finally:
             self.directives.Finalise()
 
