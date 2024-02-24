@@ -44,18 +44,14 @@ class AsmLexer(Lexer):
 
     # stuff that needs to be processed
     OPCODE          = r'[A-Z]{3}[0-9]?'
-    VARIABLE        = r'[a-zA-Z_][_a-zA-Z0-9]*:'
-
-    LO              = r'LO(.*)'
-    HI              = r'HI(.*)'
-
+    VARIABLE        = r'[a-zA-Z_][a-zA-Z_0-9]*:'
 
     # addressing modes
     ABSINDEXX       = r'\$[0-9a-fA-F]{4},[Xx]'                              # ex. $7fe4,X           a,x     Absolute Indexed with X (3)
     ABSINDEXY       = r'\$[0-9a-fA-F]{4},[Yy]'                              # ex. $7fe4,Y           a,y     Absolute Indexed with Y (4)
-    ABSINDIND       = r'\$\([0-9a-fA-F]{4},[Xx]\)'                          # ex. ($4fe4,x)         (a,x)   Absolute Indexed Indirect (2)    
+    ABSINDIND       = r'\(\$[0-9a-fA-F]{4},[Xx]\)'                          # ex. ($4fe4,x)         (a,x)   Absolute Indexed Indirect (2)    
     INDIRECT        = r'\(\$[0-9a-fA-F]{4}\)'                               # ex. ($1000)           (a)     Absolute Indirect (5)
-    ABSOLUTE        = r'\$[0-9a-fA-F]{4}|[a-zA-Z_][_a-zA-Z0-9]*'            # ex. $4fe4             a       Absolute (1)    
+    ABSOLUTE        = r'\$[0-9a-fA-F]{4}'                                   # ex. $4fe4             a       Absolute (1)    
     IMMEDIATE       = r'\#\$[0-9a-fA-F]{1,2}|(LO|HI)\(\$[0-9a-fA-F]{4}\)'   # ex. #$1 or LO($8000)  #       Immediate (7)
     ZPINDX          = r'\$[0-9a-fA-F]{1,2},[Xx]'                            # ex. $7f,x             zp,x    Zero Page Indexed with X (13)
     ZPINDY          = r'\$[0-9a-fA-F]{1,2},[Yy]'                            # ex. $7f,y             zp,y    Zero Page Indexed with Y (14)
@@ -80,4 +76,6 @@ class AsmLexer(Lexer):
     STRINGNAME      = r'@[a-zA-Z]+'
     LABEL           = r':[a-zA-Z_][_a-zA-Z0-9]*'      # ex. :label1
 
+    LO              = r'LO(.*)'
+    HI              = r'HI(.*)'
 

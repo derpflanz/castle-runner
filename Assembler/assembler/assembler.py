@@ -1,5 +1,5 @@
 from fileprocessing import opcodes, lexer
-import sly
+import sly, re
 
 class Assembler:
     def __init__(self, _lexer, _directives):
@@ -10,6 +10,7 @@ class Assembler:
         self.show_labels = False
         self.show_result = False
         self.labels = {}
+        self.variables = {}
         self.phase = "Initialising"
         self.first_opcode_address = None
         self.irq_address = None
@@ -17,6 +18,11 @@ class Assembler:
         self.linenumber = 1
         self.target = "cr1"
 
+    def apply_variables(self, line, variables):
+        for varname, value in variables.items():
+            line = line.replace(varname, value)
+
+        return line
 
     def print_labels(self):
         for label,address in self.labels.items():
@@ -30,6 +36,7 @@ class Assembler:
         # first process labels and string names
         for line in lines:
             self.current_line = line
+            line = self.apply_variables(line, self.variables)
             result = list(self.lexer.tokenize(line))
             codes = opcodes.Opcodes(result)
 
@@ -105,6 +112,7 @@ class Assembler:
         address = self.starting_address
         for line in preprocessed_lines:
             self.current_line = line
+            line = self.apply_variables(line, self.variables)
             result = list(self.lexer.tokenize(line))
 
             codes = opcodes.Opcodes(result, address)
@@ -120,10 +128,30 @@ class Assembler:
 
             self.linenumber += 1
 
+    def read_variables(self, lines):
+        self.phase = "Reading variables"
+        pattern = r"(?P<varname>[a-zA-Z_][a-zA-Z_0-9]*):\s*(?P<address>\$[a-fA-F0-9]{2,4})"
+
+        newlines = []
+
+        for line in lines:            
+            match = re.search(pattern, line)
+            if match is not None:
+                d = match.groupdict()
+                self.variables[d['varname']] = d['address']
+            else:
+                newlines.append(line)
+
+        return newlines
+
+
     def assemble(self, ifile, ofile):
         lines = self.readlines(ifile)
 
         try:
+            lines = self.read_variables(lines)
+            print(self.variables)
+
             self.lexing(lines)
             self.check_lexing_result()
 
