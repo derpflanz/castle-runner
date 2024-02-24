@@ -246,6 +246,19 @@ RTS                 ; VIO_WriteGraphScreen
     JSR :__vio_write_memblock
 RTS                 ; VIO_WriteCharScreen
 
+:Wait1sec
+    LDA #$0f
+    STA $10
+    :__w1s_outer
+    LDA #$ff
+    :__w1s_inner
+    DEC
+    NOP
+    BNE :__w1s_inner
+    DEC $10
+    BNE :__w1s_outer
+RTS
+
 ; WriteString
 ; Params: pointer to string in ($80)
 ; Result: the string is printed on screen at where ($90) was pointing at

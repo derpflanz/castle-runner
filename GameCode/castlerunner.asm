@@ -12,6 +12,9 @@ CLD             ; Clear "D" flag: use binary mode (instead of BCD)
 LDX #$ff        ; Initialise stack on 0x01ff
 TXS
 
+LDA #$20
+STA $4002       ; turn on sound
+
 ; HARDWARE INIT
 JSR :VIO_ResetDisplay
 JSR :VIO_InitDisplay
@@ -24,6 +27,16 @@ STA $0200
 
 JSR :LoadBackdrop
 JSR :VIO_WriteGraphScreen
+
+LDA #$00
+STA $4002       ; turn off sound
+
+JSR :Wait1sec
+LDA #$20
+STA $4002
+JSR :Wait1sec
+LDA #$00
+STA $4002
 
 CLI             ; Enable interrupts
 
