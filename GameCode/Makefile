@@ -6,8 +6,8 @@ ASM3_FILES=io_test.asm
 DEBUGFILE=castlerunner.debug
 PROGDATA=castlerunner-data.hex
 PROGDATA_START=4000				# 0x4000 in ROM is 0xC000 in Cr002 memory map
-ASM_FLAGS=-s8000 --opcodefile $(ASM_BASE)w65c02s_opcodes.txt --debuginfo=$(DEBUGFILE) 
-EMULATOR_ASM_FLAGS=-s8000 --opcodefile $(ASM_BASE)w65c02s_opcodes.txt --debuginfo=$(DEBUGFILE) --ignore=:VIO_ResetDisplay,:VIO_InitDisplay,:VIO_ClearDisplay,:InitVideoRam,:LoadBackdrop,:VIO_WriteGraphScreen,:VIO_WriteCharScreen
+ASM_FLAGS=-s8000 --opcodefile $(ASM_BASE)w65c02s_opcodes.txt --debuginfo=$(DEBUGFILE) -r -l
+EMULATOR_ASM_FLAGS=-s8000 --opcodefile $(ASM_BASE)w65c02s_opcodes.txt --debuginfo=$(DEBUGFILE) --ignore=:VIO_ResetDisplay,:VIO_InitDisplay,:VIO_ClearDisplay,:InitVideoRam,:LoadBackdrop,:VIO_WriteGraphScreen,:VIO_WriteCharScreen -r -l
 ASSEMBLER=python $(ASM_BASE)assembler.py
 OUTPUT=castlerunner.hex
 

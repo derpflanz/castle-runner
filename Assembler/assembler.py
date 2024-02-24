@@ -37,6 +37,10 @@ except:
     print(f"Address '{args.starting_address}' is not a valid address. Must be hex and between 0x0000 and 0xFFFF")
     sys.exit(1)
 
+ignores = []
+if args.ignore != '':
+    ignores = args.ignore.split(",")
+
 print(f"Going to create HEX file for target '{args.target}'")
 print(f"Using ${args.starting_address} as starting address, all labels will be calculated from here.")
 
@@ -49,6 +53,7 @@ with open(args.inputfile, "r") as ifile, open(args.outputfile, 'wb') as ofile:
     assembler.starting_address = starting_address
     assembler.show_labels = args.show_labels
     assembler.target = args.target
+    assembler.ignores = ignores
     assembler.show_result = args.result
 
     assembler.assemble(ifile, ofile)

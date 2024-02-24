@@ -121,13 +121,30 @@ class Assembler:
             result = list(self.lexer.tokenize(line))
 
             codes = opcodes.Opcodes(result, address)
-            ofile.write(codes.as_bytes())
+            skip = False
+
+            if codes.is_jsr():
+                i = ""
+                for ignore in self.ignores:
+                    if ignore in self.labels:
+                        ignore_addr = self.labels[ignore]
+                        jmpaddr = codes.operand()
+                        hexjmpaddr = f"{jmpaddr[1]:02x}{jmpaddr[0]:02x}"
+                        if ignore_addr == hexjmpaddr:
+                            skip = True
+                            i = ignore
+                            break
+
+            if skip:
+                ofile.write(b'\xea\xea\xea')
+            else:
+                ofile.write(codes.as_bytes())
 
             if self.show_result:
                 a = "    " if codes.length() == 0 else f"{address:04x}"
-                s = f"[{self.linenumber:5}:{a}] {line.strip()}"
+                s = f"[{self.linenumber:5}:{a}] {'NOP NOP NOP' if skip else line.strip()}"
                 h = codes.as_bytes().hex(' ', 1)
-                print(f"{s:80} {h}")
+                print(f"{s:80} {f'({i} call was ignored)' if skip else h}")
             
             address += codes.length()
 
