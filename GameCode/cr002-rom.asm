@@ -24,10 +24,14 @@
 ;
 ; Video call that start with VIO_ do actual video IO
 
+display_data:   $4000
+display_ctrl:   $4001
+
+
 :VIO_ResetDisplay
     ; To reset, we pull de /RES pin low for at least 3ms
     LDA #$01        ; WR=1, RS=0, RES=0
-    STA $4001
+    STA display_ctrl
     LDA #$ff        ; number of full cycles to make $ff = 8ms
     STA $40
     :__reset_outer
@@ -38,7 +42,7 @@
     DEC $40
     BNE :__reset_outer
     LDA #$05        ; WR=1, RS=0, RES=1
-    STA $4001
+    STA display_ctrl
 RTS             ; ResetDisplay
 
 :VIO_InitDisplay
