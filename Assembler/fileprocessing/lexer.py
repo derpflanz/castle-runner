@@ -45,23 +45,23 @@ class AsmLexer(Lexer):
     # stuff that needs to be processed
     OPCODE          = r'[A-Z]{3}[0-9]?'
 
-    # operands
+    # addressing modes
     ABSINDEXX       = r'\$[0-9a-fA-F]{4},[Xx]'                              # ex. $7fe4,X           a,x     Absolute Indexed with X (3)
     ABSINDEXY       = r'\$[0-9a-fA-F]{4},[Yy]'                              # ex. $7fe4,Y           a,y     Absolute Indexed with Y (4)
     ABSINDIND       = r'\$\([0-9a-fA-F]{4},[Xx]\)'                          # ex. ($4fe4,x)         (a,x)   Absolute Indexed Indirect (2)    
     INDIRECT        = r'\(\$[0-9a-fA-F]{4}\)'                               # ex. ($1000)           (a)     Absolute Indirect (5)
     ABSOLUTE        = r'\$[0-9a-fA-F]{4}'                                   # ex. $4fe4             a       Absolute (1)    
-  # ACCU                                                                    #                       A       Accumulator (6)
     IMMEDIATE       = r'\#\$[0-9a-fA-F]{1,2}|(LO|HI)\(\$[0-9a-fA-F]{4}\)'   # ex. #$1 or LO($8000)  #       Immediate (7)
-  # IMPLIED                                                                 #                       i       Implied (8)
-  # RELATIVE                                                                #                       r       Program Counter Relative (9)
-  # STACK                                                                   #                       s       Stack (10)
     ZPINDX          = r'\$[0-9a-fA-F]{1,2},[Xx]'                            # ex. $7f,x             zp,x    Zero Page Indexed with X (13)
     ZPINDY          = r'\$[0-9a-fA-F]{1,2},[Yy]'                            # ex. $7f,y             zp,y    Zero Page Indexed with Y (14)
     ZEROPAGE        = r'\$[0-9a-fA-F]{1,2}'                                 # ex. $7f               zp      Zero Page (11)
     ZPINDIND        = r'\(\$[0-9a-fA-F]{1,2},[Xx]\)'                        # ex. ($7f,x)           (zp,x)  Zero Page Indexed Indirect (12)
     ZPINDINDY       = r'\(\$[0-9a-fA-F]{2}\),[Yy]'                          # ex. ($10),Y           (zp),y  Zero Page Indirect Indexed with Y (16)
     ZPIND           = r'\(\$[0-9a-fA-F]{1,2}\)'                             # ex. ($7f)             (zp)    Zero Page Indirect (15)
+  # ACCU                                                                    #                       A       Accumulator (6)
+  # IMPLIED                                                                 #                       i       Implied (8)
+  # RELATIVE                                                                #                       r       Program Counter Relative (9)
+  # STACK                                                                   #                       s       Stack (10)
 
     DIRECTIVE       = r'![a-z]+'                                            # ex. !break            Virtual machine runtime directives
 
