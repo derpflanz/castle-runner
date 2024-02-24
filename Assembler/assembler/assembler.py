@@ -11,7 +11,6 @@ class Assembler:
         self.show_result = False
         self.labels = {}
         self.variables = {}
-        self.phase = "Initialising"
         self.first_opcode_address = None
         self.irq_address = None
         self.current_line = ""
@@ -28,9 +27,47 @@ class Assembler:
         for label,address in self.labels.items():
             print(f"{label:30}: {address}")
 
-    def lexing(self, lines):
-        self.phase = "Lexing"
+    def check_address_results(self):
+        if self.first_opcode_address == None:
+            raise SyntaxError('No opcodes found. This ASM file is useless.')
 
+        if ":HW_IRQ" not in self.labels:
+            raise SyntaxError("Assembly had no interrupt handler and no default implemented. Stop.")
+        
+        print(f"Using ${self.first_opcode_address:04x} as the reset vector (first opcode).")
+        print(f"Using ${self.irq_address:04x} as the interrupt vector.")
+
+    def readlines(self, ifile):
+        # read the lines of the file into an array, so we can safely edit them
+        lines = []
+        for line in ifile:
+            lines.append(line)
+
+        return lines
+
+    def write_vectors(self, ofile):
+        if self.target == 'c64':
+            ofile.write(self.starting_address.to_bytes(2, 'little'))
+        else:
+            ofile.write(self.first_opcode_address.to_bytes(2, 'little'))
+            ofile.write(self.irq_address.to_bytes(2, 'little'))
+
+    def read_variables(self, lines):
+        pattern = r"(?P<varname>[a-zA-Z_][a-zA-Z_0-9]*):\s*(?P<address>\$[a-fA-F0-9]{2,4})"
+
+        newlines = []
+
+        for line in lines:            
+            match = re.search(pattern, line)
+            if match is not None:
+                d = match.groupdict()
+                self.variables[d['varname']] = d['address']
+            else:
+                newlines.append(line)
+
+        return newlines
+
+    def calculate_addresses(self, lines):
         address = self.starting_address
 
         # first process labels and string names
@@ -55,23 +92,8 @@ class Assembler:
 
         self.irq_address = int(self.labels[':HW_IRQ'], 16)
 
-
-    def check_lexing_result(self):
-        if self.first_opcode_address == None:
-            raise SyntaxError('No opcodes found. This ASM file is useless.')
-
-        if ":HW_IRQ" not in self.labels:
-            raise SyntaxError("Assembly had no interrupt handler and no default implemented. Stop.")
-        
-        print(f"Using ${self.first_opcode_address:04x} as the reset vector (first opcode).")
-        print(f"Using ${self.irq_address:04x} as the interrupt vector.")
-
-    def preprocessing(self, lines):
-        self.phase = 'Preprocessing'
-
-        # then preprocess the lines, replacing all labels and string names with their hex operand
-        # this way, the assembler only needs to handle hex operands
-        preprocessed_lines = []
+    def process_labels(self, lines):
+        newlines = []
         linenumber = 1
         for line in lines:   
             self.current_line = line         
@@ -84,30 +106,13 @@ class Assembler:
                 # the replace should be "whole word"
                 line = line.replace(label, '$' + address)
 
-            preprocessed_lines.append(line)
+            newlines.append(line)
 
             linenumber += 1
 
-        return preprocessed_lines
-
-    def readlines(self, ifile):
-        # read the lines of the file into an array, so we can safely edit them
-        lines = []
-        for line in ifile:
-            lines.append(line)
-
-        return lines
-
-    def write_vectors(self, ofile):
-        if self.target == 'c64':
-            ofile.write(self.starting_address.to_bytes(2, 'little'))
-        else:
-            ofile.write(self.first_opcode_address.to_bytes(2, 'little'))
-            ofile.write(self.irq_address.to_bytes(2, 'little'))
+        return newlines
 
     def assembling(self, preprocessed_lines, ofile):
-        self.phase = "Assembling"
-
         self.linenumber = 1
         address = self.starting_address
         for line in preprocessed_lines:
@@ -128,47 +133,28 @@ class Assembler:
 
             self.linenumber += 1
 
-    def read_variables(self, lines):
-        self.phase = "Reading variables"
-        pattern = r"(?P<varname>[a-zA-Z_][a-zA-Z_0-9]*):\s*(?P<address>\$[a-fA-F0-9]{2,4})"
-
-        newlines = []
-
-        for line in lines:            
-            match = re.search(pattern, line)
-            if match is not None:
-                d = match.groupdict()
-                self.variables[d['varname']] = d['address']
-            else:
-                newlines.append(line)
-
-        return newlines
-
-
     def assemble(self, ifile, ofile):
         lines = self.readlines(ifile)
 
         try:
             lines = self.read_variables(lines)
-            print(self.variables)
 
-            self.lexing(lines)
-            self.check_lexing_result()
+            self.calculate_addresses(lines)
+            self.check_address_results()
+            lines = self.process_labels(lines)
 
             if self.show_labels:
                 print("\nLABELS\n------------------------------------")
                 self.print_labels()
 
-            self.write_vectors(ofile)
-            preprocessed_lines = self.preprocessing(lines)
-
             if self.show_result:
                 print("\nRESULT\n-----------------------------------------------------------------------------------------")
 
-            self.assembling(preprocessed_lines, ofile)
+            self.write_vectors(ofile)
+            self.assembling(lines, ofile)
 
         except sly.lex.LexError as err:
-            print(f"LEXER ERROR: {err} in phase {self.phase}")
+            print(f"LEXER ERROR: {err}")
             print(f"[{self.linenumber:5}:    ] {self.current_line.strip()}")
         except opcodes.OpcodeError as err:
             print(f"OPCODE ERROR: {err} in line {self.linenumber}")
