@@ -41,14 +41,14 @@ class Opcodes:
 
     def _construct_statement(self, opcode, addressing_mode, operand):
         opcode_record = _opcode_matrix[opcode]
-        opcode_mnemonic = None
+        opcode_binary = None
 
         if addressing_mode is None:
             # no operand given, this is either Accu, Implied or Stack
             for mode in ['ACCU', 'IMPLIED', 'STACK']:
                 addressing_mode_idx = _addressing_mode_map[mode]
-                opcode_mnemonic = opcode_record[addressing_mode_idx]
-                if opcode_mnemonic != _invalid_addressing_mode:
+                opcode_binary = opcode_record[addressing_mode_idx]
+                if opcode_binary != _invalid_addressing_mode:
                     addressing_mode = mode
                     break
         else:
@@ -56,19 +56,19 @@ class Opcodes:
                 # operand with two bytes (e.g. $0400) given, this is either Absolute or Relative
                 for mode in ['ABSOLUTE', 'RELATIVE']:
                     addressing_mode_idx = _addressing_mode_map[mode]
-                    opcode_mnemonic = opcode_record[addressing_mode_idx]
-                    if opcode_mnemonic != _invalid_addressing_mode:
+                    opcode_binary = opcode_record[addressing_mode_idx]
+                    if opcode_binary != _invalid_addressing_mode:
                         addressing_mode = mode
                         break
             else: 
                 addressing_mode_idx = _addressing_mode_map[addressing_mode]
-                opcode_mnemonic = opcode_record[addressing_mode_idx]
+                opcode_binary = opcode_record[addressing_mode_idx]
 
-        if opcode_mnemonic == _invalid_addressing_mode:
+        if opcode_binary == _invalid_addressing_mode:
             raise OpcodeError(f'Addressing mode {addressing_mode} not supported for {opcode}')
 
         # write mnemonc
-        self._binary += opcode_mnemonic
+        self._binary += opcode_binary
 
         if addressing_mode is not None:
             if addressing_mode == 'RELATIVE':
