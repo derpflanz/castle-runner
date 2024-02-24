@@ -41,14 +41,14 @@ class Opcodes:
 
     def _construct_statement(self, opcode, addressing_mode, operand):
         opcode_record = _opcode_matrix[opcode]
-        opcode_mnemonic = None
+        opcode_binary = None
 
         if addressing_mode is None:
             # no operand given, this is either Accu, Implied or Stack
             for mode in ['ACCU', 'IMPLIED', 'STACK']:
                 addressing_mode_idx = _addressing_mode_map[mode]
-                opcode_mnemonic = opcode_record[addressing_mode_idx]
-                if opcode_mnemonic != _invalid_addressing_mode:
+                opcode_binary = opcode_record[addressing_mode_idx]
+                if opcode_binary != _invalid_addressing_mode:
                     addressing_mode = mode
                     break
         else:
@@ -56,19 +56,19 @@ class Opcodes:
                 # operand with two bytes (e.g. $0400) given, this is either Absolute or Relative
                 for mode in ['ABSOLUTE', 'RELATIVE']:
                     addressing_mode_idx = _addressing_mode_map[mode]
-                    opcode_mnemonic = opcode_record[addressing_mode_idx]
-                    if opcode_mnemonic != _invalid_addressing_mode:
+                    opcode_binary = opcode_record[addressing_mode_idx]
+                    if opcode_binary != _invalid_addressing_mode:
                         addressing_mode = mode
                         break
             else: 
                 addressing_mode_idx = _addressing_mode_map[addressing_mode]
-                opcode_mnemonic = opcode_record[addressing_mode_idx]
+                opcode_binary = opcode_record[addressing_mode_idx]
 
-        if opcode_mnemonic == _invalid_addressing_mode:
+        if opcode_binary == _invalid_addressing_mode:
             raise OpcodeError(f'Addressing mode {addressing_mode} not supported for {opcode}')
 
         # write mnemonc
-        self._binary += opcode_mnemonic
+        self._binary += opcode_binary
 
         if addressing_mode is not None:
             if addressing_mode == 'RELATIVE':
@@ -97,6 +97,9 @@ class Opcodes:
         return len(self._binary)
 
     def _to_bytes(self, operand):
+        take_low = False
+        take_high = False
+
         if type(operand) is int:
             operand = f"{operand:04x}"
 
@@ -104,14 +107,15 @@ class Opcodes:
             return operand
 
         if operand.startswith("LO"):
-            operand = operand[6:8]
+            operand = operand[3:-1]
+            take_low = True
         if operand.startswith("HI"):
-            operand = operand[4:6]
+            operand = operand[3:-1]
+            take_high = True
 
         # operand is a string
         # an operand can be #$xx, $xx or $xxxx
-        operand = operand.replace('#', '')
-        operand = operand.replace('$', '')
+        operand = operand.replace('#', '')       
         operand = operand.replace(',X', '')
         operand = operand.replace(',Y', '')
         operand = operand.replace(',x', '')
@@ -119,8 +123,18 @@ class Opcodes:
         operand = operand.replace('(', '')
         operand = operand.replace(')', '')
 
+        if operand in Opcodes._variables:
+            operand = Opcodes._variables[operand]
+
+        operand = operand.replace('$', '')
+
         if len(operand) == 1:
             operand = '0' + operand
+
+        if take_high:
+            operand = operand[0:2]
+        if take_low:
+            operand = operand[2:4]
 
         return bytes.fromhex(operand)[::-1]
 
@@ -148,10 +162,7 @@ class Opcodes:
                     raise SyntaxError("Operand without OPCODE or VARIABLE_NAME")
 
                 if variable_name is not None:                                   # register variable value
-                    Opcodes._variables[variable_name] = token.value
-
-                if f"{token.value}:" in Opcodes._variables:                     # fetch value of variable
-                    token.value = Opcodes._variables[f"{token.value}:"]
+                    Opcodes._variables[variable_name[:-1]] = token.value
 
                 # 'real' addressing modes
                 addressing_method = token.type
