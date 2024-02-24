@@ -37,6 +37,7 @@ class Opcodes:
     _tokens = None
     _binary = b''
     _length = 0
+    _variables = {}
 
     def _construct_statement(self, opcode, addressing_mode, operand):
         opcode_record = _opcode_matrix[opcode]
@@ -132,6 +133,7 @@ class Opcodes:
         opcode = None
         addressing_method = None
         operand = None
+        variable_name = None
 
         for token in self._tokens:
             if token.type == TOK_OPCODE:
@@ -141,8 +143,15 @@ class Opcodes:
                 opcode = token.value
             elif token.type in (TOK_OPER_ABSOLUTE, TOK_OPER_ABSINDIND, TOK_OPER_ABSX, TOK_OPER_ABSY, TOK_OPER_INDIRECT, TOK_OPER_IMMEDIATE,
                                     TOK_OPER_ZP, TOK_OPER_ZPINDIND, TOK_OPER_ZPINDX, TOK_OPER_ZPINDY, TOK_OPER_ZPIND, TOK_OPER_ZPINDINDY):
-                if opcode is None:
-                    raise SyntaxError("Operand without OPCODE")
+
+                if opcode is None and variable_name is None:
+                    raise SyntaxError("Operand without OPCODE or VARIABLE_NAME")
+
+                if variable_name is not None:                                   # register variable value
+                    Opcodes._variables[variable_name] = token.value
+
+                if f"{token.value}:" in Opcodes._variables:                     # fetch value of variable
+                    token.value = Opcodes._variables[f"{token.value}:"]
 
                 # 'real' addressing modes
                 addressing_method = token.type
@@ -161,11 +170,13 @@ class Opcodes:
                 addressing_method = TOK_OPER_IMMEDIATE
                 operand = b'\x00'
             elif token.type == TOK_ASCII:
-                value = ord(token.value.strip("'"))       # remove ' from the token and translate to number
+                value = ord(token.value.strip("'"))                     # remove ' from the token and translate to number
                 operand = self._to_bytes(f"{value:02x}")                # translate to two-letter hex code
                 addressing_method = TOK_OPER_IMMEDIATE
             elif token.type in (TOK_COMMENT, TOK_DIRECTIVE):
                 pass
+            elif token.type in (TOK_VARIABLE):
+                variable_name = token.value
             else:
                 raise SyntaxError(f"Unknown token type: {token.type}. This shouldn't happen.")
 
