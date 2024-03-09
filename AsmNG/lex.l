@@ -51,12 +51,12 @@ int lexlinecounter = 1;
 	return *yytext;
 }
 
-[\(\)=] {
+[\(\)=A] {
 	return *yytext;
 }
 
 ;.*$ 			;
 [ \t]+          ;
 
-.    printf("Invalid token in line %d: %s\n", lexlinecounter, yytext);
+.    printf("Lexer error: invalid token on line %d: %s\n", lexlinecounter, yytext);
 
