@@ -23,3 +23,9 @@ Arduino/.vscode/
 Arduino/VideoSignal/.vscode/
 
 PixelArt/bytes.asc
+
+AsmNG/as6502
+
+AsmNG/generated/
+
+AsmNG/testfile
