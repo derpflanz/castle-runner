@@ -4,6 +4,7 @@
 int yylex(void);
 extern char *yytext;
 extern int linecounter;
+extern int lexerrorcounter;
 int errors = 0;
 
 void yyerror(char *s) {
@@ -14,8 +15,8 @@ void yyerror(char *s) {
 int main(int argc, char **argv) {
     yyparse();
 
-    if (errors > 0) {
-        printf("Parsing failed with %d error(s).\n", errors);
+    if (errors + lexerrorcounter > 0) {
+        printf("Parsing failed with %d error(s).\n", errors + lexerrorcounter);
         return 1;
     }
 

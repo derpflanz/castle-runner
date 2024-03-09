@@ -2,6 +2,7 @@
 #include "parser.h"
 #include <ctype.h>
 int lexlinecounter = 1;
+int lexerrorcounter = 0;
 
 %}
 %%
@@ -58,5 +59,5 @@ int lexlinecounter = 1;
 ;.*$ 			;
 [ \t]+          ;
 
-.    printf("Lexer error: invalid token on line %d: %s\n", lexlinecounter, yytext);
+.    printf("Lexer error %d: invalid token on line %d: %s (%d)\n", ++lexerrorcounter, lexlinecounter, yytext);
 

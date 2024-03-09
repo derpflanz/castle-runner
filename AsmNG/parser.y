@@ -22,22 +22,22 @@ struct element *identifiers = NULL;
 
 static const char *mnemonics[OPCODE_COUNT] = {
 /*         |  0    |  1    |  2    |  3    |  4    |  5    |  6    |  7     |  8    |  9    |  A    |  B  |    C  |    D  |    E    |  F    |      */
-/* 0 */      "brk",  "ora",  "   ",  "   ",  "tsb",  "ora",  "asl",  "rmb0",  "php",  "ora",  "asl",  "   ",  "tsb",  "ora",  "asl",  "bbr0", /* 0 */
-/* 1 */      "bpl",  "ora",  "ora",  "   ",  "trb",  "ora",  "asl",  "rmb1",  "clc",  "ora",  "inc",  "   ",  "trb",  "ora",  "asl",  "bbr1", /* 1 */
-/* 2 */      "jsr",  "and",  "   ",  "   ",  "bit",  "and",  "rol",  "rmb2",  "plp",  "and",  "rol",  "   ",  "bit",  "and",  "rol",  "bbr2", /* 2 */
-/* 3 */      "bmi",  "and",  "and",  "   ",  "bit",  "and",  "rol",  "rmb3",  "sec",  "and",  "dec",  "   ",  "bit",  "and",  "rol",  "bbr3", /* 3 */
-/* 4 */      "rti",  "eor",  "   ",  "   ",  "   ",  "eor",  "lsr",  "rmb4",  "pha",  "eor",  "lsr",  "   ",  "jmp",  "eor",  "lsr",  "bbr4", /* 4 */
-/* 5 */      "bvc",  "eor",  "eor",  "   ",  "   ",  "eor",  "lsr",  "rmb5",  "cli",  "eor",  "phy",  "   ",  "   ",  "eor",  "lsr",  "bbr5", /* 5 */
-/* 6 */      "rts",  "adc",  "   ",  "   ",  "stz",  "adc",  "ror",  "rmb6",  "pla",  "adc",  "ror",  "   ",  "jmp",  "adc",  "ror",  "bbr6", /* 6 */
-/* 7 */      "bvs",  "adc",  "adc",  "   ",  "stz",  "adc",  "ror",  "rmb7",  "sei",  "adc",  "ply",  "   ",  "jmp",  "adc",  "ror",  "bbr7", /* 7 */
-/* 8 */      "bra",  "sta",  "   ",  "   ",  "sty",  "sta",  "stx",  "smb0",  "dey",  "bit",  "txa",  "   ",  "sty",  "sta",  "stx",  "bbs0", /* 8 */
-/* 9 */      "bcc",  "sta",  "sta",  "   ",  "sty",  "sta",  "stx",  "smb1",  "tya",  "sta",  "txs",  "   ",  "stz",  "sta",  "stz",  "bbs1", /* 9 */
-/* A */      "ldy",  "lda",  "ldx",  "   ",  "ldy",  "lda",  "ldx",  "smb2",  "tay",  "lda",  "tax",  "   ",  "ldy",  "lda",  "ldx",  "bbs2", /* A */
-/* B */      "bcs",  "lda",  "lda",  "   ",  "ldy",  "lda",  "ldx",  "smb3",  "clv",  "lda",  "tsx",  "   ",  "ldy",  "lda",  "ldx",  "bbs3", /* B */
-/* C */      "cpy",  "cmp",  "   ",  "   ",  "cpy",  "cmp",  "dec",  "smb4",  "iny",  "cmp",  "dex",  "wai",  "cpy",  "cmp",  "dec",  "bbs4", /* C */
-/* D */      "bne",  "cmp",  "cmp",  "   ",  "   ",  "cmp",  "dec",  "smb5",  "cld",  "cmp",  "phx",  "stp",  "   ",  "cmp",  "dec",  "bbs5", /* D */
-/* E */      "cpx",  "sbc",  "   ",  "   ",  "cpx",  "sbc",  "inc",  "smb6",  "inx",  "sbc",  "nop",  "   ",  "cpx",  "sbc",  "inc",  "bbs6", /* E */
-/* F */      "beq",  "sbc",  "sbc",  "   ",  "   ",  "sbc",  "inc",  "smb7",  "sed",  "sbc",  "plx",  "   ",  "   ",  "sbc",  "inc",  "bbs7"  /* F */
+/* 0 */      "brk",  "ora",  "",     "",  "tsb",  "ora",  "asl",  "rmb0",  "php",  "ora",  "asl",  "",     "tsb",  "ora",  "asl",  "bbr0", /* 0 */
+/* 1 */      "bpl",  "ora",  "ora",  "",  "trb",  "ora",  "asl",  "rmb1",  "clc",  "ora",  "inc",  "",     "trb",  "ora",  "asl",  "bbr1", /* 1 */
+/* 2 */      "jsr",  "and",  "",     "",  "bit",  "and",  "rol",  "rmb2",  "plp",  "and",  "rol",  "",     "bit",  "and",  "rol",  "bbr2", /* 2 */
+/* 3 */      "bmi",  "and",  "and",  "",  "bit",  "and",  "rol",  "rmb3",  "sec",  "and",  "dec",  "",     "bit",  "and",  "rol",  "bbr3", /* 3 */
+/* 4 */      "rti",  "eor",  "",     "",  "",     "eor",  "lsr",  "rmb4",  "pha",  "eor",  "lsr",  "",     "jmp",  "eor",  "lsr",  "bbr4", /* 4 */
+/* 5 */      "bvc",  "eor",  "eor",  "",  "",     "eor",  "lsr",  "rmb5",  "cli",  "eor",  "phy",  "",     "",     "eor",  "lsr",  "bbr5", /* 5 */
+/* 6 */      "rts",  "adc",  "",     "",  "stz",  "adc",  "ror",  "rmb6",  "pla",  "adc",  "ror",  "",     "jmp",  "adc",  "ror",  "bbr6", /* 6 */
+/* 7 */      "bvs",  "adc",  "adc",  "",  "stz",  "adc",  "ror",  "rmb7",  "sei",  "adc",  "ply",  "",     "jmp",  "adc",  "ror",  "bbr7", /* 7 */
+/* 8 */      "bra",  "sta",  "",     "",  "sty",  "sta",  "stx",  "smb0",  "dey",  "bit",  "txa",  "",     "sty",  "sta",  "stx",  "bbs0", /* 8 */
+/* 9 */      "bcc",  "sta",  "sta",  "",  "sty",  "sta",  "stx",  "smb1",  "tya",  "sta",  "txs",  "",     "stz",  "sta",  "stz",  "bbs1", /* 9 */
+/* A */      "ldy",  "lda",  "ldx",  "",  "ldy",  "lda",  "ldx",  "smb2",  "tay",  "lda",  "tax",  "",     "ldy",  "lda",  "ldx",  "bbs2", /* A */
+/* B */      "bcs",  "lda",  "lda",  "",  "ldy",  "lda",  "ldx",  "smb3",  "clv",  "lda",  "tsx",  "",     "ldy",  "lda",  "ldx",  "bbs3", /* B */
+/* C */      "cpy",  "cmp",  "",     "",  "cpy",  "cmp",  "dec",  "smb4",  "iny",  "cmp",  "dex",  "wai",  "cpy",  "cmp",  "dec",  "bbs4", /* C */
+/* D */      "bne",  "cmp",  "cmp",  "",  "",     "cmp",  "dec",  "smb5",  "cld",  "cmp",  "phx",  "stp",  "",     "cmp",  "dec",  "bbs5", /* D */
+/* E */      "cpx",  "sbc",  "",     "",  "cpx",  "sbc",  "inc",  "smb6",  "inx",  "sbc",  "nop",  "",     "cpx",  "sbc",  "inc",  "bbs6", /* E */
+/* F */      "beq",  "sbc",  "sbc",  "",  "",     "sbc",  "inc",  "smb7",  "sed",  "sbc",  "plx",  "",     "",     "sbc",  "inc",  "bbs7"  /* F */
 };
 
 
@@ -81,10 +81,9 @@ static char *addressing_modes[OPCODE_COUNT] = {
 
 unsigned char opcode_lookup(char *mnemonic, char *mode) {
     for (unsigned char i = 0; i < OPCODE_COUNT-1; i++) {
-        printf("Checking %d %s %s\n", i, mnemonics[i], addressing_modes[i]);
         if (
-            !strncmp(addressing_modes[i],   mode,       strlen(addressing_modes[i])) && 
-            !strncmp(mnemonics[i],          mnemonic,   strlen(mnemonics[i]))
+            !strncmp(addressing_modes[i],   mode,       strlen(mode)) && 
+            !strncmp(mnemonics[i],          mnemonic,   strlen(mnemonic))
         ) {
             return i;
         }        
