@@ -29,3 +29,5 @@ AsmNG/as6502
 AsmNG/generated/
 
 AsmNG/testfile
+
+AsmNG/testfile.asm
