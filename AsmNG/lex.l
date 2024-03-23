@@ -60,7 +60,7 @@ int lexerrorcounter = 0;
 	return *yytext;
 }
 
-[\(\)=Aa#XxYy,:\+\-] {
+[\(\)=Aa#XxYy,:\+\-\<\>] {
 	return *yytext;
 }
 

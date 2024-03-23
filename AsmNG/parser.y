@@ -125,7 +125,7 @@ int get_statement_length(const char *addressing_mode) {
     return 2;
 }
 
-void statement(char *mnemonic, struct addr_offset *ao, char *addressing_mode) {
+void statement(int callid, char *mnemonic, struct addr_offset *ao, char *addressing_mode) {
     char *operand = NULL;
     int offset = 0;
     if (ao != NULL) {
@@ -139,11 +139,14 @@ void statement(char *mnemonic, struct addr_offset *ao, char *addressing_mode) {
         yyerror(error_msg);
     }
 
-    printf("[%04x] %d  mn: %s, operand: %-7s (offset %d)  mode=%-6s %10s opcode: %02x (%s) +%d bytes\n", 
-        address, linecounter, mnemonic, operand, offset, addressing_mode, "", opcode, mnemonics[opcode], 
+    printf("%02d [%04x] %d  mn: %s (%p), operand: %-7s (offset %4d)  mode=%-6s %10s opcode: %02x (%s) +%d bytes\n", 
+        callid, address, linecounter, mnemonic, mnemonic, operand, offset, addressing_mode, "", opcode, mnemonics[opcode], 
         get_statement_length(addressing_mode));
 
     address += get_statement_length(addressing_mode);
+
+    if (operand != NULL) free(operand);
+    free(mnemonic);
 }
 
 bool is_zp(struct addr_offset *ao) {
@@ -190,6 +193,7 @@ bool is_zp(struct addr_offset *ao) {
 %type<str> IDENTIFIER
 %type<str> ABSOLUTE
 %type<str> ZEROPAGE
+%type<number> NUMBER
 %type<ao> zp_abs_identifier
 %type<ao> zp_abs
 %type<ao> zp_identifier
@@ -197,7 +201,6 @@ bool is_zp(struct addr_offset *ao) {
 %type<ao> abs
 %type<ao> zp
 %type<ao> ident
-%type<number> NUMBER
 
 %%
 
@@ -209,17 +212,17 @@ program:
 ;
 
 expression:
-    MNEMONIC                                { statement($1, NULL,   "i"); }
-|   MNEMONIC accu                           { statement($1, NULL,   "i"); }
-|   MNEMONIC '#' zp_identifier              { statement($1, $3,     "#"); }
-|   MNEMONIC zp_abs_identifier ',' x        { statement($1, $2,     is_zp($2)?"zp,x":"a,x"); }
-|   MNEMONIC zp_abs_identifier ',' y        { statement($1, $2,     is_zp($2)?"zp,y":"a,y"); }
-|   MNEMONIC zp_abs_identifier              { statement($1, $2,     is_zp($2)?"zp":"a"); }
-|   MNEMONIC '(' zp_identifier ')'          { statement($1, $3,     is_zp($3)?"(zp)":"(a)"); }
-|   MNEMONIC '(' abs ')'                    { statement($1, $3,     "(a)"); }
-|   MNEMONIC '(' zp_identifier ')' ',' y    { statement($1, $3,     "(zp),y"); }
-|   MNEMONIC '(' zp_identifier ',' x ')'    { statement($1, $3,     "(zp,x)"); }
-|   BRANCH_MNEMONIC abs_identifier          { statement($1, $2,     "r"); }
+    MNEMONIC                                { statement(0,  $1, NULL,   "i"); }
+|   MNEMONIC accu                           { statement(1,  $1, NULL,   "i"); }
+|   MNEMONIC '#' zp_identifier              { statement(2,  $1, $3,     "#"); }
+|   MNEMONIC zp_abs_identifier ',' x        { statement(3,  $1, $2,     is_zp($2)?"zp,x":"a,x"); }
+|   MNEMONIC zp_abs_identifier ',' y        { statement(4,  $1, $2,     is_zp($2)?"zp,y":"a,y"); }
+|   MNEMONIC zp_abs_identifier              { statement(5,  $1, $2,     is_zp($2)?"zp":"a"); }
+|   MNEMONIC '(' zp_identifier ')'          { statement(6,  $1, $3,     is_zp($3)?"(zp)":"(a)"); }
+|   MNEMONIC '(' abs ')'                    { statement(7,  $1, $3,     "(a)"); }
+|   MNEMONIC '(' zp_identifier ')' ',' y    { statement(8,  $1, $3,     "(zp),y"); }
+|   MNEMONIC '(' zp_identifier ',' x ')'    { statement(9,  $1, $3,     "(zp,x)"); }
+|   BRANCH_MNEMONIC abs_identifier          { statement(10, $1, $2,     "r"); }
 |   IDENTIFIER '=' zp_abs                   { identifiers = register_identifier(identifiers, $1, strtol(($3->str)+1, NULL, 16)); }
 |   IDENTIFIER ':'                          { identifiers = register_identifier(identifiers, $1, address); }
 |   DIRECTIVE ABSOLUTE                      { directive($1, strtol($2+1, NULL, 16)); }
@@ -235,6 +238,8 @@ abs:
 
 zp:
     ZEROPAGE { $$->str = strdup($1); }
+|   '>' ABSOLUTE { $$->str = strdup($2); }
+|   '<' ABSOLUTE { $$->str = strdup($2); }
 ;
 
 ident:
