@@ -17,7 +17,7 @@ char error_msg[ERRBUFLEN];
 struct identifier *identifiers = NULL;
 
 static const char *mnemonics[OPCODE_COUNT] = {
-/*         |  0    |  1    |  2    |  3    |  4    |  5    |  6    |  7     |  8    |  9    |  A    |  B  |    C  |    D  |    E    |  F    |      */
+/*         |  0    |  1    |  2    |  3 |  4    |  5    |  6    |  7     |  8    |  9    |  A    |  B  |    C  |    D  |    E    |  F    |      */
 /* 0 */      "brk",  "ora",  "",     "",  "tsb",  "ora",  "asl",  "rmb0",  "php",  "ora",  "asl",  "",     "tsb",  "ora",  "asl",  "bbr0", /* 0 */
 /* 1 */      "bpl",  "ora",  "ora",  "",  "trb",  "ora",  "asl",  "rmb1",  "clc",  "ora",  "inc",  "",     "trb",  "ora",  "asl",  "bbr1", /* 1 */
 /* 2 */      "jsr",  "and",  "",     "",  "bit",  "and",  "rol",  "rmb2",  "plp",  "and",  "rol",  "",     "bit",  "and",  "rol",  "bbr2", /* 2 */
@@ -78,19 +78,17 @@ static char *addressing_modes[OPCODE_COUNT] = {
 /* F */     "r",  "(zp),y",  "(zp)", "",   "",      "zp,x",  "zp,x",  "zp",    "i",  "a,y",  "i",  "",   "",      "a,x", "a,x", "r"  /* F */
 };
 
+
 bool opcode_lookup(const char *mnemonic, const char *mode, unsigned char *opcode) {
     for (unsigned char i = 0; i < OPCODE_COUNT-1; i++) {
-        if (
-            !strncmp(addressing_modes[i],   mode,       strlen(mode)) && 
-            !strncmp(mnemonics[i],          mnemonic,   strlen(mnemonic))
+        if ((!strncmp(mnemonics[i],         mnemonic,   strlen(mnemonic))) &&
+            (!strncmp(addressing_modes[i],  mode,       strlen(mode)))
         ) {
             *opcode = i;
             return true;
-        }        
+        }
     }
 
-    snprintf(error_msg, ERRBUFLEN, "Opcode not found for mnemonic %s and addressing mode %s", mnemonic, mode);
-    yyerror(error_msg);
     return false;
 }
 
@@ -118,10 +116,13 @@ bool get_address(char *ident, unsigned short *address) {
 
 void statement(char *mnemonic, char *operand, char *addressing_mode) {
     unsigned char opcode = 0x00;
-    opcode_lookup(mnemonic, addressing_mode, &opcode);
+    if (!opcode_lookup(mnemonic, addressing_mode, &opcode)) {
+        snprintf(error_msg, ERRBUFLEN, "Opcode not found for mnemonic %s and addressing mode %s", mnemonic, addressing_mode);
+        yyerror(error_msg);
+    }
 
-    printf("%d mn: %s, op: %s, mode=%s --> opcode: %02x\n", 
-        linecounter, mnemonic, operand, addressing_mode, opcode);
+    printf("%d  mn: %s, op: %s, mode=%s --> opcode: %02x (%s)\n", 
+        linecounter, mnemonic, operand, addressing_mode, opcode, mnemonics[opcode]);
 }
 
 bool is_zp(char *operand) {
@@ -146,6 +147,7 @@ bool is_zp(char *operand) {
 %}
 
 %token MNEMONIC
+%token BRANCH_MNEMONIC
 %token ABSOLUTE
 %token IDENTIFIER
 %token DIRECTIVE
@@ -156,6 +158,7 @@ bool is_zp(char *operand) {
 }
 
 %type<str> MNEMONIC
+%type<str> BRANCH_MNEMONIC
 %type<str> DIRECTIVE
 %type<str> IDENTIFIER
 %type<str> ABSOLUTE
@@ -184,6 +187,7 @@ expression:
 |   MNEMONIC '(' ABSOLUTE ')'               { statement($1, $3,     "(a)"); }
 |   MNEMONIC '(' zp_identifier ')' ',' y    { statement($1, $3,     "(zp),y"); }
 |   MNEMONIC '(' zp_identifier ',' x ')'    { statement($1, $3,     "(zp,x)"); }
+|   BRANCH_MNEMONIC IDENTIFIER              { statement($1, $2,     "r"); }
 |   IDENTIFIER '=' zp_abs                   { identifiers = register_identifier(identifiers, $1, strtol($3+1, NULL, 16)); }
 |   DIRECTIVE ABSOLUTE                      { directive($1, strtol($2+1, NULL, 16)); }
 ;

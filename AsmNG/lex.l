@@ -9,17 +9,25 @@ int lexerrorcounter = 0;
 
 
 (?xi:
-	ADC|AND|ASL|BCC|BCS|BEQ|BIT|BMI|BNE|BPL|BRK|
-	BVC|BVS|CLC|CLD|CLI|CLV|CMP|CPX|CPY|DEC|DEX|
+	ADC|AND|ASL|BIT|BRK|CLC|CLD|CLI|CLV|CMP|CPX|
 	DEY|EOR|INC|INX|INY|JMP|JSR|LDA|LDX|LDY|LSR|
 	NOP|ORA|PHA|PHP|PLA|PLP|ROL|ROR|RTI|RTS|SBC|
 	SEC|SED|SEI|STA|STX|STY|TAX|TAY|TSX|TXA|TXS|
-	TYA
+	TYA|CPY|DEC|DEX
 ) {
     yylval.str = strdup(yytext);
 	for(char *ptr = yylval.str; *ptr = tolower(*ptr); *ptr++);
 
 	return MNEMONIC;
+}
+
+(?xi:
+	BCC|BCS|BEQ|BMI|BNE|BPL|BVC|BVS|BRA|BB[RS][0-9]
+) {
+	yylval.str = strdup(yytext);
+	for(char *ptr = yylval.str; *ptr = tolower(*ptr); *ptr++);
+
+	return BRANCH_MNEMONIC;
 }
 
 [a-zA-Z_][a-zA-Z0-9_]+ {
