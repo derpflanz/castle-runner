@@ -165,8 +165,6 @@ bool is_zp(char *operand) {
 
 %token MNEMONIC
 %token ABSOLUTE
-%token COMMAX
-%token COMMAY
 %token IDENTIFIER
 %token DIRECTIVE
 %token ZEROPAGE
@@ -197,14 +195,25 @@ expression:
     MNEMONIC                                { statement($1, NULL,   "i"); }
 |   MNEMONIC accu                           { statement($1, NULL,   "i"); }
 |   MNEMONIC '#' zp_identifier              { statement($1, $3,     "#"); }
-|   MNEMONIC zp_abs_identifier COMMAX       { statement($1, $2,     is_zp($2)?"zp,x":"a,x"); }
-|   MNEMONIC zp_abs_identifier COMMAY       { statement($1, $2,     is_zp($2)?"zp,y":"a,y"); }
+|   MNEMONIC zp_abs_identifier ',' x        { statement($1, $2,     is_zp($2)?"zp,x":"a,x"); }
+|   MNEMONIC zp_abs_identifier ',' y        { statement($1, $2,     is_zp($2)?"zp,y":"a,y"); }
 |   MNEMONIC zp_abs_identifier              { statement($1, $2,     is_zp($2)?"zp":"a"); }
-|   MNEMONIC '(' zp_abs_identifier ')'      { statement($1, $3,     is_zp($3)?"(zp)":"(a)"); }
-|   MNEMONIC '(' zp_identifier ')' COMMAY   { statement($1, $3,     "(zp),y"); }
-|   MNEMONIC '(' zp_identifier COMMAX ')'   { statement($1, $3,     "(zp,x)"); }
+|   MNEMONIC '(' zp_identifier ')'          { statement($1, $3,     is_zp($3)?"(zp)":"(a)"); }
+|   MNEMONIC '(' ABSOLUTE ')'               { statement($1, $3,     "(a)"); }
+|   MNEMONIC '(' zp_identifier ')' ',' y    { statement($1, $3,     "(zp),y"); }
+|   MNEMONIC '(' zp_identifier ',' x ')'    { statement($1, $3,     "(zp,x)"); }
 |   IDENTIFIER '=' zp_abs                   { identifiers = register_identifier(identifiers, $1, strtol($3+1, NULL, 16)); }
 |   DIRECTIVE ABSOLUTE                      { directive($1, strtol($2+1, NULL, 16)); }
+;
+
+x:
+    'X'
+|   'x'
+;
+
+y:
+    'Y'
+|   'y'
 ;
 
 accu:

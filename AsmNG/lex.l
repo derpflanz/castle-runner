@@ -42,21 +42,12 @@ int lexerrorcounter = 0;
 	return ZEROPAGE;
 }
 
-
-,[Xx] {
-	return COMMAX;
-}
-
-,[Yy] {
-	return COMMAY;
-}
-
 \n {
 	lexlinecounter++;
 	return *yytext;
 }
 
-[\(\)=Aa#] {
+[\(\)=Aa#XxYy,] {
 	return *yytext;
 }
 
