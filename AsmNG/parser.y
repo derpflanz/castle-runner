@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+#include <stdbool.h>
 #include "../identifier.h"
 int yylex(void);
 void yyerror(char *);
@@ -122,15 +124,41 @@ void directive(char *directive, unsigned short addr) {
     free(directive);
 }
 
-unsigned short get_address(char *ident) {
+bool get_address(char *ident, unsigned short *address) {
     struct identifier *p = identifiers;
 
     while (p) {
         if (!strncmp(ident, p->name, strlen(ident))) {
-            return p->address;
+            *address = p->address;
+            return true;
         }
         p = p->next;
     }
+
+    return false;
+}
+
+void statement(char *mnemonic, char *operand, char *addressing_mode) {
+    printf("%d mn: %s, op: %s, mode=%s\n", linecounter, mnemonic, operand, addressing_mode);
+}
+
+bool is_zp(char *operand) {
+    // operand is zero page if:
+    // - the operand looks like $xx, OR
+    // - the operand is an identifier and its address is $xx, AND
+    // - it is not in the identifiers list, because that it can only be a label (which is never zp)
+    if (operand[0] == '$' && isxdigit(operand[1]) && isxdigit(operand[2]) && operand[3] == '\0') {
+        return true;
+    }
+
+    unsigned short address = 0x0000;
+    if (get_address(operand, &address)) {
+        if ((address | 0x00ff) == 0x00ff) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 %}
@@ -138,22 +166,23 @@ unsigned short get_address(char *ident) {
 %token MNEMONIC
 %token ABSOLUTE
 %token COMMAX
+%token COMMAY
 %token IDENTIFIER
 %token DIRECTIVE
 %token ZEROPAGE
 
 %union {
     char *str;
-    unsigned short addr;
 }
 
 %type<str> MNEMONIC
 %type<str> DIRECTIVE
 %type<str> IDENTIFIER
-%type<addr> ABSOLUTE
-%type<addr> ZEROPAGE
-%type<addr> zp_abs_identifier
-%type<addr> zp_abs
+%type<str> ABSOLUTE
+%type<str> ZEROPAGE
+%type<str> zp_abs_identifier
+%type<str> zp_abs
+%type<str> zp_identifier
 
 %%
 
@@ -165,16 +194,27 @@ program:
 ;
 
 expression:
-    MNEMONIC { implied($1); }
-|   MNEMONIC accu { implied($1); }
-|   MNEMONIC zp_abs_identifier { direct($1, $2); }
-|   IDENTIFIER '=' zp_abs { identifiers = register_identifier(identifiers, $1, $3); }
-|   DIRECTIVE ABSOLUTE { directive($1, $2); }
+    MNEMONIC                                { statement($1, NULL,   "i"); }
+|   MNEMONIC accu                           { statement($1, NULL,   "i"); }
+|   MNEMONIC '#' zp_identifier              { statement($1, $3,     "#"); }
+|   MNEMONIC zp_abs_identifier COMMAX       { statement($1, $2,     is_zp($2)?"zp,x":"a,x"); }
+|   MNEMONIC zp_abs_identifier COMMAY       { statement($1, $2,     is_zp($2)?"zp,y":"a,y"); }
+|   MNEMONIC zp_abs_identifier              { statement($1, $2,     is_zp($2)?"zp":"a"); }
+|   MNEMONIC '(' zp_abs_identifier ')'      { statement($1, $3,     is_zp($3)?"(zp)":"(a)"); }
+|   MNEMONIC '(' zp_identifier ')' COMMAY   { statement($1, $3,     "(zp),y"); }
+|   MNEMONIC '(' zp_identifier COMMAX ')'   { statement($1, $3,     "(zp,x)"); }
+|   IDENTIFIER '=' zp_abs                   { identifiers = register_identifier(identifiers, $1, strtol($3+1, NULL, 16)); }
+|   DIRECTIVE ABSOLUTE                      { directive($1, strtol($2+1, NULL, 16)); }
 ;
 
 accu:
     'A'
 |   'a'
+;
+
+zp_identifier:
+    ZEROPAGE
+|   IDENTIFIER
 ;
 
 zp_abs:
@@ -185,7 +225,7 @@ zp_abs:
 zp_abs_identifier:
     ZEROPAGE
 |   ABSOLUTE
-|   IDENTIFIER  { $$ = get_address($1); }
+|   IDENTIFIER
 ;
 
 %%

@@ -33,12 +33,12 @@ int lexerrorcounter = 0;
 }
 
 \$[0-9a-fA-F]{4} {
-	yylval.addr = strtol(yytext + 1, NULL, 16);
+	yylval.str = strdup(yytext);
 	return ABSOLUTE;
 }
 
 \$[0-9a-fA-F]{2} {
-	yylval.addr = strtol(yytext + 1, NULL, 16);
+	yylval.str = strdup(yytext);
 	return ZEROPAGE;
 }
 
@@ -47,12 +47,16 @@ int lexerrorcounter = 0;
 	return COMMAX;
 }
 
+,[Yy] {
+	return COMMAY;
+}
+
 \n {
 	lexlinecounter++;
 	return *yytext;
 }
 
-[\(\)=A] {
+[\(\)=Aa#] {
 	return *yytext;
 }
 

@@ -10,5 +10,7 @@ generated/lex.c: lex.l
 	flex -o generated/lex.c lex.l
 
 generated/parser.c: parser.y
-	bison -d -o  generated/parser.c parser.y 
+	bison -d -o  generated/parser.c parser.y -Dparse.trace -Wcounterexamples
 
+clean:
+	rm generated/*
