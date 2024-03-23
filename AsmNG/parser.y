@@ -78,42 +78,20 @@ static char *addressing_modes[OPCODE_COUNT] = {
 /* F */     "r",  "(zp),y",  "(zp)", "",   "",      "zp,x",  "zp,x",  "zp",    "i",  "a,y",  "i",  "",   "",      "a,x", "a,x", "r"  /* F */
 };
 
-unsigned char opcode_lookup(char *mnemonic, char *mode) {
+bool opcode_lookup(const char *mnemonic, const char *mode, unsigned char *opcode) {
     for (unsigned char i = 0; i < OPCODE_COUNT-1; i++) {
         if (
             !strncmp(addressing_modes[i],   mode,       strlen(mode)) && 
             !strncmp(mnemonics[i],          mnemonic,   strlen(mnemonic))
         ) {
-            return i;
+            *opcode = i;
+            return true;
         }        
     }
 
     snprintf(error_msg, ERRBUFLEN, "Opcode not found for mnemonic %s and addressing mode %s", mnemonic, mode);
     yyerror(error_msg);
-    return 0x00;
-}
-
-/* implied addressing, this includes 's' and 'A' */
-void implied(char *mnemonic) {
-    unsigned char opcode = opcode_lookup(mnemonic, "i");
-
-    printf("[%04x] i    %s %10s %02x\n", address, mnemonic, " ", opcode);
-
-    address += 1;
-    free(mnemonic);
-}
-
-
-/* direct addressing, can be zero page or absolute */
-void direct(char *mnemonic, unsigned short operand) {
-    if ((operand | 0x00ff) == 0x00ff) {
-        printf("[%04x] zp   %s $%02x\n", address, mnemonic, operand);
-        address += 2;
-    } else {
-        printf("[%04x] a    %s $%04x\n", address, mnemonic, operand);
-        address += 3;
-    }
-    free(mnemonic);
+    return false;
 }
 
 void directive(char *directive, unsigned short addr) {
@@ -139,7 +117,11 @@ bool get_address(char *ident, unsigned short *address) {
 }
 
 void statement(char *mnemonic, char *operand, char *addressing_mode) {
-    printf("%d mn: %s, op: %s, mode=%s\n", linecounter, mnemonic, operand, addressing_mode);
+    unsigned char opcode = 0x00;
+    opcode_lookup(mnemonic, addressing_mode, &opcode);
+
+    printf("%d mn: %s, op: %s, mode=%s --> opcode: %02x\n", 
+        linecounter, mnemonic, operand, addressing_mode, opcode);
 }
 
 bool is_zp(char *operand) {
