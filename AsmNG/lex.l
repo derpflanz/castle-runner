@@ -16,7 +16,7 @@ int lexerrorcounter = 0;
 	TYA|CPY|DEC|DEX
 ) {
     yylval.str = strdup(yytext);
-	for(char *ptr = yylval.str; *ptr = tolower(*ptr); *ptr++);
+	for(char *ptr = yylval.str; *ptr = tolower(*ptr); ptr++);
 
 	return MNEMONIC;
 }
