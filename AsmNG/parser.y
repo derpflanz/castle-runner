@@ -14,7 +14,11 @@ void yyerror(char *);
 int linecounter = 1;
 unsigned short address = 0x0000;
 char error_msg[ERRBUFLEN];
-struct identifier *identifiers = NULL;
+
+struct addr_offset {
+    char *str;
+    int offset;
+};
 
 static const char *mnemonics[OPCODE_COUNT] = {
 /*         |  0    |  1    |  2    |  3 |  4    |  5    |  6    |  7     |  8    |  9    |  A    |  B  |    C  |    D  |    E    |  F    |      */
@@ -114,22 +118,42 @@ bool get_address(char *ident, unsigned short *address) {
     return false;
 }
 
-void statement(char *mnemonic, char *operand, char *addressing_mode) {
+int get_statement_length(const char *addressing_mode) {
+    if (addressing_mode[0] == 'i') return 1;
+    if (strchr(addressing_mode, 'a') != NULL) return 3;
+
+    return 2;
+}
+
+void statement(char *mnemonic, struct addr_offset *ao, char *addressing_mode) {
+    char *operand = NULL;
+    int offset = 0;
+    if (ao != NULL) {
+        operand = ao->str;
+        offset = ao->offset;
+    }
+
     unsigned char opcode = 0x00;
     if (!opcode_lookup(mnemonic, addressing_mode, &opcode)) {
         snprintf(error_msg, ERRBUFLEN, "Opcode not found for mnemonic %s and addressing mode %s", mnemonic, addressing_mode);
         yyerror(error_msg);
     }
 
-    printf("%d  mn: %s, op: %s, mode=%s --> opcode: %02x (%s)\n", 
-        linecounter, mnemonic, operand, addressing_mode, opcode, mnemonics[opcode]);
+    printf("[%04x] %d  mn: %s, operand: %-7s (offset %d)  mode=%-6s %10s opcode: %02x (%s) +%d bytes\n", 
+        address, linecounter, mnemonic, operand, offset, addressing_mode, "", opcode, mnemonics[opcode], 
+        get_statement_length(addressing_mode));
+
+    address += get_statement_length(addressing_mode);
 }
 
-bool is_zp(char *operand) {
+bool is_zp(struct addr_offset *ao) {
+    char *operand = NULL;
+    if (ao != NULL) operand = ao->str;
+
     // operand is zero page if:
     // - the operand looks like $xx, OR
-    // - the operand is an identifier and its address is $xx, AND
-    // - it is not in the identifiers list, because that it can only be a label (which is never zp)
+    // - the operand is an identifier and its address is $xx
+    // If it is not in the identifiers list, then it can only be a label (which is never zp)
     if (operand[0] == '$' && isxdigit(operand[1]) && isxdigit(operand[2]) && operand[3] == '\0') {
         return true;
     }
@@ -152,9 +176,12 @@ bool is_zp(char *operand) {
 %token IDENTIFIER
 %token DIRECTIVE
 %token ZEROPAGE
+%token NUMBER
 
 %union {
     char *str;
+    int number;
+    struct addr_offset *ao;
 }
 
 %type<str> MNEMONIC
@@ -163,9 +190,14 @@ bool is_zp(char *operand) {
 %type<str> IDENTIFIER
 %type<str> ABSOLUTE
 %type<str> ZEROPAGE
-%type<str> zp_abs_identifier
-%type<str> zp_abs
-%type<str> zp_identifier
+%type<ao> zp_abs_identifier
+%type<ao> zp_abs
+%type<ao> zp_identifier
+%type<ao> abs_identifier
+%type<ao> abs
+%type<ao> zp
+%type<ao> ident
+%type<number> NUMBER
 
 %%
 
@@ -184,43 +216,52 @@ expression:
 |   MNEMONIC zp_abs_identifier ',' y        { statement($1, $2,     is_zp($2)?"zp,y":"a,y"); }
 |   MNEMONIC zp_abs_identifier              { statement($1, $2,     is_zp($2)?"zp":"a"); }
 |   MNEMONIC '(' zp_identifier ')'          { statement($1, $3,     is_zp($3)?"(zp)":"(a)"); }
-|   MNEMONIC '(' ABSOLUTE ')'               { statement($1, $3,     "(a)"); }
+|   MNEMONIC '(' abs ')'                    { statement($1, $3,     "(a)"); }
 |   MNEMONIC '(' zp_identifier ')' ',' y    { statement($1, $3,     "(zp),y"); }
 |   MNEMONIC '(' zp_identifier ',' x ')'    { statement($1, $3,     "(zp,x)"); }
-|   BRANCH_MNEMONIC IDENTIFIER              { statement($1, $2,     "r"); }
-|   IDENTIFIER '=' zp_abs                   { identifiers = register_identifier(identifiers, $1, strtol($3+1, NULL, 16)); }
+|   BRANCH_MNEMONIC abs_identifier          { statement($1, $2,     "r"); }
+|   IDENTIFIER '=' zp_abs                   { identifiers = register_identifier(identifiers, $1, strtol(($3->str)+1, NULL, 16)); }
+|   IDENTIFIER ':'                          { identifiers = register_identifier(identifiers, $1, address); }
 |   DIRECTIVE ABSOLUTE                      { directive($1, strtol($2+1, NULL, 16)); }
 ;
 
-x:
-    'X'
-|   'x'
+x: 'X' | 'x' ;
+y: 'Y' | 'y' ;
+accu: 'A' | 'a';
+
+abs:
+    ABSOLUTE { $$->str = strdup($1); }
 ;
 
-y:
-    'Y'
-|   'y'
+zp:
+    ZEROPAGE { $$->str = strdup($1); }
 ;
 
-accu:
-    'A'
-|   'a'
+ident:
+    IDENTIFIER { $$->str = strdup($1); }
+|   IDENTIFIER '+' NUMBER { $$->str = strdup($1); $$->offset = $3; }
+|   IDENTIFIER '-' NUMBER { $$->str = strdup($1); $$->offset = -$3; }
 ;
 
 zp_identifier:
-    ZEROPAGE
-|   IDENTIFIER
+    zp
+|   ident
 ;
 
 zp_abs:
-    ZEROPAGE
-|   ABSOLUTE
+    zp
+|   abs
+;
+
+abs_identifier:
+    abs
+|   ident
 ;
 
 zp_abs_identifier:
-    ZEROPAGE
-|   ABSOLUTE
-|   IDENTIFIER
+    zp
+|   abs
+|   ident
 ;
 
 %%

@@ -23,3 +23,5 @@ struct identifier *register_identifier(struct identifier *list, char *ident, uns
 
     return new_element;
 }
+
+struct identifier *identifiers = NULL;

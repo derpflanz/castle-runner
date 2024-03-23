@@ -12,4 +12,6 @@ struct identifier {
 struct identifier *register_identifier(struct identifier *list, char *ident, unsigned short addr);
 void print_list(struct identifier *list);
 
+extern struct identifier *identifiers;
+
 #endif

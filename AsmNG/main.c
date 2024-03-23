@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "generated/parser.h"
+#include "identifier.h"
 
 int yylex(void);
 extern char *yytext;
@@ -19,6 +20,8 @@ int main(int argc, char **argv) {
         printf("Parsing failed with %d error(s).\n", errors + lexerrorcounter);
         return 1;
     }
+
+    print_list(identifiers);
 
     return 0;
 }

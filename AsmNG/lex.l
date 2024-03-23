@@ -45,6 +45,11 @@ int lexerrorcounter = 0;
 	return ABSOLUTE;
 }
 
+[0-9]+ {
+	yylval.number = strtol(yytext, NULL, 10);
+	return NUMBER;
+}
+
 \$[0-9a-fA-F]{2} {
 	yylval.str = strdup(yytext);
 	return ZEROPAGE;
@@ -55,7 +60,7 @@ int lexerrorcounter = 0;
 	return *yytext;
 }
 
-[\(\)=Aa#XxYy,] {
+[\(\)=Aa#XxYy,:\+\-] {
 	return *yytext;
 }
 
