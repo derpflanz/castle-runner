@@ -14,3 +14,4 @@ generated/parser.c: parser.y
 
 clean:
 	rm generated/*
+	rm $(TARGET)
