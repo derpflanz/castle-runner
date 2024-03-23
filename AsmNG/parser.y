@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../identifier.h"
 int yylex(void);
 void yyerror(char *);
 
@@ -11,14 +12,7 @@ void yyerror(char *);
 int linecounter = 1;
 unsigned short address = 0x0000;
 char error_msg[ERRBUFLEN];
-
-struct element {
-    char *name;
-    unsigned short address;
-
-    struct element *next;
-};
-struct element *identifiers = NULL;
+struct identifier *identifiers = NULL;
 
 static const char *mnemonics[OPCODE_COUNT] = {
 /*         |  0    |  1    |  2    |  3    |  4    |  5    |  6    |  7     |  8    |  9    |  A    |  B  |    C  |    D  |    E    |  F    |      */
@@ -59,6 +53,9 @@ static const char *mnemonics[OPCODE_COUNT] = {
 // i       Implied (8)
 // s       Stack (10)
 
+// Note on the addressing mode table:
+// all addressing modes without an operand, are labeled 'i': implied
+// this goes for the 's' (stack) and 'A' (accu) modes
 static char *addressing_modes[OPCODE_COUNT] = {
 /*        |  0  |  1       |  2    |  3  |  4     |  5     |  6     |  7     |  8  |  9    |  A  |  B  |  C   |    D   |  E   |  F  |     */
 /* 0 */     "i",  "(zp,x)",  "",     "",   "zp",    "zp",    "zp",    "zp",    "i",  "#",    "i",  "",   "a",     "a",   "a",   "r", /* 0 */
@@ -94,19 +91,11 @@ unsigned char opcode_lookup(char *mnemonic, char *mode) {
     return 0x00;
 }
 
-/* implied addressing */
+/* implied addressing, this includes 's' and 'A' */
 void implied(char *mnemonic) {
     unsigned char opcode = opcode_lookup(mnemonic, "i");
 
-    printf("[%04x] i    %s %02x\n", address, mnemonic, opcode);
-
-    address += 1;
-    free(mnemonic);
-}
-
-/* accu addressing */
-void accu(char *mnemonic) {
-    printf("[%04x] i    %s\n", address, mnemonic);
+    printf("[%04x] i    %s %10s %02x\n", address, mnemonic, " ", opcode);
 
     address += 1;
     free(mnemonic);
@@ -125,27 +114,6 @@ void direct(char *mnemonic, unsigned short operand) {
     free(mnemonic);
 }
 
-void print_list(struct element *list) {
-    printf("Current list:\n");
-
-    struct element *p = list;
-
-    while (p) {
-        printf("element: name=%s, addr=%04x\n", p->name, p->address);
-        p = p->next;
-    }
-}
-
-void register_identifier(char *ident, unsigned short addr) {
-    struct element *new_element = malloc(sizeof(struct element));
-    new_element->name = strdup(ident);
-    new_element->address = addr;
-    new_element->next = identifiers;
-    identifiers = new_element;
-
-    free(ident);
-}
-
 void directive(char *directive, unsigned short addr) {
     if (strncmp("orig", directive, 4)) {
         address = addr;
@@ -155,7 +123,7 @@ void directive(char *directive, unsigned short addr) {
 }
 
 unsigned short get_address(char *ident) {
-    struct element *p = identifiers;
+    struct identifier *p = identifiers;
 
     while (p) {
         if (!strncmp(ident, p->name, strlen(ident))) {
@@ -198,10 +166,15 @@ program:
 
 expression:
     MNEMONIC { implied($1); }
-|   MNEMONIC 'A' { accu($1); }
+|   MNEMONIC accu { implied($1); }
 |   MNEMONIC zp_abs_identifier { direct($1, $2); }
-|   IDENTIFIER '=' zp_abs { register_identifier($1, $3); }
+|   IDENTIFIER '=' zp_abs { identifiers = register_identifier(identifiers, $1, $3); }
 |   DIRECTIVE ABSOLUTE { directive($1, $2); }
+;
+
+accu:
+    'A'
+|   'a'
 ;
 
 zp_abs:

@@ -1,8 +1,9 @@
-CFILES=generated/parser.c generated/lex.c main.c
+CFILES=generated/parser.c generated/lex.c identifier.c main.c
+HFILES=identifier.h
 CC=gcc
 TARGET=as6502
 
-all: $(CFILES)
+all: $(CFILES) $(HFILES)
 	$(CC) $(CFILES) -lfl -o $(TARGET)
 	
 generated/lex.c: lex.l
