@@ -125,7 +125,9 @@ int get_statement_length(const char *addressing_mode) {
     return 2;
 }
 
-void statement(int callid, char *mnemonic, struct addr_offset *ao, char *addressing_mode) {
+void statement(int callid, char *mnemonic, struct addr_offset *ao, const char *addressing_mode) {
+    printf("parser statement mnemonic=%s, ptr=%p\n", mnemonic, mnemonic);
+
     char *operand = NULL;
     int offset = 0;
     if (ao != NULL) {
@@ -147,6 +149,7 @@ void statement(int callid, char *mnemonic, struct addr_offset *ao, char *address
 
     if (operand != NULL) free(operand);
     free(mnemonic);
+
 }
 
 bool is_zp(struct addr_offset *ao) {

@@ -18,6 +18,8 @@ int lexerrorcounter = 0;
     yylval.str = strdup(yytext);
 	for(char *ptr = yylval.str; *ptr = tolower(*ptr); ptr++);
 
+	printf("lexer mnemonic yytext value=%s addr=%p, dup: %p\n", yytext, yytext, yylval.str);
+
 	return MNEMONIC;
 }
 
@@ -61,6 +63,7 @@ int lexerrorcounter = 0;
 }
 
 [\(\)=Aa#XxYy,:\+\-\<\>] {
+	yylval.str = strdup("");
 	return *yytext;
 }
 
