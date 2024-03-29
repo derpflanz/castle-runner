@@ -124,8 +124,6 @@ int get_statement_length(const char *addressing_mode) {
 }
 
 void statement(int callid, char *mnemonic, struct addr_offset ao, const char *addressing_mode) {
-    printf("parser statement mnemonic=%s, ptr=%p\n", mnemonic, mnemonic);
-
     char *operand = NULL;
     int offset = 0;
     operand = ao.str;
@@ -256,6 +254,8 @@ ident:
     IDENTIFIER { $$.str = $1; }
 |   IDENTIFIER '+' NUMBER { $$.str = $1; $$.offset = $3; }
 |   IDENTIFIER '-' NUMBER { $$.str = $1; $$.offset = -$3; }
+|   '>' IDENTIFIER { $$.str = $2; $$.operation = '>'; }
+|   '<' IDENTIFIER { $$.str = $2; $$.operation = '<'; }
 ;
 
 zp_identifier:
