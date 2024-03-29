@@ -243,19 +243,19 @@ y: 'Y' | 'y' ;
 accu: 'A' | 'a';
 
 abs:
-    ABSOLUTE { $$.str = strdup($1); }
+    ABSOLUTE { $$.str = $1; }
 ;
 
 zp:
-    ZEROPAGE { $$.str = strdup($1); }
-|   '>' ABSOLUTE { $$.str = strdup($2); $$.operation = '>'; }
-|   '<' ABSOLUTE { $$.str = strdup($2); $$.operation = '<'; }
+    ZEROPAGE { $$.str = $1; }
+|   '>' ABSOLUTE { $$.str = $2; $$.operation = '>'; }
+|   '<' ABSOLUTE { $$.str = $2; $$.operation = '<'; }
 ;
 
 ident:
-    IDENTIFIER { $$.str = strdup($1); }
-|   IDENTIFIER '+' NUMBER { $$.str = strdup($1); $$.offset = $3; }
-|   IDENTIFIER '-' NUMBER { $$.str = strdup($1); $$.offset = -$3; }
+    IDENTIFIER { $$.str = $1; }
+|   IDENTIFIER '+' NUMBER { $$.str = $1; $$.offset = $3; }
+|   IDENTIFIER '-' NUMBER { $$.str = $1; $$.offset = -$3; }
 ;
 
 zp_identifier:
