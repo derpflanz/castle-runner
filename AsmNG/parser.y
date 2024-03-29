@@ -188,11 +188,13 @@ bool is_zp(struct addr_offset ao) {
 %token DIRECTIVE
 %token ZEROPAGE
 %token NUMBER
+%token OPERATION
 
 %union {
     char *str;
     int number;
     struct addr_offset ao;
+    char ch;
 }
 
 %type<str> MNEMONIC
@@ -202,6 +204,7 @@ bool is_zp(struct addr_offset ao) {
 %type<str> ABSOLUTE
 %type<str> ZEROPAGE
 %type<number> NUMBER
+%type<ch> OPERATION
 %type<ao> zp_abs_identifier
 %type<ao> zp_abs
 %type<ao> zp_identifier
@@ -246,16 +249,14 @@ abs:
 
 zp:
     ZEROPAGE { $$.str = $1; }
-|   '>' ABSOLUTE { $$.str = $2; $$.operation = '>'; }
-|   '<' ABSOLUTE { $$.str = $2; $$.operation = '<'; }
+|   OPERATION ABSOLUTE { $$.str = $2; $$.operation = $1; }
 ;
 
 ident:
     IDENTIFIER { $$.str = $1; }
 |   IDENTIFIER '+' NUMBER { $$.str = $1; $$.offset = $3; }
 |   IDENTIFIER '-' NUMBER { $$.str = $1; $$.offset = -$3; }
-|   '>' IDENTIFIER { $$.str = $2; $$.operation = '>'; }
-|   '<' IDENTIFIER { $$.str = $2; $$.operation = '<'; }
+|   OPERATION IDENTIFIER { $$.str = $2; $$.operation = $1; }
 ;
 
 zp_identifier:

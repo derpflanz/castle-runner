@@ -60,7 +60,12 @@ int lexerrorcounter = 0;
 	return *yytext;
 }
 
-[\(\)=Aa#XxYy,:\+\-\<\>] {
+[\<\>] {
+	yylval.ch = *yytext;
+	return OPERATION;
+}
+
+[\(\)=Aa#XxYy,:\+\-] {
 	yylval.str = strdup("");
 	return *yytext;
 }
