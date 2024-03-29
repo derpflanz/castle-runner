@@ -94,9 +94,14 @@ bool opcode_lookup(const char *mnemonic, const char *mode, unsigned char *opcode
     return false;
 }
 
-void directive(char *directive, unsigned short addr) {
-    if (strncmp("orig", directive, 4)) {
-        address = addr;
+void directive(char *directive, struct addr_offset ao) {    
+    if (!strncmp("orig", directive, 4)) {
+        address = strtol((ao.str)+1, NULL, 16);
+    }
+
+    if (!strncmp("byte", directive, 4)) {
+        // add element to tree
+        address++;
     }
 
     free(directive);
@@ -144,6 +149,17 @@ void statement(int callid, char *mnemonic, struct addr_offset ao, const char *ad
     if (operand != NULL) free(operand);
     free(mnemonic);
 
+    // add element to tree
+}
+
+// the string includes " and zero terminating 
+void string(char *s) {
+    s[strlen(s)-1] = '\0';
+    printf("String: %s\n", s+1);
+    address += strlen(s-2);
+    free(s);
+
+    // add element to tree
 }
 
 bool is_zp(struct addr_offset ao) {
@@ -156,7 +172,6 @@ bool is_zp(struct addr_offset ao) {
     // operand is zero page if:
     // - the operand looks like $xx, OR
     // - the operand is an identifier and its address is $xx
-    // If it is not in the identifiers list, then it can only be a label (which is never zp)
     if (operand[0] == '$' && isxdigit(operand[1]) && isxdigit(operand[2]) && operand[3] == '\0') {
         return true;
     }
@@ -168,6 +183,7 @@ bool is_zp(struct addr_offset ao) {
         }
     }
 
+    // if it is not in the identifiers list, then it can only be a label (which is never zp)
     return false;
 }
 
@@ -189,6 +205,7 @@ bool is_zp(struct addr_offset ao) {
 %token ZEROPAGE
 %token NUMBER
 %token OPERATION
+%token STRING
 
 %union {
     char *str;
@@ -203,6 +220,7 @@ bool is_zp(struct addr_offset ao) {
 %type<str> IDENTIFIER
 %type<str> ABSOLUTE
 %type<str> ZEROPAGE
+%type<str> STRING
 %type<number> NUMBER
 %type<ch> OPERATION
 %type<ao> zp_abs_identifier
@@ -235,8 +253,9 @@ expression:
 |   MNEMONIC '(' zp_identifier ',' x ')'    { statement(9,  $1, $3,     "(zp,x)"); }
 |   BRANCH_MNEMONIC abs_identifier          { statement(10, $1, $2,     "r"); }
 |   IDENTIFIER '=' zp_abs                   { identifiers = register_identifier(identifiers, $1, strtol(($3.str)+1, NULL, 16)); }
+|   IDENTIFIER '=' STRING                   { identifiers = register_identifier(identifiers, $1, address); string($3); }
 |   IDENTIFIER ':'                          { identifiers = register_identifier(identifiers, $1, address); }
-|   DIRECTIVE ABSOLUTE                      { directive($1, strtol($2+1, NULL, 16)); }
+|   DIRECTIVE zp_abs                        { directive($1, $2); }
 ;
 
 x: 'X' | 'x' ;

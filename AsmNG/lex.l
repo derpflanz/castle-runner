@@ -35,8 +35,8 @@ int lexerrorcounter = 0;
 	return IDENTIFIER;
 }
 
-\.(orig) {
-	yylval.str = strdup(yytext);
+\.(orig|byte) {
+	yylval.str = strdup(yytext+1);
 	return DIRECTIVE;
 }
 
@@ -68,6 +68,11 @@ int lexerrorcounter = 0;
 [\(\)=Aa#XxYy,:\+\-] {
 	yylval.str = strdup("");
 	return *yytext;
+}
+
+\".+\" {
+	yylval.str = strdup(yytext);
+	return STRING;
 }
 
 ;.*$ 			;
