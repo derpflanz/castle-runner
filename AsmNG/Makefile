@@ -1,5 +1,5 @@
-CFILES=generated/parser.c generated/lex.c identifier.c main.c
-HFILES=identifier.h
+CFILES=generated/parser.c generated/lex.c identifier.c main.c opcode.c
+HFILES=identifier.h opcode.h
 CC=gcc
 TARGET=as6502
 
@@ -13,5 +13,5 @@ generated/parser.c: parser.y
 	bison -d -o  generated/parser.c parser.y -Dparse.trace -Wcounterexamples
 
 clean:
-	rm generated/*
-	rm $(TARGET)
+	rm -f generated/*
+	rm -f $(TARGET)
