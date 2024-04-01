@@ -24,4 +24,18 @@ struct identifier *register_identifier(struct identifier *list, char *ident, uns
     return new_element;
 }
 
+bool get_address(char *ident, unsigned short *address) {
+    struct identifier *p = identifiers;
+
+    while (p) {
+        if (!strncmp(ident, p->name, strlen(ident))) {
+            *address = p->address;
+            return true;
+        }
+        p = p->next;
+    }
+
+    return false;
+}
+
 struct identifier *identifiers = NULL;

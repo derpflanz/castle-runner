@@ -31,19 +31,7 @@ void directive(char *directive, struct addr_offset ao) {
     free(directive);
 }
 
-bool get_address(char *ident, unsigned short *address) {
-    struct identifier *p = identifiers;
 
-    while (p) {
-        if (!strncmp(ident, p->name, strlen(ident))) {
-            *address = p->address;
-            return true;
-        }
-        p = p->next;
-    }
-
-    return false;
-}
 
 int get_statement_length(const char *addressing_mode) {
     if (addressing_mode[0] == 'i') return 1;
