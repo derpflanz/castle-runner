@@ -15,43 +15,37 @@ int yylex(void);
 void yyerror(char *);
 
 int linecounter = 1;
-unsigned short address = 0x0000;
+unsigned short current_address = 0x0000;
 char error_msg[ERRBUFLEN];
-
 struct operand NULL_ADDR = { NULL, 0, '\0' };
 
-void directive(char *directive, struct operand ao) {    
+void directive(char *directive, struct operand operand) {
     if (!strncmp("orig", directive, 4)) {
-        address = strtol((ao.str)+1, NULL, 16);
+        current_address = strtol((operand.str)+1, NULL, 16);
     }
 
     if (!strncmp("byte", directive, 4)) {
         // add element to tree
-        address++;
+        current_address++;
     }
 
     free(directive);
 }
 
-void statement(int callid, char *mnemonic, struct operand ao, const char *addressing_mode) {
-    char *operand = NULL;
-    int offset = 0;
-    operand = ao.str;
-    offset = ao.offset;
-
+void statement(int callid, char *mnemonic, struct operand operand, const char *addressing_mode) {
     unsigned char opcode = 0x00;
     if (!opcode_lookup(mnemonic, addressing_mode, &opcode)) {
         snprintf(error_msg, ERRBUFLEN, "Opcode not found for mnemonic %s and addressing mode %s", mnemonic, addressing_mode);
         yyerror(error_msg);
     }
 
-    printf("%02d [%04x] %d  mn: %s (%p), operand: %-7s (offset %4d)  mode=%-6s operation=%c %10s opcode: %02x (%s) +%d bytes\n", 
-        callid, address, linecounter, mnemonic, mnemonic, operand, offset, addressing_mode, ao.operation, "", opcode, mnemonics[opcode], 
+    printf("%02d [%04x] %d  mn: %s (%p), operand: %-7s (offset %4d)  mode=%-6s operation=%2c %10s opcode: %02x (%s) +%d bytes\n", 
+        callid, current_address, linecounter, mnemonic, mnemonic, operand.str, operand.offset, addressing_mode, operand.operation, "", opcode, mnemonics[opcode], 
         get_statement_length(addressing_mode));
 
-    address += get_statement_length(addressing_mode);
+    current_address += get_statement_length(addressing_mode);
 
-    if (operand != NULL) free(operand);
+    if (operand.str != NULL) free(operand.str);
     free(mnemonic);
 
     // add element to tree
@@ -60,29 +54,27 @@ void statement(int callid, char *mnemonic, struct operand ao, const char *addres
 // the string includes " and zero terminating 
 void string(char *s) {
     s[strlen(s)-1] = '\0';
-    printf("String: %s\n", s+1);
-    address += strlen(s-2);
+    current_address += strlen(s) - 2;
+    printf("[%04x] String: %s\n", current_address, s+1);
     free(s);
 
     // add element to tree
 }
 
-bool is_zp(struct operand ao) {
-    char *operand = ao.str;
-
-    if (ao.operation == '>' || ao.operation == '<') {
+bool is_zp(struct operand operand) {
+    if (operand.operation == '>' || operand.operation == '<') {
         return true;
     }
 
     // operand is zero page if:
     // - the operand looks like $xx, OR
     // - the operand is an identifier and its address is $xx
-    if (operand[0] == '$' && isxdigit(operand[1]) && isxdigit(operand[2]) && operand[3] == '\0') {
+    if (operand.str[0] == '$' && isxdigit(operand.str[1]) && isxdigit(operand.str[2]) && operand.str[3] == '\0') {
         return true;
     }
 
     unsigned short address = 0x0000;
-    if (get_address(operand, &address)) {
+    if (get_address(operand.str, &address)) {
         if ((address | 0x00ff) == 0x00ff) {
             return true;
         }
@@ -158,8 +150,8 @@ expression:
 |   MNEMONIC '(' zp_identifier ',' x ')'    { statement(9,  $1, $3,     "(zp,x)"); }
 |   BRANCH_MNEMONIC abs_identifier          { statement(10, $1, $2,     "r"); }
 |   IDENTIFIER '=' zp_abs                   { identifiers = register_identifier(identifiers, $1, strtol(($3.str)+1, NULL, 16)); }
-|   IDENTIFIER '=' STRING                   { identifiers = register_identifier(identifiers, $1, address); string($3); }
-|   IDENTIFIER ':'                          { identifiers = register_identifier(identifiers, $1, address); }
+|   IDENTIFIER '=' STRING                   { identifiers = register_identifier(identifiers, $1, current_address); string($3); }
+|   IDENTIFIER ':'                          { identifiers = register_identifier(identifiers, $1, current_address); }
 |   DIRECTIVE zp_abs                        { directive($1, $2); }
 ;
 
