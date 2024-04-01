@@ -168,6 +168,8 @@ ident:
 |   IDENTIFIER '+' NUMBER { $$.str = $1; $$.offset = $3; }
 |   IDENTIFIER '-' NUMBER { $$.str = $1; $$.offset = -$3; }
 |   OPERATION IDENTIFIER { $$.str = $2; $$.operation = $1; }
+|   OPERATION IDENTIFIER  '+' NUMBER { $$.operation = $1; $$.str = $2; $$.offset = $4; }
+|   OPERATION IDENTIFIER  '-' NUMBER { $$.operation = $1; $$.str = $2; $$.offset = -$4; }
 ;
 
 zp_identifier:
