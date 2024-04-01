@@ -77,3 +77,10 @@ bool opcode_lookup(const char *mnemonic, const char *mode, unsigned char *opcode
 
     return false;
 }
+
+int get_statement_length(const char *addressing_mode) {
+    if (addressing_mode[0] == 'i') return 1;
+    if (strchr(addressing_mode, 'a') != NULL) return 3;
+
+    return 2;
+}

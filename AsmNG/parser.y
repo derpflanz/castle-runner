@@ -1,4 +1,5 @@
 %{
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,18 +8,19 @@
 #include "../identifier.h"
 #include "../opcode.h"
 #include "parser.h"
-int yylex(void);
-void yyerror(char *);
 
 #define ERRBUFLEN 1024
+
+int yylex(void);
+void yyerror(char *);
 
 int linecounter = 1;
 unsigned short address = 0x0000;
 char error_msg[ERRBUFLEN];
 
-struct addr_offset NULL_ADDR = { NULL, 0, '\0' };
+struct operand NULL_ADDR = { NULL, 0, '\0' };
 
-void directive(char *directive, struct addr_offset ao) {    
+void directive(char *directive, struct operand ao) {    
     if (!strncmp("orig", directive, 4)) {
         address = strtol((ao.str)+1, NULL, 16);
     }
@@ -31,16 +33,7 @@ void directive(char *directive, struct addr_offset ao) {
     free(directive);
 }
 
-
-
-int get_statement_length(const char *addressing_mode) {
-    if (addressing_mode[0] == 'i') return 1;
-    if (strchr(addressing_mode, 'a') != NULL) return 3;
-
-    return 2;
-}
-
-void statement(int callid, char *mnemonic, struct addr_offset ao, const char *addressing_mode) {
+void statement(int callid, char *mnemonic, struct operand ao, const char *addressing_mode) {
     char *operand = NULL;
     int offset = 0;
     operand = ao.str;
@@ -74,7 +67,7 @@ void string(char *s) {
     // add element to tree
 }
 
-bool is_zp(struct addr_offset ao) {
+bool is_zp(struct operand ao) {
     char *operand = ao.str;
 
     if (ao.operation == '>' || ao.operation == '<') {
@@ -102,7 +95,7 @@ bool is_zp(struct addr_offset ao) {
 %}
 
 %code requires {
-    struct addr_offset {
+    struct operand {
         char *str;
         int offset;
         char operation;
@@ -122,7 +115,7 @@ bool is_zp(struct addr_offset ao) {
 %union {
     char *str;
     int number;
-    struct addr_offset ao;
+    struct operand ao;
     char ch;
 }
 
