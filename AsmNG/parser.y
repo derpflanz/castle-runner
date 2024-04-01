@@ -123,6 +123,7 @@ bool is_zp(struct operand operand) {
 %type<ao> abs
 %type<ao> zp
 %type<ao> ident
+%type<ao> ident_oper
 %%
 
 program:
@@ -167,14 +168,16 @@ ident:
     IDENTIFIER { $$.str = $1; }
 |   IDENTIFIER '+' NUMBER { $$.str = $1; $$.offset = $3; }
 |   IDENTIFIER '-' NUMBER { $$.str = $1; $$.offset = -$3; }
-|   OPERATION IDENTIFIER { $$.str = $2; $$.operation = $1; }
-|   OPERATION IDENTIFIER  '+' NUMBER { $$.operation = $1; $$.str = $2; $$.offset = $4; }
-|   OPERATION IDENTIFIER  '-' NUMBER { $$.operation = $1; $$.str = $2; $$.offset = -$4; }
+;
+
+ident_oper:
+    ident
+|   OPERATION ident { $$.operation = $1; $$.str = $2.str; $$.offset = $2.offset; }
 ;
 
 zp_identifier:
     zp
-|   ident
+|   ident_oper
 ;
 
 zp_abs:
@@ -190,7 +193,7 @@ abs_identifier:
 zp_abs_identifier:
     zp
 |   abs
-|   ident
+|   ident_oper
 ;
 
 %%
