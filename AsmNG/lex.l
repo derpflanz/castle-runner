@@ -7,7 +7,6 @@ int lexerrorcounter = 0;
 %}
 %%
 
-
 (?xi:
 	ADC|AND|ASL|BIT|BRK|CLC|CLD|CLI|CLV|CMP|CPX|
 	DEY|EOR|INC|INX|INY|JMP|JSR|LDA|LDX|LDY|LSR|
@@ -79,4 +78,3 @@ int lexerrorcounter = 0;
 [ \t]+          ;
 
 .    printf("Lexer error %d: invalid token on line %d: %s (%d)\n", ++lexerrorcounter, lexlinecounter, yytext);
-

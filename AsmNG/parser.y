@@ -26,21 +26,17 @@ void directive(char *directive, struct operand operand) {
 
     if (!strncmp("byte", directive, 4)) {
         // add element to tree
+        printf("[%04x] %s\n", current_address, operand.str);
         current_address++;
     }
 
     free(directive);
 }
 
-void statement(int callid, char *mnemonic, struct operand operand, const char *addressing_mode) {
-    unsigned char opcode = 0x00;
-    if (!opcode_lookup(mnemonic, addressing_mode, &opcode)) {
-        snprintf(error_msg, ERRBUFLEN, "Opcode not found for mnemonic %s and addressing mode %s", mnemonic, addressing_mode);
-        yyerror(error_msg);
-    }
-
-    printf("%02d [%04x] %d  mn: %s (%p), operand: %-7s (offset %4d)  mode=%-6s operation=%2c %10s opcode: %02x (%s) +%d bytes\n", 
-        callid, current_address, linecounter, mnemonic, mnemonic, operand.str, operand.offset, addressing_mode, operand.operation, "", opcode, mnemonics[opcode], 
+void statement(char *mnemonic, struct operand operand, const char *addressing_mode) {
+    printf("[%04x] %s %-2c %-7s (offset %4d) addressing mode=%-6s +%d bytes\n", 
+        current_address, mnemonic, operand.operation==0?' ':operand.operation, operand.str, 
+        operand.offset, addressing_mode, 
         get_statement_length(addressing_mode));
 
     current_address += get_statement_length(addressing_mode);
@@ -54,8 +50,8 @@ void statement(int callid, char *mnemonic, struct operand operand, const char *a
 // the string includes " and zero terminating 
 void string(char *s) {
     s[strlen(s)-1] = '\0';
-    current_address += strlen(s) - 2;
-    printf("[%04x] String: %s\n", current_address, s+1);
+    printf("[%04x] %s\n", current_address, s+1);
+    current_address += strlen(s) - 2;    
     free(s);
 
     // add element to tree
@@ -127,7 +123,6 @@ bool is_zp(struct operand operand) {
 %type<ao> abs
 %type<ao> zp
 %type<ao> ident
-
 %%
 
 program:
@@ -138,17 +133,17 @@ program:
 ;
 
 expression:
-    MNEMONIC                                { statement(0,  $1, NULL_ADDR,   "i"); }
-|   MNEMONIC accu                           { statement(1,  $1, NULL_ADDR,   "i"); }
-|   MNEMONIC '#' zp_identifier              { statement(2,  $1, $3,     "#"); }
-|   MNEMONIC zp_abs_identifier ',' x        { statement(3,  $1, $2,     is_zp($2)?"zp,x":"a,x"); }
-|   MNEMONIC zp_abs_identifier ',' y        { statement(4,  $1, $2,     is_zp($2)?"zp,y":"a,y"); }
-|   MNEMONIC zp_abs_identifier              { statement(5,  $1, $2,     is_zp($2)?"zp":"a"); }
-|   MNEMONIC '(' zp_identifier ')'          { statement(6,  $1, $3,     is_zp($3)?"(zp)":"(a)"); }
-|   MNEMONIC '(' abs ')'                    { statement(7,  $1, $3,     "(a)"); }
-|   MNEMONIC '(' zp_identifier ')' ',' y    { statement(8,  $1, $3,     "(zp),y"); }
-|   MNEMONIC '(' zp_identifier ',' x ')'    { statement(9,  $1, $3,     "(zp,x)"); }
-|   BRANCH_MNEMONIC abs_identifier          { statement(10, $1, $2,     "r"); }
+    MNEMONIC                                { statement($1, NULL_ADDR,  "i"); }
+|   MNEMONIC accu                           { statement($1, NULL_ADDR,  "i"); }
+|   MNEMONIC '#' zp_identifier              { statement($1, $3,         "#"); }
+|   MNEMONIC zp_abs_identifier ',' x        { statement($1, $2,         is_zp($2)?"zp,x":"a,x"); }
+|   MNEMONIC zp_abs_identifier ',' y        { statement($1, $2,         is_zp($2)?"zp,y":"a,y"); }
+|   MNEMONIC zp_abs_identifier              { statement($1, $2,         is_zp($2)?"zp":"a"); }
+|   MNEMONIC '(' zp_identifier ')'          { statement($1, $3,         is_zp($3)?"(zp)":"(a)"); }
+|   MNEMONIC '(' abs ')'                    { statement($1, $3,         "(a)"); }
+|   MNEMONIC '(' zp_identifier ')' ',' y    { statement($1, $3,         "(zp),y"); }
+|   MNEMONIC '(' zp_identifier ',' x ')'    { statement($1, $3,         "(zp,x)"); }
+|   BRANCH_MNEMONIC abs_identifier          { statement($1, $2,         "r"); }
 |   IDENTIFIER '=' zp_abs                   { identifiers = register_identifier(identifiers, $1, strtol(($3.str)+1, NULL, 16)); }
 |   IDENTIFIER '=' STRING                   { identifiers = register_identifier(identifiers, $1, current_address); string($3); }
 |   IDENTIFIER ':'                          { identifiers = register_identifier(identifiers, $1, current_address); }
