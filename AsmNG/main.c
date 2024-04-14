@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "generated/parser.h"
 #include "identifier.h"
+#include "tree.h"
 
 int yylex(void);
 extern char *yytext;
@@ -22,6 +23,8 @@ int main(int argc, char **argv) {
     }
 
     print_list(identifiers);
+
+    tree_print(tree);
 
     return 0;
 }

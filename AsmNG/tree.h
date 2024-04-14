@@ -15,6 +15,8 @@ void tree_add_opcode(const char *mnemonic, struct operand operand, const char *a
 void tree_add_string(const char *string);
 void tree_add_byte(const char *byte);
 
+void tree_print(struct node *tree);
+
 extern struct node *tree;
 
 #endif
