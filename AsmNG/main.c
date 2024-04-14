@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 
     print_list(identifiers);
 
-    tree_print(tree);
+    tree_print();
 
     return 0;
 }

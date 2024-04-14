@@ -4,11 +4,23 @@
 #include <stdio.h>
 
 void tree_add_opcode(const char *mnemonic, struct operand operand, const char *addressing_mode) {
+   struct node *node = malloc(sizeof(struct node));
 
+    node->bytes = strdup(mnemonic);
+    node->operand.str = operand.str==NULL?NULL:strdup(operand.str);
+    node->operand.offset = operand.offset;
+    node->operand.operation = operand.operation;
+
+    tree_add_node(node);
 }
 
 void tree_add_string(const char *string) {
+    struct node *node = malloc(sizeof(struct node));
 
+    node->bytes = strdup(string);
+    node->operand.str = NULL;
+
+    tree_add_node(node);
 }
 
 void tree_add_byte(const char *byte) {
@@ -16,6 +28,21 @@ void tree_add_byte(const char *byte) {
 
     node->bytes = strdup(byte);
     node->operand.str = NULL;
+
+    tree_add_node(node);
+}
+
+void tree_add_node(struct node *node) {
+    node->next = NULL;
+
+    if (opcode_tree == NULL) {
+        opcode_tree = node;
+        last_element = node;
+        return;
+    }
+
+    last_element->next = node;
+    last_element = node;    
 }
 
 void tree_print_node(struct node *node) {
@@ -23,8 +50,8 @@ void tree_print_node(struct node *node) {
         node->operand.str, node->operand.offset, node->operand.operation);
 }
 
-void tree_print(struct node *tree) {
-    struct node *ptr = tree;
+void tree_print() {
+    struct node *ptr = opcode_tree;
 
     if (ptr == NULL) {
         printf("Tree is empty.\n");
@@ -37,4 +64,5 @@ void tree_print(struct node *tree) {
     }
 }
 
-struct node *tree = NULL;
+struct node *opcode_tree = NULL;
+struct node *last_element = NULL;
