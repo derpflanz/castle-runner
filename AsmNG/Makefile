@@ -1,5 +1,5 @@
-CFILES=generated/parser.c generated/lex.c identifier.c main.c opcode.c
-HFILES=identifier.h opcode.h
+CFILES=generated/parser.c generated/lex.c identifier.c main.c opcode.c tree.c
+HFILES=identifier.h opcode.h tree.h
 CC=gcc
 TARGET=as6502
 
