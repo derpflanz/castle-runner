@@ -75,6 +75,10 @@ bool is_zp(struct operand operand) {
     return false;
 }
 
+void identifier(char *ident, unsigned short addr) {
+    identifier_add(ident, addr);
+}
+
 %}
 
 %code requires {
@@ -140,9 +144,9 @@ expression:
 |   MNEMONIC '(' zp_identifier ')' ',' y    { statement($1, $3,         "(zp),y"); }
 |   MNEMONIC '(' zp_identifier ',' x ')'    { statement($1, $3,         "(zp,x)"); }
 |   BRANCH_MNEMONIC abs_identifier          { statement($1, $2,         "r"); }
-|   IDENTIFIER '=' zp_abs                   { identifiers = register_identifier(identifiers, $1, strtol(($3.str)+1, NULL, 16)); }
-|   IDENTIFIER '=' STRING                   { identifiers = register_identifier(identifiers, $1, current_address); string($3); }
-|   IDENTIFIER ':'                          { identifiers = register_identifier(identifiers, $1, current_address); }
+|   IDENTIFIER '=' zp_abs                   { identifier($1, strtol(($3.str)+1, NULL, 16)); }
+|   IDENTIFIER '=' STRING                   { identifier($1, current_address); string($3); }
+|   IDENTIFIER ':'                          { identifier($1, current_address); }
 |   DIRECTIVE zp_abs                        { directive($1, $2); }
 ;
 
