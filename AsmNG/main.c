@@ -3,8 +3,6 @@
 #include "identifier.h"
 #include "tree.h"
 
-int yylex(void);
-extern char *yytext;
 extern int linecounter;
 extern int lexerrorcounter;
 int errors = 0;
@@ -23,7 +21,6 @@ int main(int argc, char **argv) {
     }
 
     identifier_print();
-
     tree_print();
 
     return 0;
