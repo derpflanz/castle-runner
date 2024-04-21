@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
     yyparse();
 
     struct node *ptr = tree_head();
-    while (ptr->next) {
+    while (ptr) {
         switch(ptr->type) {
             case t_byte:
                 // ptr->bytes holds "$xx"
@@ -62,7 +62,10 @@ int main(int argc, char **argv) {
                     unsigned short operand = calculate_operand(ptr->operand);
                     int operand_len = get_operand_length(opcode);
 
-                    fprintf(stderr, "addr: %s %c (%d) --> %04x\n", ptr->operand.str, ptr->operand.operation, ptr->operand.offset, operand);
+                    fprintf(stderr, "addr: %s %c (%d) --> %04x oper len=%d, opcode=%d\n", 
+                        ptr->operand.str, ptr->operand.operation, ptr->operand.offset, 
+                        operand, operand_len, opcode);
+
                     // when no operand, we are done
                     if (operand_len == 0) {
                         break;
@@ -73,7 +76,7 @@ int main(int argc, char **argv) {
                     }
 
                     if (operand_len == 2) {
-
+                        fprintf(hex_output, "%c%c", operand & 0x00ff, operand >> 8);
                     }
 
                     

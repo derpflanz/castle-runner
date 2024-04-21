@@ -66,7 +66,7 @@ const char *addressing_modes[OPCODE_COUNT] = {
 
 // i = 0, r = 1, # = 1, a = 2, zp = 1
 const int operand_length[OPCODE_COUNT] = {
-/*        |  0  |  1       |  2    |  3  |  4     |  5     |  6     |  7     |  8  |  9    |  A  |  B  |  C   |    D   |  E   |  F  |     */
+/*        |  0  |  1       |  2    |  3  |  4     |  5     |  6     |  7     |  8  |  9    |  A  |  B  |  C   |    D   |  E   |  F  |        */
 /* 0 */      0,    1,         0,      0,    1,       1,       1,       1,       0,    1,      0,    0,    2,       2,     2,     1,     /* 0 */
 /* 1 */      1,    1,         1,      0,    1,       1,       1,       1,       0,    2,      0,    0,    2,       2,     2,     1,     /* 1 */
 /* 2 */      2,    1,         0,      0,    1,       1,       1,       1,       0,    1,      0,    0,    2,       2,     2,     1,     /* 2 */
@@ -82,7 +82,7 @@ const int operand_length[OPCODE_COUNT] = {
 /* C */      1,    1,         0,      0,    1,       1,       1,       1,       0,    1,      0,    0,    2,       2,     2,     1,     /* C */
 /* D */      1,    1,         1,      0,    0,       1,       1,       1,       0,    2,      0,    0,    0,       2,     2,     1,     /* D */
 /* E */      1,    1,         0,      0,    1,       1,       1,       1,       0,    1,      0,    0,    2,       2,     2,     1,     /* E */
-/* F */      1,    1,         1,      0,    0,       1,       1,       1,       0,    2,      0,    0,    0,       2,     2,     1     /* F */
+/* F */      1,    1,         1,      0,    0,       1,       1,       1,       0,    2,      0,    0,    0,       2,     2,     1      /* F */
 };
 
 
@@ -106,6 +106,6 @@ int get_statement_length(const char *addressing_mode) {
     return 2;
 }
 
-int get_operand_length(const char opcode) {
+int get_operand_length(const unsigned char opcode) {
     return operand_length[opcode];
 }
