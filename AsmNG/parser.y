@@ -48,7 +48,7 @@ void string(char *s) {
     s[strlen(s)-1] = '\0';
     current_address += strlen(s) - 2;    
 
-    tree_add_string(s);
+    tree_add_string(s+1);
     free(s);
 }
 
