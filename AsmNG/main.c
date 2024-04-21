@@ -3,9 +3,40 @@
 #include "identifier.h"
 #include "tree.h"
 #include "opcode.h"
+#include <argp.h>
+
+const char *argp_program_version = "1.0";
+static char doc[] = "AsmNG - a re-written CastleRunner assembler";
+static char args_doc[] = "OUTPUT";
+static struct argp_option options[] = {
+    {"output", 'o', "FILE", 0, "Write to FILE instead of standard output" },
+    { 0 }
+};
+
+struct arguments {
+    char *args[1];
+    char *output_file;
+};
+
+static error_t parse_opt(int key, char *arg, struct argp_state *state) {
+    struct arguments *arguments = state->input;
+
+    switch(key) {
+        case 'o':
+            arguments->output_file = arg;
+            break;
+        default:
+            return ARGP_ERR_UNKNOWN;
+    }
+
+    return 0;
+}
+
+static struct argp argp = { options, parse_opt, args_doc, doc };
 
 extern int linecounter;
 extern int lexerrorcounter;
+extern FILE *yyin;
 int errors = 0;
 
 void yyerror(char *s) {
@@ -38,8 +69,16 @@ unsigned short calculate_operand(const struct operand operand) {
 }
 
 int main(int argc, char **argv) {
-    FILE *hex_output = stdout;
+    struct arguments arguments;
 
+    arguments.output_file = "-";
+
+    argp_parse(&argp, argc, argv, 0, 0, &arguments);
+
+    printf("Writing to %s\n", arguments.output_file);
+
+    FILE *hex_output = stdout;
+    yyin = stdin;
     yyparse();
 
     struct node *ptr = tree_head();
