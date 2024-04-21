@@ -13,6 +13,26 @@ void yyerror(char *s) {
     errors++;
 }
 
+unsigned short calculate_operand(const struct operand operand) {
+    unsigned short address = 0x0000;
+
+    if (!get_address(operand.str, &address)) {
+        address = strtol(operand.str+1, NULL, 16);
+    }
+    address += operand.offset;
+
+    switch (operand.operation) {
+        case '>':
+            address = address >> 8;
+        break;
+        case '<':
+            address = address & 0x00ff;
+        break;
+    }
+
+    return address;
+}
+
 int main(int argc, char **argv) {
     FILE *hex_output = stdout;
 
@@ -31,20 +51,15 @@ int main(int argc, char **argv) {
             break;
             case t_opcode:
                 unsigned char opcode = 0x00;
-                if (opcode_lookup(ptr->bytes, ptr->operand.addressing_mode, &opcode) == true) {
-                    unsigned short address = 0x0000;
+                if (opcode_lookup(ptr->bytes, ptr->operand.addressing_mode, &opcode) == true) {                    
                     if (ptr->operand.str == NULL) {
                         fprintf(hex_output, "%c", opcode);
                         break;
                     } 
-                    
-                    if (!get_address(ptr->operand.str, &address)) {
-                        address = strtol((ptr->operand.str)+1, NULL, 16);
-                    }
+                                        
+                    unsigned short address = calculate_operand(ptr->operand);
 
-                    address += ptr->operand.offset;
-
-                    fprintf(stderr, "addr: %s (%d) --> %04x\n", ptr->operand.str, ptr->operand.offset, address);
+                    fprintf(stderr, "addr: %s %c (%d) --> %04x\n", ptr->operand.str, ptr->operand.operation, ptr->operand.offset, address);
                 } else {
                     errors++;
                     fprintf(stderr, "Opcode lookup failed for '%s' and addressing mode '%s'.\n", ptr->bytes, ptr->operand.addressing_mode);
