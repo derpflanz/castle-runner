@@ -10,10 +10,9 @@ struct identifier {
     struct identifier *next;
 };
 
-struct identifier *identifier_get();
 void identifier_add(char *ident, unsigned short addr);
 struct identifier *register_identifier(struct identifier *list, char *ident, unsigned short addr);
-void print_list(struct identifier *list);
+void identifier_print();
 bool get_address(char *ident, unsigned short *address);
 
 #endif

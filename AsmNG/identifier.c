@@ -4,10 +4,10 @@
 
 struct identifier *identifiers = NULL;
 
-void print_list(struct identifier *list) {
+void identifier_print() {
     printf("Current list:\n");
 
-    struct identifier *p = list;
+    struct identifier *p = identifiers;
 
     while (p) {
         printf("element: name=%s, addr=%04x\n", p->name, p->address);
@@ -17,10 +17,6 @@ void print_list(struct identifier *list) {
 
 void identifier_add(char *ident, unsigned short addr) {
     identifiers = register_identifier(identifiers, ident, addr);
-}
-
-struct identifier *identifier_get() {
-    return identifiers;
 }
 
 struct identifier *register_identifier(struct identifier *list, char *ident, unsigned short addr) {
