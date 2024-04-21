@@ -32,7 +32,19 @@ int main(int argc, char **argv) {
             case t_opcode:
                 unsigned char opcode = 0x00;
                 if (opcode_lookup(ptr->bytes, ptr->operand.addressing_mode, &opcode) == true) {
+                    unsigned short address = 0x0000;
+                    if (ptr->operand.str == NULL) {
+                        fprintf(hex_output, "%c", opcode);
+                        break;
+                    } 
                     
+                    if (!get_address(ptr->operand.str, &address)) {
+                        address = strtol((ptr->operand.str)+1, NULL, 16);
+                    }
+
+                    address += ptr->operand.offset;
+
+                    fprintf(stderr, "addr: %s (%d) --> %04x\n", ptr->operand.str, ptr->operand.offset, address);
                 } else {
                     errors++;
                     fprintf(stderr, "Opcode lookup failed for '%s' and addressing mode '%s'.\n", ptr->bytes, ptr->operand.addressing_mode);
