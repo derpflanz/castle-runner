@@ -86,6 +86,7 @@ void identifier(char *ident, unsigned short addr) {
         char *str;
         int offset;
         char operation;
+        char *addressing_mode;
     };
 }
 

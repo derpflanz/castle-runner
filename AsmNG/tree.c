@@ -13,6 +13,7 @@ void tree_add_opcode(const char *mnemonic, struct operand operand, const char *a
     node->operand.str = operand.str==NULL?NULL:strdup(operand.str);
     node->operand.offset = operand.offset;
     node->operand.operation = operand.operation;
+    node->operand.addressing_mode = strdup(addressing_mode);
     node->type = t_opcode;
 
     tree_add_node(node);
