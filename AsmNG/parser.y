@@ -65,7 +65,7 @@ bool is_zp(struct operand operand) {
     }
 
     unsigned short address = 0x0000;
-    if (get_address(operand.str, &address)) {
+    if (identifier_get(operand.str, &address)) {
         if ((address | 0x00ff) == 0x00ff) {
             return true;
         }

@@ -16,18 +16,13 @@ void identifier_print() {
 }
 
 void identifier_add(char *ident, unsigned short addr) {
-    identifiers = register_identifier(identifiers, ident, addr);
-}
-
-struct identifier *register_identifier(struct identifier *list, char *ident, unsigned short addr) {
     struct identifier *new_element = malloc(sizeof(struct identifier));
     new_element->name = strdup(ident);
     new_element->address = addr;
-    new_element->next = list;
+    new_element->next = identifiers;
+    identifiers = new_element;
 
     free(ident);
-
-    return new_element;
 }
 
 bool identifier_get(char *ident, unsigned short *address) {

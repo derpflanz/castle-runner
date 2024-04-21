@@ -7,7 +7,6 @@
 #include <string.h>
 #include "options.h"
 
-
 extern int linecounter;
 extern int lexerrorcounter;
 extern FILE *yyin;
@@ -18,22 +17,12 @@ void yyerror(char *s) {
     errors++;
 }
 
-
-
-
 int main(int argc, char **argv) {
     FILE *asm_input = stdin;
     FILE *hex_output = stdout;
 
-    struct arguments arguments = arguments_parse(argc, argv);
-
-    if (arguments.output_file == NULL) {
-        printf("You must provide an output file (-o, --output).\n");
-        return -1;
-    }
-
-    if (arguments.input_file == NULL) {
-        printf("You must provide an input file (-i, --input).\n");
+    struct arguments arguments;
+    if (!arguments_parse(argc, argv, &arguments)) {
         return -1;
     }
 
@@ -44,7 +33,6 @@ int main(int argc, char **argv) {
     }
     printf("Reading from %s\n", arguments.input_file);
     
-
     hex_output = fopen(arguments.output_file, "w");
     if (!hex_output) {
         printf("Failed to open %s for writing.\n", arguments.output_file);
@@ -52,11 +40,12 @@ int main(int argc, char **argv) {
     }
     printf("Writing to %s\n", arguments.output_file);
     
+    // Parse!
     yyin = asm_input;
     yyparse();
-
     fclose(asm_input);
 
+    // Process!
     struct node *ptr = tree_head();
     while (ptr) {
         switch(ptr->type) {
