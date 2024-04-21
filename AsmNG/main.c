@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    print_list(identifiers);
+    print_list(identifier_get());
 
     tree_print();
 

@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdio.h>
 
+struct identifier *identifiers = NULL;
+
 void print_list(struct identifier *list) {
     printf("Current list:\n");
 
@@ -15,6 +17,10 @@ void print_list(struct identifier *list) {
 
 void identifier_add(char *ident, unsigned short addr) {
     identifiers = register_identifier(identifiers, ident, addr);
+}
+
+struct identifier *identifier_get() {
+    return identifiers;
 }
 
 struct identifier *register_identifier(struct identifier *list, char *ident, unsigned short addr) {
@@ -42,4 +48,4 @@ bool get_address(char *ident, unsigned short *address) {
     return false;
 }
 
-struct identifier *identifiers = NULL;
+
