@@ -32,6 +32,7 @@ struct identifier *register_identifier(struct identifier *list, char *ident, uns
 
 bool get_address(char *ident, unsigned short *address) {
     struct identifier *p = identifiers;
+    fprintf(stderr, "should be null: %p\n", identifiers);
 
     while (p) {
         if (!strncmp(ident, p->name, strlen(ident))) {

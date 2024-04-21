@@ -16,6 +16,10 @@ void yyerror(char *s) {
 unsigned short calculate_operand(const struct operand operand) {
     unsigned short address = 0x0000;
 
+    if (operand.str == NULL) {
+        return address;
+    }
+
     if (!get_address(operand.str, &address)) {
         address = strtol(operand.str+1, NULL, 16);
     }
@@ -51,15 +55,28 @@ int main(int argc, char **argv) {
             break;
             case t_opcode:
                 unsigned char opcode = 0x00;
-                if (opcode_lookup(ptr->bytes, ptr->operand.addressing_mode, &opcode) == true) {                    
-                    if (ptr->operand.str == NULL) {
-                        fprintf(hex_output, "%c", opcode);
-                        break;
-                    } 
-                                        
-                    unsigned short address = calculate_operand(ptr->operand);
+                if (opcode_lookup(ptr->bytes, ptr->operand.addressing_mode, &opcode) == true) {
+                    // output opcode byte
+                    fprintf(hex_output, "%c", opcode);
 
-                    fprintf(stderr, "addr: %s %c (%d) --> %04x\n", ptr->operand.str, ptr->operand.operation, ptr->operand.offset, address);
+                    unsigned short operand = calculate_operand(ptr->operand);
+                    int operand_len = get_operand_length(opcode);
+
+                    fprintf(stderr, "addr: %s %c (%d) --> %04x\n", ptr->operand.str, ptr->operand.operation, ptr->operand.offset, operand);
+                    // when no operand, we are done
+                    if (operand_len == 0) {
+                        break;
+                    }
+
+                    if (operand_len == 1) {
+                        fprintf(hex_output, "%c", operand & 0x00ff);
+                    }
+
+                    if (operand_len == 2) {
+
+                    }
+
+                    
                 } else {
                     errors++;
                     fprintf(stderr, "Opcode lookup failed for '%s' and addressing mode '%s'.\n", ptr->bytes, ptr->operand.addressing_mode);

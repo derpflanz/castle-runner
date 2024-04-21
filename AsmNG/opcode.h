@@ -7,6 +7,7 @@
 
 bool opcode_lookup(const char *mnemonic, const char *mode, unsigned char *opcode);
 int get_statement_length(const char *addressing_mode);
+int get_operand_length(const char opcode);
 
 extern const char *addressing_modes[OPCODE_COUNT];
 extern const char *mnemonics[OPCODE_COUNT];
