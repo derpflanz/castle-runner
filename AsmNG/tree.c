@@ -13,6 +13,7 @@ void tree_add_opcode(const char *mnemonic, struct operand operand, const char *a
     node->operand.str = operand.str==NULL?NULL:strdup(operand.str);
     node->operand.offset = operand.offset;
     node->operand.operation = operand.operation;
+    node->type = t_opcode;
 
     tree_add_node(node);
 }
@@ -22,6 +23,7 @@ void tree_add_string(const char *string) {
 
     node->bytes = strdup(string);
     node->operand.str = NULL;
+    node->type = t_string;
 
     tree_add_node(node);
 }
@@ -31,6 +33,7 @@ void tree_add_byte(const char *byte) {
 
     node->bytes = strdup(byte);
     node->operand.str = NULL;
+    node->type = t_byte;
 
     tree_add_node(node);
 }
@@ -65,4 +68,8 @@ void tree_print() {
         tree_print_node(ptr);
         ptr = ptr->next;
     }
+}
+
+struct node *tree_head() {
+    return opcode_tree;
 }

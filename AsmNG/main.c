@@ -2,6 +2,7 @@
 #include "generated/parser.h"
 #include "identifier.h"
 #include "tree.h"
+#include "opcode.h"
 
 extern int linecounter;
 extern int lexerrorcounter;
@@ -20,8 +21,13 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    identifier_print();
-    tree_print();
+    struct node *ptr = tree_head();
+    while (ptr->next) {
+
+        printf("bytes: %s\n", ptr->bytes);
+
+        ptr = ptr->next;
+    }
 
     return 0;
 }
