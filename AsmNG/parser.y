@@ -26,7 +26,7 @@ void directive(char *directive, struct operand operand) {
     }
 
     if (!strncmp("byte", directive, 4)) {
-        tree_add_byte(operand.str);
+        tree_add_byte(current_address, operand.str);
         free(operand.str);
         current_address++;
     }
@@ -35,10 +35,9 @@ void directive(char *directive, struct operand operand) {
 }
 
 void statement(char *mnemonic, struct operand operand, const char *addressing_mode) {
+    tree_add_opcode(current_address, mnemonic, operand, addressing_mode);
+
     current_address += get_statement_length(addressing_mode);
-
-    tree_add_opcode(mnemonic, operand, addressing_mode);
-
     if (operand.str != NULL) free(operand.str);
     free(mnemonic);
 }
@@ -46,9 +45,9 @@ void statement(char *mnemonic, struct operand operand, const char *addressing_mo
 // the string includes " and zero terminating 
 void string(char *s) {
     s[strlen(s)-1] = '\0';
+    tree_add_string(current_address, s+1);
     current_address += strlen(s) - 2;    
-
-    tree_add_string(s+1);
+    
     free(s);
 }
 

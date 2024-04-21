@@ -6,10 +6,11 @@
 struct node *opcode_tree = NULL;
 struct node *last_element = NULL;
 
-void tree_add_opcode(const char *mnemonic, struct operand operand, const char *addressing_mode) {
+void tree_add_opcode(unsigned short address, const char *mnemonic, struct operand operand, const char *addressing_mode) {
    struct node *node = malloc(sizeof(struct node));
 
     node->bytes = strdup(mnemonic);
+    node->address = address;
     node->operand.str = operand.str==NULL?NULL:strdup(operand.str);
     node->operand.offset = operand.offset;
     node->operand.operation = operand.operation;
@@ -19,9 +20,10 @@ void tree_add_opcode(const char *mnemonic, struct operand operand, const char *a
     tree_add_node(node);
 }
 
-void tree_add_string(const char *string) {
+void tree_add_string(unsigned short address, const char *string) {
     struct node *node = malloc(sizeof(struct node));
 
+    node->address = address;
     node->bytes = strdup(string);
     node->operand.str = NULL;
     node->type = t_string;
@@ -29,9 +31,10 @@ void tree_add_string(const char *string) {
     tree_add_node(node);
 }
 
-void tree_add_byte(const char *byte) {
+void tree_add_byte(unsigned short address, const char *byte) {
     struct node *node = malloc(sizeof(struct node));
 
+    node->address = address;
     node->bytes = strdup(byte);
     node->operand.str = NULL;
     node->type = t_byte;

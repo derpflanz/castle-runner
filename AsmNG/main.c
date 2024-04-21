@@ -48,6 +48,8 @@ int main(int argc, char **argv) {
     // Process!
     struct node *ptr = tree_head();
     while (ptr) {
+        printf("[%04x] %s %s\n", ptr->address, ptr->bytes, ptr->operand.str);
+
         switch(ptr->type) {
             case t_byte:
                 // ptr->bytes holds "$xx"
@@ -65,10 +67,6 @@ int main(int argc, char **argv) {
 
                     unsigned short operand = calculate_operand(ptr->operand);
                     int operand_len = get_operand_length(opcode);
-
-                    fprintf(stderr, "addr: %s %c (%d) --> %04x oper len=%d, opcode=%d\n", 
-                        ptr->operand.str, ptr->operand.operation, ptr->operand.offset, 
-                        operand, operand_len, opcode);
 
                     // when no operand, we are done
                     if (operand_len == 0) {
