@@ -30,7 +30,7 @@ struct identifier *register_identifier(struct identifier *list, char *ident, uns
     return new_element;
 }
 
-bool get_address(char *ident, unsigned short *address) {
+bool identifier_get(char *ident, unsigned short *address) {
     struct identifier *p = identifiers;
 
     while (p) {

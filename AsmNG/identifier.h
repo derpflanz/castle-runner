@@ -13,6 +13,6 @@ struct identifier {
 void identifier_add(char *ident, unsigned short addr);
 struct identifier *register_identifier(struct identifier *list, char *ident, unsigned short addr);
 void identifier_print();
-bool get_address(char *ident, unsigned short *address);
+bool identifier_get(char *ident, unsigned short *address);
 
 #endif

@@ -4,35 +4,9 @@
 #include "tree.h"
 #include "opcode.h"
 #include <argp.h>
+#include <string.h>
+#include "options.h"
 
-const char *argp_program_version = "1.0";
-static char doc[] = "AsmNG - a re-written CastleRunner assembler";
-static char args_doc[] = "OUTPUT";
-static struct argp_option options[] = {
-    {"output", 'o', "FILE", 0, "Write to FILE instead of standard output" },
-    { 0 }
-};
-
-struct arguments {
-    char *args[1];
-    char *output_file;
-};
-
-static error_t parse_opt(int key, char *arg, struct argp_state *state) {
-    struct arguments *arguments = state->input;
-
-    switch(key) {
-        case 'o':
-            arguments->output_file = arg;
-            break;
-        default:
-            return ARGP_ERR_UNKNOWN;
-    }
-
-    return 0;
-}
-
-static struct argp argp = { options, parse_opt, args_doc, doc };
 
 extern int linecounter;
 extern int lexerrorcounter;
@@ -44,42 +18,44 @@ void yyerror(char *s) {
     errors++;
 }
 
-unsigned short calculate_operand(const struct operand operand) {
-    unsigned short address = 0x0000;
 
-    if (operand.str == NULL) {
-        return address;
-    }
 
-    if (!get_address(operand.str, &address)) {
-        address = strtol(operand.str+1, NULL, 16);
-    }
-    address += operand.offset;
-
-    switch (operand.operation) {
-        case '>':
-            address = address >> 8;
-        break;
-        case '<':
-            address = address & 0x00ff;
-        break;
-    }
-
-    return address;
-}
 
 int main(int argc, char **argv) {
-    struct arguments arguments;
-
-    arguments.output_file = "-";
-
-    argp_parse(&argp, argc, argv, 0, 0, &arguments);
-
-    printf("Writing to %s\n", arguments.output_file);
-
+    FILE *asm_input = stdin;
     FILE *hex_output = stdout;
-    yyin = stdin;
+
+    struct arguments arguments = arguments_parse(argc, argv);
+
+    if (arguments.output_file == NULL) {
+        printf("You must provide an output file (-o, --output).\n");
+        return -1;
+    }
+
+    if (arguments.input_file == NULL) {
+        printf("You must provide an input file (-i, --input).\n");
+        return -1;
+    }
+
+    asm_input = fopen(arguments.input_file, "r");
+    if (!asm_input) {
+        printf("Failed to open %s for reading.\n", arguments.input_file);
+        return -1;
+    }
+    printf("Reading from %s\n", arguments.input_file);
+    
+
+    hex_output = fopen(arguments.output_file, "w");
+    if (!hex_output) {
+        printf("Failed to open %s for writing.\n", arguments.output_file);
+        return -1;
+    }
+    printf("Writing to %s\n", arguments.output_file);
+    
+    yyin = asm_input;
     yyparse();
+
+    fclose(asm_input);
 
     struct node *ptr = tree_head();
     while (ptr) {
@@ -117,8 +93,6 @@ int main(int argc, char **argv) {
                     if (operand_len == 2) {
                         fprintf(hex_output, "%c%c", operand & 0x00ff, operand >> 8);
                     }
-
-                    
                 } else {
                     errors++;
                     fprintf(stderr, "Opcode lookup failed for '%s' and addressing mode '%s'.\n", ptr->bytes, ptr->operand.addressing_mode);

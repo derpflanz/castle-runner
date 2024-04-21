@@ -109,3 +109,27 @@ int get_statement_length(const char *addressing_mode) {
 int get_operand_length(const unsigned char opcode) {
     return operand_length[opcode];
 }
+
+unsigned short calculate_operand(const struct operand operand) {
+    unsigned short address = 0x0000;
+
+    if (operand.str == NULL) {
+        return address;
+    }
+
+    if (!identifier_get(operand.str, &address)) {
+        address = strtol(operand.str+1, NULL, 16);
+    }
+    address += operand.offset;
+
+    switch (operand.operation) {
+        case '>':
+            address = address >> 8;
+        break;
+        case '<':
+            address = address & 0x00ff;
+        break;
+    }
+
+    return address;
+}
