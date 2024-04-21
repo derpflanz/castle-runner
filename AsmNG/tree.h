@@ -19,7 +19,4 @@ void tree_print();
 void tree_add_node(struct node *node);
 void tree_print_node(struct node *node);
 
-extern struct node *opcode_tree;
-extern struct node *last_element;
-
 #endif
