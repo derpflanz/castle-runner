@@ -80,6 +80,8 @@ void identifier(char *ident, unsigned short addr) {
     identifier_add(ident, addr);
 }
 
+
+
 %}
 
 %code requires {
@@ -100,6 +102,7 @@ void identifier(char *ident, unsigned short addr) {
 %token NUMBER
 %token OPERATION
 %token STRING
+%token CHAR
 
 %union {
     char *str;
@@ -115,6 +118,7 @@ void identifier(char *ident, unsigned short addr) {
 %type<str> ABSOLUTE
 %type<str> ZEROPAGE
 %type<str> STRING
+%type<str> CHAR
 %type<number> NUMBER
 %type<ch> OPERATION
 %type<ao> zp_abs_identifier
@@ -125,6 +129,7 @@ void identifier(char *ident, unsigned short addr) {
 %type<ao> zp
 %type<ao> ident
 %type<ao> ident_oper
+%type<ao> ch
 %%
 
 program:
@@ -145,6 +150,7 @@ expression:
 |   MNEMONIC '(' abs ')'                    { statement($1, $3,         "(a)"); }
 |   MNEMONIC '(' zp_identifier ')' ',' y    { statement($1, $3,         "(zp),y"); }
 |   MNEMONIC '(' zp_identifier ',' x ')'    { statement($1, $3,         "(zp,x)"); }
+|   MNEMONIC ch                             { statement($1, $2,         "#"); }
 |   BRANCH_MNEMONIC abs_identifier          { statement($1, $2,         "r"); }
 |   IDENTIFIER '=' zp_abs                   { identifier($1, strtol(($3.str)+1, NULL, 16)); }
 |   IDENTIFIER '=' STRING                   { identifier($1, current_address); string($3); }
@@ -155,6 +161,10 @@ expression:
 x: 'X' | 'x' ;
 y: 'Y' | 'y' ;
 accu: 'A' | 'a';
+
+ch:
+    CHAR { $$.str = $1; }
+;
 
 abs:
     ABSOLUTE { $$.str = $1; }

@@ -117,11 +117,18 @@ unsigned short calculate_operand(const struct operand operand) {
         return address;
     }
 
+    // 'X'
+    if (strlen(operand.str) == 3 && operand.str[0] == '\'' && operand.str[2] == '\'') {
+        return (unsigned short)operand.str[1];
+    }
+
+    // $90
     if (!identifier_get(operand.str, &address)) {
         address = strtol(operand.str+1, NULL, 16);
     }
     address += operand.offset;
 
+    // >$90
     switch (operand.operation) {
         case '>':
             address = address >> 8;

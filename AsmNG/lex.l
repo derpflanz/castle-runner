@@ -74,6 +74,11 @@ int lexerrorcounter = 0;
 	return STRING;
 }
 
+'.' {
+	yylval.str = strdup(yytext);
+	return CHAR;
+}
+
 ;.*$ 			;
 [ \t]+          ;
 
