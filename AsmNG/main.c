@@ -54,12 +54,18 @@ int main(int argc, char **argv) {
     yyparse();
     fclose(asm_input);
 
+    if (errors + lexerrorcounter > 0) {
+        fprintf(stderr, "Parsing failed with %d error(s).\n", errors + lexerrorcounter);
+        return 1;
+    }
+
     int col_width = 30;
 
     // Process!
     struct node *ptr = tree_head();
     while (ptr) {
         address_print(ptr->address);
+
         switch(ptr->type) {
             case t_byte:
                 // ptr->bytes holds "$xx"
@@ -109,7 +115,7 @@ int main(int argc, char **argv) {
     }
 
     if (errors + lexerrorcounter > 0) {
-        fprintf(stderr, "Parsing failed with %d error(s).\n", errors + lexerrorcounter);
+        fprintf(stderr, "Processing failed with %d error(s).\n", errors + lexerrorcounter);
         return 1;
     }
 
