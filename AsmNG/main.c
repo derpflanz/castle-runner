@@ -23,7 +23,7 @@ void hex_print(const char *s) {
 }
 
 void address_print(unsigned short address) {
-    printf("[%04x %-10s] ", address, identifier_reverse_lookup(address));
+    printf("[%04x %-20s] ", address, identifier_reverse_lookup(address));
 }
 
 int main(int argc, char **argv) {

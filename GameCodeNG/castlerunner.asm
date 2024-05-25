@@ -1,6 +1,8 @@
 ; This is the Castle Runner game!
 ; It uses the cr001-rom.asm library
 
+.orig $8000
+
 ; DATA
 splash = "123456789ABCDEF0123456789"       ; 13 characters, X=3 to middle it
 copyright = "2023"
