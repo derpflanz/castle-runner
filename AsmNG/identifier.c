@@ -39,4 +39,15 @@ bool identifier_get(char *ident, unsigned short *address) {
     return false;
 }
 
+const char *reverse_lookup(unsigned short address) {
+    struct identifier *p = identifiers;
+    while (p) {
+        if (p->address == address) {
+            return p->name;
+        }
 
+        p = p->next;
+    }
+
+    return NULL;
+}

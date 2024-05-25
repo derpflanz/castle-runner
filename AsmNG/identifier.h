@@ -12,6 +12,7 @@ struct identifier {
 
 void identifier_add(char *ident, unsigned short addr);
 bool identifier_get(char *ident, unsigned short *address);
+const char *reverse_lookup(unsigned short address);
 void identifier_print();
 
 #endif

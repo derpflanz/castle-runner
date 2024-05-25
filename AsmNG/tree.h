@@ -7,10 +7,10 @@
 enum node_type { t_byte, t_string, t_opcode };
 
 struct node {
-    unsigned short address;
-    char *bytes;
-    struct operand operand;
-    enum node_type type;
+    unsigned short address;         // address of where the statement is
+    char *bytes;                    // mnemonic, or literal bytes
+    struct operand operand;         // operand info, value or variable
+    enum node_type type;            // type of statement
 
     struct node *next;
 };
