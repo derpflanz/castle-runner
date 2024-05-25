@@ -6,6 +6,7 @@
 #include <argp.h>
 #include <string.h>
 #include "options.h"
+#include "ignores.h"
 
 #define COL_WIDTH   30
 
@@ -99,9 +100,20 @@ void write_string(FILE *hex_output, FILE *user_output, struct node *node) {
     fprintf(user_output, "\n");
 }
 
-void write_opcode(FILE *hex_output, FILE *user_output, struct node *node) {
+void write_opcode(FILE *hex_output, FILE *user_output, struct node *node, const char **ignores) {
     unsigned char opcode = 0x00;
     if (opcode_lookup(node->bytes, node->operand.addressing_mode, &opcode) == true) {
+        if (ignores_in_list(ignores, node->operand.str)) {
+            // when an ignore is found as label, we assume it to be a JMP
+            // so we replace this by three NOPs
+            unsigned char nop;
+            opcode_lookup("nop", "i", &nop);
+            fprintf(hex_output, "%c%c%c", nop, nop, nop);
+            fprintf(user_output, "%*s%02x %02x %02x", -COL_WIDTH, "nop nop nop", nop, nop, nop);
+            fprintf(user_output, " (%s ignored)\n", node->operand.str);
+            return;
+        }
+
         // output opcode byte
         fprintf(hex_output, "%c", opcode);
 
@@ -136,6 +148,7 @@ int main(int argc, char **argv) {
     FILE *asm_input = stdin;
     FILE *hex_output = stdout;
     FILE *user_output = fopen("/dev/null", "w");
+    const char **ignores = NULL;
 
     struct arguments arguments;
     if (!arguments_parse(argc, argv, &arguments)) {
@@ -150,6 +163,10 @@ int main(int argc, char **argv) {
         user_output = stdout;
     }
     
+    if (arguments.ignores != NULL) {
+        ignores = ignores_create(arguments.ignores);
+    }
+
     // Parse!
     yyin = asm_input;
     yyparse();
@@ -179,7 +196,7 @@ int main(int argc, char **argv) {
                 write_string(hex_output, user_output, node);
             break;
             case t_opcode:
-                write_opcode(hex_output, user_output, node);
+                write_opcode(hex_output, user_output, node, ignores);
             break;
         }
 
