@@ -80,8 +80,6 @@ void identifier(char *ident, unsigned short addr) {
     identifier_add(ident, addr);
 }
 
-
-
 %}
 
 %code requires {

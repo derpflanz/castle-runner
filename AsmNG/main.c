@@ -66,6 +66,34 @@ int main(int argc, char **argv) {
 
     int col_width = 30;
 
+    if (arguments.add_vectors == 1) {
+        unsigned short resb, irq;
+        bool resb_found = false;
+        if (identifier_get("HW_IRQ", &irq) == false) {
+            printf("No IRQ vector found. Cannot write hex file.\n");
+            return -1;
+        }
+
+        struct node *ptr = tree_head();
+        while (ptr) {
+            if (ptr->type == t_opcode) {
+                resb = ptr->address;
+                resb_found = true;
+                break;
+            }
+            ptr = ptr->next;
+        }
+
+        if (resb_found == false) {
+            printf("No RESB vector found. Cannot write hex file.\n");
+            return -1;
+        }
+
+        printf("Adding vectors to hex file: RESB=%04x, IRQ=%04x\n", resb, irq);
+        fprintf(hex_output, "%c%c", resb & 0x00ff, resb >> 8);
+        fprintf(hex_output, "%c%c", irq & 0x00ff, irq >> 8);
+    }
+
     // Process!
     struct node *ptr = tree_head();
     while (ptr) {
