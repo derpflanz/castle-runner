@@ -22,6 +22,10 @@ void hex_print(const char *s) {
     printf ("%02x", '\0');
 }
 
+void address_print(unsigned short address) {
+    printf("[%04x %-10s] ", address, identifier_reverse_lookup(address));
+}
+
 int main(int argc, char **argv) {
     FILE *asm_input = stdin;
     FILE *hex_output = stdout;
@@ -50,21 +54,22 @@ int main(int argc, char **argv) {
     yyparse();
     fclose(asm_input);
 
-    int col_width = 20;
+    int col_width = 30;
 
     // Process!
     struct node *ptr = tree_head();
     while (ptr) {
+        address_print(ptr->address);
         switch(ptr->type) {
             case t_byte:
                 // ptr->bytes holds "$xx"
                 unsigned char value = (unsigned char)strtol((ptr->bytes)+1, NULL, 16);
                 fprintf(hex_output, "%c", value);
-                printf("[%04x] .byte %*s%x\n", ptr->address, -col_width+1, ptr->bytes, value);
+                printf(".byte %*s%x\n", -col_width+6, ptr->bytes, value);
             break;
             case t_string:
                 fprintf(hex_output, "%s%c", ptr->bytes, '\0');
-                printf("[%04x] %s = %*s\t", ptr->address, reverse_lookup(ptr->address), -col_width+8, ptr->bytes);
+                printf("%*s", -col_width, ptr->bytes);
                 hex_print(ptr->bytes);
                 printf("\n");
             break;
@@ -79,18 +84,18 @@ int main(int argc, char **argv) {
 
                     // when no operand, we are done
                     if (operand_len == 0) {
-                        printf("[%04x] %*s\t%02x\n", ptr->address, -col_width, ptr->bytes, opcode);
+                        printf("%*s%02x\n", -col_width, ptr->bytes, opcode);
                         break;
                     }
 
                     if (operand_len == 1) {
                         fprintf(hex_output, "%c", operand & 0x00ff);
-                        printf("[%04x] %s %*s\t%02x %02x\n", ptr->address, ptr->bytes, -col_width+4, ptr->operand.str, opcode, operand);
+                        printf("%s %*s%02x %02x\n", ptr->bytes, -col_width+4, ptr->operand.str, opcode, operand);
                     }
 
                     if (operand_len == 2) {
                         fprintf(hex_output, "%c%c", operand & 0x00ff, operand >> 8);
-                        printf("[%04x] %s %*s\t%02x %02x %02x\n", ptr->address, ptr->bytes, -col_width+4, ptr->operand.str, opcode, 
+                        printf("%s %*s%02x %02x %02x\n", ptr->bytes, -col_width+4, ptr->operand.str, opcode, 
                             operand & 0x00ff, operand >> 8);
                     }
                 } else {

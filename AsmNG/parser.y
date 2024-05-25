@@ -36,19 +36,21 @@ void directive(char *directive, struct operand operand) {
 
 void statement(char *mnemonic, struct operand operand, const char *addressing_mode) {
     tree_add_opcode(current_address, mnemonic, operand, addressing_mode);
-
-    current_address += get_statement_length(addressing_mode);
     if (operand.str != NULL) free(operand.str);
     free(mnemonic);
+
+    current_address += get_statement_length(addressing_mode);
 }
 
 // the string includes " and zero terminating 
 void string(char *s) {
-    s[strlen(s)-1] = '\0';
+    int slen = strlen(s);       // this includes the " characters
+
+    s[slen-1] = '\0';
     tree_add_string(current_address, s+1);
-    current_address += strlen(s) - 2;    
-    
     free(s);
+
+    current_address += slen -2 +1;      // -2 for the "s, +1 for the \0
 }
 
 bool is_zp(struct operand operand) {
