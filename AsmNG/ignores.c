@@ -4,11 +4,11 @@
 #include <string.h>
 
 void ignores_print(char **arr) {
-    char **ptr = arr;
+    if (arr == NULL) return;
 
-    while (*ptr) {
-        printf("%s\n", *ptr);
-        ptr++;
+    while (*arr) {
+        printf("%s\n", *arr);
+        arr++;
     }
 }
 
@@ -25,19 +25,18 @@ char **ignores_create(char *s) {
     char **result = malloc((elements + 1) * sizeof(char *));
     int i = 0;
 
-    result[i] = s;
+    result[i++] = s;
 
     ptr = s;
     while (*ptr) {
         if (*ptr == ',') {
             *ptr = '\0';
-            result[++i] = ptr+1;
-            ptr++;
+            result[i++] = ptr+1;
         }
         ptr++;
     }
 
-    result[i+1] = NULL;
+    result[i] = NULL;
 
     ignores_print(result);
 
@@ -48,14 +47,12 @@ bool ignores_in_list(char **ignores, const char *s) {
     if (ignores == NULL || s == NULL) {
         return false;
     }
-
-    char **ptr = ignores;
-
-    while (*ptr) {
-        if (!strcmp(s, *ptr)){
+    
+    while (*ignores) {
+        if (!strcmp(s, *ignores)){
             return true;
         }
-        ptr++;
+        ignores++;
     }
 
     return false;
