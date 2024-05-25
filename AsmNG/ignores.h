@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-const char **ignores_create(const char *s);
-bool ignores_in_list(const char **ignores, const char *s);
+char **ignores_create(char *s);
+bool ignores_in_list(char **ignores, const char *s);
+void ignores_free(char **ignores);
 
 #endif

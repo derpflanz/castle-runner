@@ -100,7 +100,7 @@ void write_string(FILE *hex_output, FILE *user_output, struct node *node) {
     fprintf(user_output, "\n");
 }
 
-void write_opcode(FILE *hex_output, FILE *user_output, struct node *node, const char **ignores) {
+void write_opcode(FILE *hex_output, FILE *user_output, struct node *node, char **ignores) {
     unsigned char opcode = 0x00;
     if (opcode_lookup(node->bytes, node->operand.addressing_mode, &opcode) == true) {
         if (ignores_in_list(ignores, node->operand.str)) {
@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
     FILE *asm_input = stdin;
     FILE *hex_output = stdout;
     FILE *user_output = fopen("/dev/null", "w");
-    const char **ignores = NULL;
+    char **ignores = NULL;
 
     struct arguments arguments;
     if (!arguments_parse(argc, argv, &arguments)) {
@@ -207,6 +207,8 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Processing failed with %d error(s).\n", errors + lexerrorcounter);
         return E_PROCESS;
     }
+
+    ignores_free(ignores);
 
     return E_OK;
 }
