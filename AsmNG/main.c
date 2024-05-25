@@ -17,18 +17,19 @@ void yyerror(char *s) {
     errors++;
 }
 
-void hex_print(const char *s) {
-    while (*s) printf("%02x ", *s++);
-    printf ("%02x", '\0');
+void hex_print(FILE *output, const char *s) {
+    while (*s) fprintf(output, "%02x ", *s++);
+    fprintf (output, "%02x", '\0');
 }
 
-void address_print(unsigned short address) {
-    printf("[%04x %-20s] ", address, identifier_reverse_lookup(address));
+void address_print(FILE *output, unsigned short address) {
+    fprintf(output, "[%04x %-20s] ", address, identifier_reverse_lookup(address));
 }
 
 int main(int argc, char **argv) {
     FILE *asm_input = stdin;
     FILE *hex_output = stdout;
+    FILE *user_output = fopen("/dev/null", "w");
 
     struct arguments arguments;
     if (!arguments_parse(argc, argv, &arguments)) {
@@ -48,6 +49,10 @@ int main(int argc, char **argv) {
         return -1;
     }
     printf("Writing to %s\n", arguments.output_file);
+
+    if (arguments.show_result == 1) {
+        user_output = stdout;
+    }
     
     // Parse!
     yyin = asm_input;
@@ -64,20 +69,20 @@ int main(int argc, char **argv) {
     // Process!
     struct node *ptr = tree_head();
     while (ptr) {
-        address_print(ptr->address);
+        address_print(user_output, ptr->address);
 
         switch(ptr->type) {
             case t_byte:
                 // ptr->bytes holds "$xx"
                 unsigned char value = (unsigned char)strtol((ptr->bytes)+1, NULL, 16);
                 fprintf(hex_output, "%c", value);
-                printf(".byte %*s%x\n", -col_width+6, ptr->bytes, value);
+                fprintf(user_output, ".byte %*s%x\n", -col_width+6, ptr->bytes, value);
             break;
             case t_string:
                 fprintf(hex_output, "%s%c", ptr->bytes, '\0');
-                printf("%*s", -col_width, ptr->bytes);
-                hex_print(ptr->bytes);
-                printf("\n");
+                fprintf(user_output, "%*s", -col_width, ptr->bytes);
+                hex_print(user_output, ptr->bytes);
+                fprintf(user_output, "\n");
             break;
             case t_opcode:
                 unsigned char opcode = 0x00;
@@ -90,18 +95,18 @@ int main(int argc, char **argv) {
 
                     // when no operand, we are done
                     if (operand_len == 0) {
-                        printf("%*s%02x\n", -col_width, ptr->bytes, opcode);
+                        fprintf(user_output, "%*s%02x\n", -col_width, ptr->bytes, opcode);
                         break;
                     }
 
                     if (operand_len == 1) {
                         fprintf(hex_output, "%c", operand & 0x00ff);
-                        printf("%s %*s%02x %02x\n", ptr->bytes, -col_width+4, ptr->operand.str, opcode, operand);
+                        fprintf(user_output, "%s %*s%02x %02x\n", ptr->bytes, -col_width+4, ptr->operand.str, opcode, operand);
                     }
 
                     if (operand_len == 2) {
                         fprintf(hex_output, "%c%c", operand & 0x00ff, operand >> 8);
-                        printf("%s %*s%02x %02x %02x\n", ptr->bytes, -col_width+4, ptr->operand.str, opcode, 
+                        fprintf(user_output, "%s %*s%02x %02x %02x\n", ptr->bytes, -col_width+4, ptr->operand.str, opcode, 
                             operand & 0x00ff, operand >> 8);
                     }
                 } else {

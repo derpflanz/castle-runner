@@ -7,6 +7,8 @@ static char args_doc[] = "-o OUTPUT -i INPUT";
 static struct argp_option options[] = {
     {"output", 'o', "FILE", 0, "Write to FILE instead of standard output" },
     {"input", 'i', "FILE", 0, "Read from FILE instead of standard input" },
+    {"add_vectors", 'a', NULL, OPTION_ARG_OPTIONAL, "Add RESB and IRQ vectors to hex file"},
+    {"show_result", 's', NULL, OPTION_ARG_OPTIONAL, "Show resulting bytes"},
     { 0 }
 };
 
@@ -14,6 +16,8 @@ struct arguments {
     char *args[2];
     char *output_file;
     char *input_file;
+    int add_vectors;
+    int show_result;
 };
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
@@ -25,6 +29,12 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
             break;
         case 'i':
             arguments->input_file = arg;
+            break;
+        case 'a':
+            arguments->add_vectors = 1;
+            break;
+        case 's':
+            arguments->show_result = 1;
             break;
         default:
             return ARGP_ERR_UNKNOWN;
