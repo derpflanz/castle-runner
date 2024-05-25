@@ -20,8 +20,6 @@ char **ignores_create(char *s) {
         ptr++;
     }
 
-    printf("Found %d elements in %s\n", elements, s);
-
     char **result = malloc((elements + 1) * sizeof(char *));
     int i = 0;
 
@@ -37,9 +35,6 @@ char **ignores_create(char *s) {
     }
 
     result[i] = NULL;
-
-    ignores_print(result);
-
     return result;
 }
 
@@ -47,7 +42,7 @@ bool ignores_in_list(char **ignores, const char *s) {
     if (ignores == NULL || s == NULL) {
         return false;
     }
-    
+
     while (*ignores) {
         if (!strcmp(s, *ignores)){
             return true;

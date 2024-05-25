@@ -165,6 +165,8 @@ int main(int argc, char **argv) {
     
     if (arguments.ignores != NULL) {
         ignores = ignores_create(arguments.ignores);
+        printf("Going to ignore calls to the following labels:\n");
+        ignores_print(ignores);
     }
 
     // Parse!
