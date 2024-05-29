@@ -117,7 +117,13 @@ void write_opcode(FILE *hex_output, FILE *user_output, struct node *node, char *
         // output opcode byte
         fprintf(hex_output, "%c", opcode);
 
-        unsigned short operand = calculate_operand(node->operand);
+        unsigned short operand;
+        if (!strcmp(node->operand.addressing_mode, "r")) {
+            operand = calculate_relative_address(node->address, node->operand);
+        } else {
+            operand = calculate_operand(node->operand);
+        }
+
         int operand_len = get_operand_length(opcode);
 
         // when no operand, we are done
