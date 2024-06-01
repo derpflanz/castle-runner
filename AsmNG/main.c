@@ -132,14 +132,31 @@ void write_opcode(FILE *hex_output, FILE *user_output, struct node *node, char *
         }
 
         if (operand_len >= 1) {
+            char operbuf[256];
+            operbuf[0] = '\0';
+            if (node->operand.operation != 0) {
+                snprintf(operbuf + strlen(operbuf), 256, "%c", node->operand.operation);
+            }
+            snprintf(operbuf + strlen(operbuf), 256, "%s", node->operand.str);
+
+            if (node->operand.offset != 0) {
+                snprintf(operbuf + strlen(operbuf), 256, "%+d", node->operand.offset);
+            }
+
             fprintf(hex_output, "%c", operand & 0x00ff);
             fprintf(user_output, "%s %*s%02x %02x", 
-                node->bytes, -COL_WIDTH+4, node->operand.str, opcode, operand & 0x00ff);
+                node->bytes, -COL_WIDTH+4, operbuf, opcode, operand & 0x00ff);
         }
 
         if (operand_len == 2) {
             fprintf(hex_output, "%c", operand >> 8);
             fprintf(user_output, " %02x", operand >> 8);
+        }
+
+        if (node->operand.str[0] != '#' && node->operand.str[0] != '$') {
+            unsigned short orig_oper;
+            identifier_get(node->operand.str, &orig_oper);
+            fprintf(user_output, "%*s%s = $%0*x", 40-(3*operand_len), "", node->operand.str, 2, orig_oper);
         }
 
         fprintf(user_output, "\n");
