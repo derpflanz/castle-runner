@@ -22,6 +22,19 @@ uint8_t sawtooth(uint8_t s) {
     return c;
 }
 
+uint8_t low_saw() {
+    static uint8_t subctr = 0;
+
+    subctr++;
+
+    if (subctr == 4) {
+        subctr = 0;
+        c++;
+    }
+
+    return c;
+}
+
 uint8_t triangle() {
     if (c == 252) {
         dir = -4;
@@ -51,7 +64,7 @@ ISR(TIMER0_OVF_vect) {
     }
     
     if (!(PINC & (1 << PC4))) {
-        n = sawtooth(2);
+        n = low_saw();
     }
 
     OCR0A = n;
