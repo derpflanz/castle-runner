@@ -3,6 +3,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include <stdlib.h>
 
 uint8_t c = 0;
 uint8_t dir = 2;
@@ -31,11 +32,28 @@ uint8_t triangle() {
     return c;
 }
 
+uint8_t noise() {
+    uint8_t r = 0;
+
+    r += rand();
+
+    return r;
+}
+
+
 ISR(TIMER0_OVF_vect) {
     cli();
+    uint8_t n = 0;
 
-    OCR0A = sine();
+    if (!(PINC & (1 << PC5))) {
+        n = noise();
+    }
+    
+    if (!(PINC & (1 << PC4))) {
+        n = sawtooth();
+    }
 
+    OCR0A = n;
     sei();
 }
 
