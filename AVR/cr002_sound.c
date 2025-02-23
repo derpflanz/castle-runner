@@ -17,8 +17,9 @@ uint8_t sine() {
     return _sine[c];
 }
 
-uint8_t sawtooth() {    
-    return c++;
+uint8_t sawtooth(uint8_t s) {
+    c += s;
+    return c;
 }
 
 uint8_t triangle() {
@@ -46,11 +47,11 @@ ISR(TIMER0_OVF_vect) {
     uint8_t n = 0;
 
     if (!(PINC & (1 << PC5))) {
-        n = noise();
+        n = sawtooth(1);
     }
     
     if (!(PINC & (1 << PC4))) {
-        n = sawtooth();
+        n = sawtooth(2);
     }
 
     OCR0A = n;
@@ -63,15 +64,21 @@ int main() {
     DDRC |= (1 << DDC0);
     PORTC |= (1 << PORTC0);         // Switch ON LED
 
-    TCCR0A |= (1 << COM0A1);       
-    TCCR0A |=  (1 << WGM00) | (1 << WGM01);
-
+    // timer 0 parameters
+    // COM0A1 = Clear OC0A on compare match, set at BOTTOM (=0)
+    // This controls the *output* pin, not the timer itself    
+    TCCR0A |= (1 << COM0A1);
+    // Fast PWM mode; Runs always from 0x00 to 0xFF
+    // TOV is always set at TOP (=0xFF), meaning TIMER0_OVF_vect is called
+    TCCR0A |= (1 << WGM00) | (1 << WGM01);
+    // Clock Select; CS2:0 = 001 -> No prescaling: runs at 16MHz
     TCCR0B |= (1 << CS00);
 
+    // Enable the timer 0 overflow interupr (causes TIMER0_OVF_vext) to actually be called
     TIMSK0 |= (1 << TOIE0);
 
-    c = 0;
-    OCR0A = c;
+    // Init timer
+    OCR0A = 0;
 
     sei();
     while (1);
