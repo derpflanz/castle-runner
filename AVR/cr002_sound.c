@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 uint8_t c = 0;
+uint16_t c_f = 0;
 uint8_t dir = 2;
 
 char _sine[] = {
@@ -20,6 +21,16 @@ uint8_t sine() {
 uint8_t sawtooth(uint8_t s) {
     c += s;
     return c;
+}
+
+uint8_t sawtooth_f(uint16_t s) {
+    c_f += s;
+
+    if (c_f > 32768) {
+        c_f = 0;
+    }
+
+    return (uint8_t) (c_f / 128);
 }
 
 uint8_t low_saw() {
@@ -60,18 +71,19 @@ ISR(TIMER0_OVF_vect) {
     uint8_t n = 0;
 
     if (!(PINC & (1 << PC5))) {
-        n = sawtooth(1);
+        n = sawtooth_f(462);
     }
     
     if (!(PINC & (1 << PC4))) {
-        n = low_saw();
+        n = sawtooth_f(231);
+        n = _sine[n];
     }
 
     OCR0A = n;
     sei();
 }
 
-int main() {
+void init_freq_timer() {
     DDRD |= (1 << DDD6);
 
     DDRC |= (1 << DDC0);
@@ -92,7 +104,26 @@ int main() {
 
     // Init timer
     OCR0A = 0;
+}
+
+void init_duration_timer() {
+    DDRB |= (1 << PB1);  // Set PB1 (OC1A) as output
+
+    TCCR1B |= (1 << WGM12);  // CTC mode (Clear Timer on Compare Match)
+    TCCR1A |= (1 << COM1A0); // Toggle OC1A on compare match
+
+    OCR1A = 1952;  // 125ms at 16MHz with prescaler 1024
+
+    TCCR1B |= (1 << CS12) | (1 << CS10); // Prescaler 1024, start timer
+}
+
+int main() {
+    cli();
+
+    init_freq_timer();
+    init_duration_timer();
 
     sei();
+
     while (1);
 }
