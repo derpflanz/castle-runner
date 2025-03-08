@@ -138,7 +138,7 @@ ISR(TIMER0_OVF_vect) {
 
     if (duration > 0) {
         uint8_t waveform = sawtooth_f(freq);
-        waveform = _sine[waveform];
+        //waveform = _sine[waveform];
 
         uint16_t n_large = waveform * amplitude;
         
@@ -187,7 +187,7 @@ ISR(TIMER1_COMPA_vect) {
         }
         
         // speed 128 is normal, higher is faster
-        speed = 128;
+        speed = 180;
 
         current_note.attack = (current_note.attack * 128) / speed;
         current_note.decay = (current_note.decay * 128) / speed;
