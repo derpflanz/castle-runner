@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 // Used in both interrupt handlers
-uint8_t amplitude;
+uint16_t amplitude;
 uint16_t frequency;
 
 // The frequency number is a uint16_t and calculated as follows:
@@ -106,7 +106,7 @@ ISR(TIMER0_OVF_vect) {
     uint8_t n = sawtooth(frequency);
     n = sine[n];
     
-    uint16_t n_large = n * amplitude;
+    uint16_t n_large = n * (amplitude / 256);
     n = n_large / 256;
     
     OCR0A = n;
@@ -152,9 +152,9 @@ ISR(TIMER1_COMPA_vect) {
         amplitude = 0;
 
         // calculate envelope steps
-        attack_step = 255 / current_note.attack;
-        decay_step = 127 / current_note.decay;
-        release_step = 127 / current_note.release;
+        attack_step = 65535 / current_note.attack;
+        decay_step = 32767 / current_note.decay;
+        release_step = 32767 / current_note.release;
 
         // calculate envelope times
         end_of_attack = current_note.attack;
