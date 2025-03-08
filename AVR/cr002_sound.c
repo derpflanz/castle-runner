@@ -13,10 +13,6 @@ int end = 0;
 uint8_t note_counter = 0;
 uint8_t amplitude;
 
-uint16_t attack_step;
-uint16_t decay_step;
-uint16_t sustain_step;
-uint16_t release_step;
 
 uint16_t end_of_attack, end_of_decay, end_of_sustain, end_of_release;
 
@@ -131,6 +127,10 @@ ISR(TIMER0_OVF_vect) {
 }
 
 ISR(TIMER1_COMPA_vect) {
+    static uint16_t attack_step;
+    static uint16_t decay_step;
+    static uint16_t release_step;
+
     if (end == 1) return;
 
     cli();
@@ -165,7 +165,6 @@ ISR(TIMER1_COMPA_vect) {
         // calculate envelope steps
         attack_step = 255 / current_note.attack;
         decay_step = 127 / current_note.decay;
-        sustain_step = 0;
         release_step = 127 / current_note.release;
 
         end_of_attack = current_note.attack;
@@ -217,7 +216,7 @@ void init_duration_timer() {
     TIMSK1 |= (1 << OCIE1A);
 
     // Initialise with a normal speed
-    OCR1A = 500;
+    OCR1A = 1000;
 }
 
 int main() {
