@@ -14,11 +14,13 @@ uint8_t duration = 0;
 uint16_t freq = 231;
 int end = 0;
 uint8_t note = 0;
+uint8_t amplitude;
 
 uint16_t attack_step;
 uint16_t decay_step;
 uint16_t sustain_step;
 uint16_t release_step;
+
 
 uint16_t notes_oct4[] = {
 //  C    C#   D    D#   E    F    F#   G    G#   A    A#   B
@@ -43,19 +45,21 @@ struct pair {
     uint16_t release;
 };
 
+struct pair current_note;
+
 struct pair song[] = {
-    { O4_C, 12, 0, 12, 0 },
-    { REST, 0, 0, 0 , 0 },
-    { O4_C, 0, 0, 8 , 0 },
-    { REST, 0, 0, 2 , 0 },
-    { O4_D, 0, 0, 8 , 0 },
-    { REST, 0, 0, 2 , 0 },
-    { O4_C, 0, 0, 8 , 0 },
-    { REST, 0, 0, 2 , 0 },
-    { O4_F, 0, 0, 8 , 0 },
-    { REST, 0, 0, 2 , 0 },
-    { O4_E, 0, 0, 16, 0 },
-    { END,  0, 0, 0 , 0 }
+    { O4_C, 10, 1, 12, 1 },
+    { REST, 1, 1, 0 , 1 },
+    { O4_C, 1, 1, 8 , 1 },
+    { REST, 1, 1, 2 , 1 },
+    { O4_D, 1, 1, 8 , 1 },
+    { REST, 1, 1, 2 , 1 },
+    { O4_C, 1, 1, 8 , 1 },
+    { REST, 1, 1, 2 , 1 },
+    { O4_F, 1, 1, 8 , 1 },
+    { REST, 1, 1, 2 , 1 },
+    { O4_E, 1, 1, 16, 1 },
+    { END,  1, 1, 0 , 1 }
 };
 
 char _sine[] = {
@@ -129,8 +133,12 @@ ISR(TIMER0_OVF_vect) {
     // }
 
     if (duration > 0) {
-        n = sawtooth_f(freq);
-        n = _sine[n];
+        uint8_t waveform = sawtooth_f(freq);
+        // waveform = _sine[waveform];
+
+        uint16_t n_large = waveform * amplitude;
+        
+        n = n_large / 256;
     }
 
     OCR0A = n;
@@ -144,17 +152,40 @@ ISR(TIMER1_COMPA_vect) {
     cli();
 
     if (duration != 0) {
+        if (duration < current_note.attack) {
+            // we are in attack phase
+            amplitude += attack_step;
+        }
+
+        if (duration > current_note.attack && 
+            duration < current_note.attack + current_note.decay) {
+            // we are in decay phase
+            amplitude -= decay_step;
+        }
+
+        if (duration > current_note.attack + current_note.decay && 
+            duration < current_note.attack + current_note.decay + current_note.sustain) {
+            // we are in sustain phase
+            amplitude += sustain_step;
+        }
+
+        if (duration > current_note.attack + current_note.decay + current_note.sustain) {
+            amplitude -= release_step;
+        }
+
         duration--;
     }
 
     if (duration == 0) {
-        struct pair current_note = song[note];
+        current_note = song[note];
         if (current_note.note == END) {
             freq = 0;
             end = 1;
         }
         
+        // init duration
         duration = current_note.attack + current_note.decay + current_note.sustain + current_note.release;
+        amplitude = 0;
 
         attack_step = 256 / current_note.attack;
         decay_step = 128 / current_note.decay;
