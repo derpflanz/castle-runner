@@ -8,12 +8,23 @@
 uint8_t c = 0;
 uint16_t c_f = 0;
 uint8_t dir = 2;
+uint16_t speed = 128;           // 128 is normal, lower is slower
 
-uint8_t duration = 0;
+uint16_t duration = 0;
+uint16_t total_duration = 0;
 
 uint16_t freq = 231;
 int end = 0;
 uint8_t note = 0;
+uint8_t amplitude;
+
+uint16_t attack_step;
+uint16_t decay_step;
+uint16_t sustain_step;
+uint16_t release_step;
+
+uint16_t end_of_attack, end_of_decay, end_of_sustain, end_of_release;
+
 
 uint16_t notes_oct4[] = {
 //  C    C#   D    D#   E    F    F#   G    G#   A    A#   B
@@ -32,22 +43,27 @@ uint16_t notes_oct4[] = {
 
 struct pair {
     uint16_t note;
-    uint16_t duration;
+    uint16_t attack;
+    uint16_t decay;
+    uint16_t sustain;
+    uint16_t release;
 };
 
+struct pair current_note;
+
 struct pair song[] = {
-    { O4_C, 12 },
-    { REST, 0 },
-    { O4_C, 8 },
-    { REST, 2 },
-    { O4_D, 8 },
-    { REST, 2 },
-    { O4_C, 8 },
-    { REST, 2 },
-    { O4_F, 8 },
-    { REST, 2 },
-    { O4_E, 16 },
-    { END, 0 }
+    { O4_C, 20, 10, 10, 10},
+     { REST, 0, 0, 10 , 0 },
+     { O4_C, 20, 10, 10 , 10 },
+     { REST, 0, 0, 10 , 0 },
+     { O4_D, 10, 10, 80 , 10 },
+     { REST, 0, 0, 10 , 0 },
+     { O4_C, 10, 10, 80 , 10 },
+     { REST, 0, 0, 10 , 0 },
+     { O4_F, 10, 10, 80 , 10 },
+     { REST, 0, 0, 10 , 0 },
+     { O4_E, 10, 10, 106, 10 },
+    { END,  1, 1, 0 , 1 }
 };
 
 char _sine[] = {
@@ -121,8 +137,12 @@ ISR(TIMER0_OVF_vect) {
     // }
 
     if (duration > 0) {
-        n = sawtooth_f(freq);
-        n = _sine[n];
+        uint8_t waveform = sawtooth_f(freq);
+        //waveform = _sine[waveform];
+
+        uint16_t n_large = waveform * amplitude;
+        
+        n = n_large / 256;
     }
 
     OCR0A = n;
@@ -135,23 +155,64 @@ ISR(TIMER1_COMPA_vect) {
 
     cli();
 
-    if (duration != 0) {
-        duration--;
-    }
+    if (duration < total_duration) {
+        if (duration < end_of_attack) {
+            // we are in attack phase
+            amplitude += attack_step;
+        }
 
-    if (duration == 0) {
-        struct pair next = song[note];
-        note++;
+        if (duration > end_of_attack && 
+            duration < end_of_decay) {
+            // we are in decay phase
+            amplitude -= decay_step;
+        }
 
-        duration = next.duration;
-        freq = next.note;
+        if (duration > end_of_decay && 
+            duration < end_of_sustain) {
+            // we are in sustain phase
+            amplitude += sustain_step;
+        }
 
-        if (next.note == END) {
+        if (duration > end_of_sustain) {
+            amplitude -= release_step;
+        }
+
+        duration++;
+    } else {
+        // end of note reached
+        current_note = song[note];
+        if (current_note.note == END) {
             freq = 0;
             end = 1;
         }
+        
+        // speed 128 is normal, higher is faster
+        speed = 180;
 
+        current_note.attack = (current_note.attack * 128) / speed;
+        current_note.decay = (current_note.decay * 128) / speed;
+        current_note.sustain = (current_note.sustain * 128) / speed;
+        current_note.release = (current_note.release * 128) / speed;
+
+        // init duration
+        total_duration = current_note.attack + current_note.decay + current_note.sustain + current_note.release;
+        duration = 0;
+        amplitude = 0;
+
+        attack_step = 256 / current_note.attack;
+        decay_step = 128 / current_note.decay;
+        sustain_step = 0;
+        release_step = 128 / current_note.release;
+
+        end_of_attack = current_note.attack;
+        end_of_decay = end_of_attack + current_note.decay;
+        end_of_sustain = end_of_decay + current_note.sustain;
+        end_of_release = end_of_sustain + current_note.release;
+
+        freq = current_note.note;
+        
         TCNT1 = 0;
+        note++;
     }
 
     sei();
@@ -185,7 +246,7 @@ void init_duration_timer() {
 
     OCR1A = 1952;  // 125ms at 16MHz with prescaler 1024
 
-    TCCR1B |= (1 << CS12) ; //| (1 << CS10); // Prescaler 1024, start timer
+    TCCR1B |= (1 << CS11)| (1 << CS10); // Prescaler 1024, start timer
 
     TIMSK1 |= (1 << OCIE1A);
 }
