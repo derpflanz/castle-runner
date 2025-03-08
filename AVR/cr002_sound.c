@@ -9,7 +9,8 @@ uint8_t c = 0;
 uint16_t c_f = 0;
 uint8_t dir = 2;
 
-uint8_t duration = 0;
+uint16_t duration = 0;
+uint16_t total_duration = 0;
 
 uint16_t freq = 231;
 int end = 0;
@@ -20,6 +21,8 @@ uint16_t attack_step;
 uint16_t decay_step;
 uint16_t sustain_step;
 uint16_t release_step;
+
+uint16_t end_of_attack, end_of_decay, end_of_sustain, end_of_release;
 
 
 uint16_t notes_oct4[] = {
@@ -48,17 +51,17 @@ struct pair {
 struct pair current_note;
 
 struct pair song[] = {
-    { O4_C, 10, 1, 12, 1 },
-    { REST, 1, 1, 0 , 1 },
-    { O4_C, 1, 1, 8 , 1 },
-    { REST, 1, 1, 2 , 1 },
-    { O4_D, 1, 1, 8 , 1 },
-    { REST, 1, 1, 2 , 1 },
-    { O4_C, 1, 1, 8 , 1 },
-    { REST, 1, 1, 2 , 1 },
-    { O4_F, 1, 1, 8 , 1 },
-    { REST, 1, 1, 2 , 1 },
-    { O4_E, 1, 1, 16, 1 },
+    { O4_C, 20, 10, 10, 10},
+     { REST, 0, 0, 10 , 0 },
+     { O4_C, 20, 10, 10 , 10 },
+     { REST, 0, 0, 10 , 0 },
+     { O4_D, 10, 10, 80 , 10 },
+     { REST, 0, 0, 10 , 0 },
+     { O4_C, 10, 10, 80 , 10 },
+     { REST, 0, 0, 10 , 0 },
+     { O4_F, 10, 10, 80 , 10 },
+     { REST, 0, 0, 10 , 0 },
+     { O4_E, 10, 10, 106, 10 },
     { END,  1, 1, 0 , 1 }
 };
 
@@ -134,7 +137,7 @@ ISR(TIMER0_OVF_vect) {
 
     if (duration > 0) {
         uint8_t waveform = sawtooth_f(freq);
-        // waveform = _sine[waveform];
+        waveform = _sine[waveform];
 
         uint16_t n_large = waveform * amplitude;
         
@@ -151,32 +154,31 @@ ISR(TIMER1_COMPA_vect) {
 
     cli();
 
-    if (duration != 0) {
-        if (duration < current_note.attack) {
+    if (duration < total_duration) {
+        if (duration < end_of_attack) {
             // we are in attack phase
             amplitude += attack_step;
         }
 
-        if (duration > current_note.attack && 
-            duration < current_note.attack + current_note.decay) {
+        if (duration > end_of_attack && 
+            duration < end_of_decay) {
             // we are in decay phase
             amplitude -= decay_step;
         }
 
-        if (duration > current_note.attack + current_note.decay && 
-            duration < current_note.attack + current_note.decay + current_note.sustain) {
+        if (duration > end_of_decay && 
+            duration < end_of_sustain) {
             // we are in sustain phase
             amplitude += sustain_step;
         }
 
-        if (duration > current_note.attack + current_note.decay + current_note.sustain) {
+        if (duration > end_of_sustain) {
             amplitude -= release_step;
         }
 
-        duration--;
-    }
-
-    if (duration == 0) {
+        duration++;
+    } else {
+        // end of note reached
         current_note = song[note];
         if (current_note.note == END) {
             freq = 0;
@@ -184,13 +186,19 @@ ISR(TIMER1_COMPA_vect) {
         }
         
         // init duration
-        duration = current_note.attack + current_note.decay + current_note.sustain + current_note.release;
+        total_duration = current_note.attack + current_note.decay + current_note.sustain + current_note.release;
+        duration = 0;
         amplitude = 0;
 
         attack_step = 256 / current_note.attack;
         decay_step = 128 / current_note.decay;
         sustain_step = 0;
         release_step = 128 / current_note.release;
+
+        end_of_attack = current_note.attack;
+        end_of_decay = end_of_attack + current_note.decay;
+        end_of_sustain = end_of_decay + current_note.sustain;
+        end_of_release = end_of_sustain + current_note.release;
 
         freq = current_note.note;
         
@@ -229,7 +237,7 @@ void init_duration_timer() {
 
     OCR1A = 1952;  // 125ms at 16MHz with prescaler 1024
 
-    TCCR1B |= (1 << CS12) ; //| (1 << CS10); // Prescaler 1024, start timer
+    TCCR1B |= (1 << CS11)| (1 << CS10); // Prescaler 1024, start timer
 
     TIMSK1 |= (1 << OCIE1A);
 }
