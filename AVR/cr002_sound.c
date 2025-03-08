@@ -32,22 +32,25 @@ uint16_t notes_oct4[] = {
 
 struct pair {
     uint16_t note;
-    uint16_t duration;
+    uint16_t attack;
+    uint16_t decay;
+    uint16_t sustain;
+    uint16_t release;
 };
 
 struct pair song[] = {
-    { O4_C, 12 },
-    { REST, 0 },
-    { O4_C, 8 },
-    { REST, 2 },
-    { O4_D, 8 },
-    { REST, 2 },
-    { O4_C, 8 },
-    { REST, 2 },
-    { O4_F, 8 },
-    { REST, 2 },
-    { O4_E, 16 },
-    { END, 0 }
+    { O4_C, 0, 0, 12, 0 },
+    { REST, 0, 0, 0 , 0 },
+    { O4_C, 0, 0, 8 , 0 },
+    { REST, 0, 0, 2 , 0 },
+    { O4_D, 0, 0, 8 , 0 },
+    { REST, 0, 0, 2 , 0 },
+    { O4_C, 0, 0, 8 , 0 },
+    { REST, 0, 0, 2 , 0 },
+    { O4_F, 0, 0, 8 , 0 },
+    { REST, 0, 0, 2 , 0 },
+    { O4_E, 0, 0, 16, 0 },
+    { END,  0, 0, 0 , 0 }
 };
 
 char _sine[] = {
@@ -143,7 +146,7 @@ ISR(TIMER1_COMPA_vect) {
         struct pair next = song[note];
         note++;
 
-        duration = next.duration;
+        duration = next.sustain;
         freq = next.note;
 
         if (next.note == END) {
