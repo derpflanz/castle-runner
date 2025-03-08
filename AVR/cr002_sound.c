@@ -120,7 +120,7 @@ ISR(TIMER0_OVF_vect) {
 
     if (slice > 0) {
         uint8_t waveform_idx = sawtooth(freq);
-        n = triangle[waveform_idx];
+        n = sine[waveform_idx];
 
         uint16_t n_large = n * amplitude;
         n = n_large / 256;
