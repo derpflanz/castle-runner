@@ -67,6 +67,7 @@ uint8_t sine[] = {
     62, 64, 67, 70, 73, 76, 79, 81, 84, 87, 90, 93, 96, 99, 103, 106, 109, 112, 115, 118, 
     121, 124
 };
+
 uint8_t triangle[] = {
     2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 
     44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 80, 82, 
@@ -113,7 +114,6 @@ ISR(TIMER0_OVF_vect) {
     sei();
 }
 
-
 ISR(TIMER1_COMPA_vect) {
     static uint16_t attack_step, decay_step, release_step;
     static uint16_t end_of_attack, end_of_decay, end_of_sustain, end_of_release;
@@ -125,31 +125,20 @@ ISR(TIMER1_COMPA_vect) {
     
     cli();
 
-    if (slice < end_of_release) {
-        if (slice < end_of_attack) {
-            // we are in attack phase
-            amplitude += attack_step;
-        }
-
-        if (slice > end_of_attack && slice < end_of_decay) {
-            // we are in decay phase
-            amplitude -= decay_step;
-        }
-
-        // Sustain is just that, nothing changes.
-
-        if (slice > end_of_sustain) {
-            amplitude -= release_step;
-        }
+    if (slice < end_of_release) {        
+        if (slice < end_of_attack) amplitude += attack_step; // attack
+        if (slice > end_of_attack && slice < end_of_decay) amplitude -= decay_step; // decay
+        // sustain is just that, nothing changes
+        if (slice > end_of_sustain) amplitude -= release_step; // release
 
         slice++;
     } else {
-        // end of note reached
-        current_note = song[note_counter];
+        current_note = song[note_counter++];
 
-        // init slice and amplitude
+        // reset slice and amplitude
         slice = 0;
         amplitude = 0;
+        frequency = current_note.frequency;
 
         // calculate envelope steps
         attack_step = 65535 / current_note.attack;
@@ -161,11 +150,6 @@ ISR(TIMER1_COMPA_vect) {
         end_of_decay = end_of_attack + current_note.decay;
         end_of_sustain = end_of_decay + current_note.sustain;
         end_of_release = end_of_sustain + current_note.release;
-
-        frequency = current_note.frequency;
-        note_counter++;
-        
-        TCNT1 = 0;
     }
 
     sei();
