@@ -5,10 +5,6 @@
 #include <avr/interrupt.h>
 #include <stdlib.h>
 
-uint8_t c = 0;
-uint8_t dir = 2;
-uint16_t speed = 128;           // 128 is normal, lower is slower
-
 uint16_t duration = 0;
 uint16_t total_duration = 0;
 
@@ -146,14 +142,6 @@ ISR(TIMER1_COMPA_vect) {
             freq = 0;
             end = 1;
         }
-        
-        // speed 128 is normal, higher is faster
-        speed = 250;
-
-        current_note.attack = (current_note.attack * 128) / speed;
-        current_note.decay = (current_note.decay * 128) / speed;
-        current_note.sustain = (current_note.sustain * 128) / speed;
-        current_note.release = (current_note.release * 128) / speed;
 
         // init duration
         total_duration = current_note.attack + current_note.decay + current_note.sustain + current_note.release;
@@ -186,30 +174,31 @@ void init_freq_timer() {
     // COM0A1 = Clear OC0A on compare match, set at BOTTOM (=0)
     // This controls the *output* pin, not the timer itself    
     TCCR0A |= (1 << COM0A1);
+
     // Fast PWM mode; Runs always from 0x00 to 0xFF
     // TOV is always set at TOP (=0xFF), meaning TIMER0_OVF_vect is called
     TCCR0A |= (1 << WGM00) | (1 << WGM01);
+
     // Clock Select; CS2:0 = 001 -> No prescaling: runs at 16MHz
     TCCR0B |= (1 << CS00);
 
     // Enable the timer 0 overflow interupr (causes TIMER0_OVF_vext) to actually be called
     TIMSK0 |= (1 << TOIE0);
 
-    // Init timer
+    // Init compare register
     OCR0A = 0;
 }
 
 void init_duration_timer() {
-    DDRB |= (1 << PB1);  // Set PB1 (OC1A) as output
+    // CTC mode (Clear Timer on Compare Match)
+    TCCR1B |= (1 << WGM12);  
 
-    TCCR1B |= (1 << WGM12);  // CTC mode (Clear Timer on Compare Match)
-    TCCR1A |= (1 << COM1A0); // Toggle OC1A on compare match
-
-    OCR1A = 1952;  // 125ms at 16MHz with prescaler 1024
-
-    TCCR1B |= (1 << CS11)| (1 << CS10); // Prescaler 1024, start timer
-
+    // Prescaler 64, gives a speed range on OCR1A between 100 (hyperturbo) and 2000 (very slow)
+    TCCR1B |= (1 << CS11)| (1 << CS10);
     TIMSK1 |= (1 << OCIE1A);
+
+    // Initialise with a normal speed
+    OCR1A = 500;
 }
 
 int main() {
