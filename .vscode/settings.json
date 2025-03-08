@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "chrono": "cpp",
-        "mutex": "cpp"
+        "mutex": "cpp",
+        "io.h": "c",
+        "iom328p.h": "c"
     }
 }

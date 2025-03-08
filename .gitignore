@@ -35,3 +35,9 @@ AsmNG/testfile.asm
 AsmNG/testfile2.asm
 
 GameCodeNG/gamecode.asm
+
+Arduino/ArduinoISP/
+
+GameCodeNG/generated/
+
+*.o

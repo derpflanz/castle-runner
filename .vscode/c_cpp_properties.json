@@ -3,8 +3,7 @@
         {
             "name": "Linux",
             "includePath": [
-                "/home/bf/.arduino15/packages/arduino/tools/**",
-                "/home/bf/.arduino15/packages/arduino/hardware/avr/1.8.3/**"
+                "/usr/avr/include"
             ],
             "forcedInclude": [
                 "/home/bf/.arduino15/packages/arduino/hardware/avr/1.8.3/cores/arduino/Arduino.h"
@@ -12,7 +11,10 @@
             "intelliSenseMode": "gcc-x64",
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c18",
-            "cppStandard": "c++14"
+            "cppStandard": "c++14",
+            "defines": [
+                "__AVR_ATmega328__=1"
+            ]
         }
     ],
     "version": 4
