@@ -34,20 +34,19 @@ struct note {
     uint16_t release;
 };
 
-
 struct note song[] = {
-    { O4_C, 20, 10, 10, 10},
-     { REST, 0, 0, 10 , 0 },
-     { O4_C, 20, 10, 10 , 0 },
-     { REST, 0, 0, 10 , 0 },
-     { O4_D, 10, 10, 80 , 10 },
-     { REST, 0, 0, 10 , 0 },
-     { O4_C, 10, 10, 80 , 10 },
-     { REST, 0, 0, 10 , 0 },
-     { O4_F, 10, 10, 80 , 10 },
-     { REST, 0, 0, 10 , 0 },
-     { O4_E, 10, 10, 106, 10 },
-     { END,  1, 1, 0 , 1 }
+    { O4_C, 20, 10,  10, 10 },
+    { REST,  0,  0,  10,  0 },
+    { O4_C, 20, 10,  10,  0 },
+    { REST,  0,  0,  10,  0 },
+    { O4_D, 10, 10,  80, 10 },
+    { REST,  0,  0,  10,  0 },
+    { O4_C, 10, 10,  80, 10 },
+    { REST,  0,  0,  10,  0 },
+    { O4_F, 10, 10,  80, 10 },
+    { REST,  0,  0,  10,  0 },
+    { O4_E, 10, 10, 160, 10 },
+    { END,   0,  0,   0,  0 }
 };
 
 // waveform values (0-255)
@@ -60,7 +59,7 @@ uint8_t sine[] = {
     247, 246, 245, 243, 242, 240, 239, 237, 236, 234, 232, 230, 228, 226, 224, 222, 
     220, 218, 216, 213, 211, 209, 206, 204, 201, 199, 196, 193, 191, 188, 185, 182, 
     179, 176, 174, 171, 168, 165, 162, 159, 156, 152, 149, 146, 143, 140, 137, 134, 
-    131, 128, 124, 121, 118, 115, 112, 109, 106, 103, 99, 96, 93, 90, 87, 84, 81, 
+    131, 128, 124, 121, 118, 115, 112, 109, 106, 103,  99,  96,  93,  90,  87,  84, 81, 
     79, 76, 73, 70, 67, 64, 62, 59, 56, 54, 51, 49, 46, 44, 42, 39, 37, 35, 33, 31, 
     29, 27, 25, 23, 21, 19, 18, 16, 15, 13, 12, 10, 9, 8, 7, 6, 5, 4, 3, 3, 2, 1, 1, 
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 3, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15, 
@@ -103,11 +102,9 @@ uint8_t sawtooth(uint16_t frequency) {
 ISR(TIMER0_OVF_vect) {
     if (frequency == END) return;
 
-    cli();
-    uint8_t n = 0;
-    
-    uint8_t waveform_idx = sawtooth(frequency);
-    n = sine[waveform_idx];
+    cli();   
+    uint8_t n = sawtooth(frequency);
+    n = sine[n];
     
     uint16_t n_large = n * amplitude;
     n = n_large / 256;
@@ -118,9 +115,7 @@ ISR(TIMER0_OVF_vect) {
 
 
 ISR(TIMER1_COMPA_vect) {
-    static uint16_t attack_step;
-    static uint16_t decay_step;
-    static uint16_t release_step;
+    static uint16_t attack_step, decay_step, release_step;
     static uint16_t end_of_attack, end_of_decay, end_of_sustain, end_of_release;
     static uint8_t note_counter = 0;
     static uint16_t slice = 0;
@@ -161,15 +156,16 @@ ISR(TIMER1_COMPA_vect) {
         decay_step = 127 / current_note.decay;
         release_step = 127 / current_note.release;
 
+        // calculate envelope times
         end_of_attack = current_note.attack;
         end_of_decay = end_of_attack + current_note.decay;
         end_of_sustain = end_of_decay + current_note.sustain;
         end_of_release = end_of_sustain + current_note.release;
 
         frequency = current_note.frequency;
+        note_counter++;
         
         TCNT1 = 0;
-        note_counter++;
     }
 
     sei();
