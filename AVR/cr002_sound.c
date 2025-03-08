@@ -5,16 +5,9 @@
 #include <avr/interrupt.h>
 #include <stdlib.h>
 
-uint16_t slice = 0;
-uint16_t total_duration = 0;
-
-uint16_t freq = 231;
-int end = 0;
-uint8_t note_counter = 0;
+// Used in both interrupt handlers
 uint8_t amplitude;
-
-
-uint16_t end_of_attack, end_of_decay, end_of_sustain, end_of_release;
+uint16_t frequency;
 
 // The frequency number is a uint16_t and calculated as follows:
 // n = f / (f_clk / 256 / 32768)
@@ -41,7 +34,6 @@ struct note {
     uint16_t release;
 };
 
-struct note current_note;
 
 struct note song[] = {
     { O4_C, 20, 10, 10, 10},
@@ -55,7 +47,7 @@ struct note song[] = {
      { O4_F, 10, 10, 80 , 10 },
      { REST, 0, 0, 10 , 0 },
      { O4_E, 10, 10, 106, 10 },
-    { END,  1, 1, 0 , 1 }
+     { END,  1, 1, 0 , 1 }
 };
 
 // waveform values (0-255)
@@ -97,42 +89,45 @@ uint8_t triangle[] = {
 // This sawtooth function is used to calculate a uint8_t value from the, 
 // uint16_t frequency, giving us more fine grained frequency steps (0-32768)
 // The return value can then be used in another waveform (e.g. sine[])
-uint8_t sawtooth(uint16_t step) {
+uint8_t sawtooth(uint16_t frequency) {
     static uint16_t wvalue = 0;
-    wvalue += step;
+    wvalue += frequency;
 
     if (wvalue > 32768) {
         wvalue = 0;
     }
-
+    
     return (uint8_t) (wvalue / 128);
 }
 
 ISR(TIMER0_OVF_vect) {
-    if (end == 1) return;
+    if (frequency == END) return;
 
     cli();
     uint8_t n = 0;
-
-    if (slice > 0) {
-        uint8_t waveform_idx = sawtooth(freq);
-        n = sine[waveform_idx];
-
-        uint16_t n_large = n * amplitude;
-        n = n_large / 256;
-    }
-
+    
+    uint8_t waveform_idx = sawtooth(frequency);
+    n = sine[waveform_idx];
+    
+    uint16_t n_large = n * amplitude;
+    n = n_large / 256;
+    
     OCR0A = n;
     sei();
 }
+
 
 ISR(TIMER1_COMPA_vect) {
     static uint16_t attack_step;
     static uint16_t decay_step;
     static uint16_t release_step;
-
-    if (end == 1) return;
-
+    static uint16_t end_of_attack, end_of_decay, end_of_sustain, end_of_release;
+    static uint8_t note_counter = 0;
+    static uint16_t slice = 0;
+    static struct note current_note;
+    
+    if (frequency == END) return;
+    
     cli();
 
     if (slice < end_of_release) {
@@ -156,7 +151,6 @@ ISR(TIMER1_COMPA_vect) {
     } else {
         // end of note reached
         current_note = song[note_counter];
-        end = current_note.frequency == END;
 
         // init slice and amplitude
         slice = 0;
@@ -172,7 +166,7 @@ ISR(TIMER1_COMPA_vect) {
         end_of_sustain = end_of_decay + current_note.sustain;
         end_of_release = end_of_sustain + current_note.release;
 
-        freq = current_note.frequency;
+        frequency = current_note.frequency;
         
         TCNT1 = 0;
         note_counter++;
