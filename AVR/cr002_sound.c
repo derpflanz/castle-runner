@@ -8,6 +8,7 @@
 uint8_t c = 0;
 uint16_t c_f = 0;
 uint8_t dir = 2;
+uint16_t speed = 128;           // 128 is normal, lower is slower
 
 uint16_t duration = 0;
 uint16_t total_duration = 0;
@@ -185,6 +186,14 @@ ISR(TIMER1_COMPA_vect) {
             end = 1;
         }
         
+        // speed 128 is normal, higher is faster
+        speed = 128;
+
+        current_note.attack = (current_note.attack * 128) / speed;
+        current_note.decay = (current_note.decay * 128) / speed;
+        current_note.sustain = (current_note.sustain * 128) / speed;
+        current_note.release = (current_note.release * 128) / speed;
+
         // init duration
         total_duration = current_note.attack + current_note.decay + current_note.sustain + current_note.release;
         duration = 0;
