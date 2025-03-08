@@ -15,6 +15,11 @@ uint16_t freq = 231;
 int end = 0;
 uint8_t note = 0;
 
+uint16_t attack_step;
+uint16_t decay_step;
+uint16_t sustain_step;
+uint16_t release_step;
+
 uint16_t notes_oct4[] = {
 //  C    C#   D    D#   E    F    F#   G    G#   A    A#   B
     138, 146, 154, 164, 173, 184, 194, 206, 218, 231, 245, 260
@@ -39,7 +44,7 @@ struct pair {
 };
 
 struct pair song[] = {
-    { O4_C, 0, 0, 12, 0 },
+    { O4_C, 12, 0, 12, 0 },
     { REST, 0, 0, 0 , 0 },
     { O4_C, 0, 0, 8 , 0 },
     { REST, 0, 0, 2 , 0 },
@@ -143,18 +148,23 @@ ISR(TIMER1_COMPA_vect) {
     }
 
     if (duration == 0) {
-        struct pair next = song[note];
-        note++;
-
-        duration = next.sustain;
-        freq = next.note;
-
-        if (next.note == END) {
+        struct pair current_note = song[note];
+        if (current_note.note == END) {
             freq = 0;
             end = 1;
         }
+        
+        duration = current_note.attack + current_note.decay + current_note.sustain + current_note.release;
 
+        attack_step = 256 / current_note.attack;
+        decay_step = 128 / current_note.decay;
+        sustain_step = 0;
+        release_step = 128 / current_note.release;
+
+        freq = current_note.note;
+        
         TCNT1 = 0;
+        note++;
     }
 
     sei();
