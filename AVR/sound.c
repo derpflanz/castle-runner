@@ -4,7 +4,7 @@
 
 // Used in both interrupt handlers
 uint16_t amplitude;
-uint16_t frequency;
+uint16_t frequency = END;
 struct note *current_song;
 
 // waveform values (0-255)
@@ -102,6 +102,10 @@ uint8_t sawtooth(uint16_t frequency) {
 
 void load_song(struct note *song) {
     current_song = song;
+}
+
+void start_song() {
+    frequency = BEGIN;
 }
 
 ISR(TIMER0_OVF_vect) {

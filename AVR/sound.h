@@ -18,6 +18,7 @@
 #define O4_B    260
 
 #define REST    0
+#define BEGIN   65534
 #define END     65535
 
 struct note {
@@ -33,6 +34,7 @@ void init_duration_timer();
 uint8_t sawtooth(uint16_t frequency);
 void load_song(struct note *song);
 void set_speed(uint16_t speed);
+void start_song();
 
 extern uint8_t sine[];
 extern uint8_t triangle[];

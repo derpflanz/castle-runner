@@ -3,6 +3,8 @@
 #include <avr/interrupt.h>
 #include "sound.h"
 
+#define RW      PD4
+
 struct note song[] = {
     { O4_C, 20, 10,  10, 10 },
     { REST,  1,  1,  10,  1 },
@@ -21,12 +23,28 @@ struct note song[] = {
 int main() {
     cli();
 
+    uint8_t prev_rw = 1;
+
+    // initialise sound system
     init_freq_timer();
     init_duration_timer();
     load_song(song);
-    set_speed(200);
+    set_speed(1000);
+
+    // initialise communication system
+    DDRD &= ~(1 << RW);
 
     sei();
 
-    while (1);
+    while (1) {
+        uint8_t rw = (PIND & (1 << RW) ? 1 : 0);
+
+        if (rw == 0 && prev_rw == 1) {
+            // we edged down, the MCU is writing
+            // check which register to load
+            start_song();
+        }
+
+        prev_rw = rw;
+    }
 }
