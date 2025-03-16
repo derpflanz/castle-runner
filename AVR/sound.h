@@ -18,7 +18,6 @@
 #define O4_B    260
 
 #define REST    0
-#define BEGIN   65534
 #define END     65535
 
 struct note {

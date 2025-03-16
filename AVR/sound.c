@@ -6,7 +6,7 @@
 uint16_t amplitude;
 uint16_t frequency = END;
 struct note *current_song;
-uint8_t note_counter = 0;
+int note_counter = -1;
 
 // waveform values (0-255)
 uint8_t sine[] = {
@@ -106,12 +106,15 @@ void load_song(struct note *song) {
 }
 
 void start_song() {
-    frequency = BEGIN;
     note_counter = 0;
 }
 
+void stop_song() {
+    note_counter = -1;
+}
+
 ISR(TIMER0_OVF_vect) {
-    if (frequency == END) return;
+    if (note_counter < 0) return;
 
     cli();   
     uint8_t n = sawtooth(frequency);
@@ -125,7 +128,7 @@ ISR(TIMER0_OVF_vect) {
 }
 
 ISR(TIMER1_COMPA_vect) {
-    if (frequency == END) return;
+    if (note_counter < 0) return;
 
     static uint16_t attack_step, decay_step, release_step;
     static uint16_t end_of_attack, end_of_decay, end_of_sustain, end_of_release;    
@@ -143,6 +146,10 @@ ISR(TIMER1_COMPA_vect) {
         slice++;
     } else {
         current_note = current_song[note_counter++];
+
+        if (current_note.frequency == END) {
+            stop_song();
+        }
 
         // reset slice and amplitude
         slice = 0;
