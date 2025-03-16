@@ -16,3 +16,13 @@ uint8_t dr() {
 uint8_t cr() {
     return (PIND & (1 << PD3) ? 1 : 0);
 }
+
+struct state read_state() {
+    struct state io_state;
+
+    io_state.rw = rw();
+    io_state.dr = dr();
+    io_state.cr = cr();
+
+    return io_state;
+}

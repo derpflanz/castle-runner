@@ -35,9 +35,9 @@ int main() {
     sei();
 
     while (1) {
-        uint8_t _rw = rw();
+        struct state io_state = read_state();
 
-        if (_rw == 0 && prev_rw == 1) {
+        if (io_state.rw == 0 && prev_rw == 1) {
             // we edged down, the MCU is writing
             // check which register to load
             
@@ -45,6 +45,6 @@ int main() {
             start_song();
         }
 
-        prev_rw = _rw;
+        prev_rw = io_state.rw;
     }
 }

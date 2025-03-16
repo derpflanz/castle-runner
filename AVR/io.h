@@ -11,10 +11,13 @@
 #define DIR_DR  DDD2
 #define DIR_CR  DDD3
 
+struct state {
+    uint8_t rw;
+    uint8_t dr;
+    uint8_t cr;
+};
 
 void init_io();
-uint8_t rw();
-uint8_t dr();
-uint8_t cr();
+struct state read_state();
 
 #endif
