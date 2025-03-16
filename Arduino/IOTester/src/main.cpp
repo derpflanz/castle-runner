@@ -9,7 +9,7 @@
 
 // The LEDBAR is LOW ACTIVE
 // The Databus is HIGH ACTIVE
-#define ACTIVE LOW
+#define ACTIVE HIGH
 
 void set_output() {
     for (int i = START_PIN; i < (START_PIN + BYTE_LENGTH); i++) {
@@ -71,6 +71,7 @@ void setup() {
     Serial.write("O<number>     to set data output\n");
     Serial.write("D             to select data register\n");
     Serial.write("C             to select control register\n");
+    Serial.write("X             to clear the data/ctrl registers\n");
     Serial.write("W             write out\n\n");
     Serial.write("> ");
 }
@@ -90,6 +91,9 @@ void process(char *buffer) {
     } else if (buffer[0] == 'C') {
         Serial.write("Enabled control register\n");
         set_ctrl_register();
+    } else if (buffer[0] == 'X') {
+        Serial.write("Disabled both registers\n");
+        clear_register();
     } else if (buffer[0] == 'W') {
         Serial.write("Edged in WR\n");
         write();
