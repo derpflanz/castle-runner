@@ -23,6 +23,15 @@ struct state read_state() {
     io_state.rw = rw();
     io_state.dr = dr();
     io_state.cr = cr();
+    io_state.reg_select = REG_NONE;
+
+    if (io_state.dr == 1 && io_state.cr == 0) {
+        io_state.reg_select = REG_DATA;
+    }
+
+    if (io_state.dr == 0 && io_state.cr == 1) {
+        io_state.reg_select = REG_CTRL;
+    }
 
     return io_state;
 }
