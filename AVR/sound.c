@@ -6,6 +6,7 @@
 uint16_t amplitude;
 uint16_t frequency = END;
 struct note *current_song;
+uint8_t note_counter = 0;
 
 // waveform values (0-255)
 uint8_t sine[] = {
@@ -106,6 +107,7 @@ void load_song(struct note *song) {
 
 void start_song() {
     frequency = BEGIN;
+    note_counter = 0;
 }
 
 ISR(TIMER0_OVF_vect) {
@@ -123,13 +125,12 @@ ISR(TIMER0_OVF_vect) {
 }
 
 ISR(TIMER1_COMPA_vect) {
+    if (frequency == END) return;
+
     static uint16_t attack_step, decay_step, release_step;
-    static uint16_t end_of_attack, end_of_decay, end_of_sustain, end_of_release;
-    static uint8_t note_counter = 0;
+    static uint16_t end_of_attack, end_of_decay, end_of_sustain, end_of_release;    
     static uint16_t slice = 0;
     static struct note current_note;
-    
-    if (frequency == END) return;
     
     cli();
 
