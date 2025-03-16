@@ -1,4 +1,4 @@
-CFILES=main.c sound.c
+CFILES=main.c sound.c io.c
 HEXFILE=sound.hex
 BINARY=sound.o
 

@@ -2,8 +2,7 @@
 
 #include <avr/interrupt.h>
 #include "sound.h"
-
-#define RW      PD4
+#include "io.h"
 
 struct note song[] = {
     { O4_C, 20, 10,  10, 10 },
@@ -31,20 +30,21 @@ int main() {
     load_song(song);
     set_speed(1000);
 
-    // initialise communication system
-    DDRD &= ~(1 << RW);
+    init_io();
 
     sei();
 
     while (1) {
-        uint8_t rw = (PIND & (1 << RW) ? 1 : 0);
+        uint8_t _rw = rw();
 
-        if (rw == 0 && prev_rw == 1) {
+        if (_rw == 0 && prev_rw == 1) {
             // we edged down, the MCU is writing
             // check which register to load
+            
+
             start_song();
         }
 
-        prev_rw = rw;
+        prev_rw = _rw;
     }
 }
