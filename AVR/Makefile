@@ -22,3 +22,6 @@ $(HEXFILE): $(BINARY)
 
 program: $(HEXFILE)
 	$(PROGR) -p$(TARGET) -c$(PROGTYPE) -P$(PORT) -U flash:w:$(HEXFILE) $(PROGFLAGS)
+
+clean:
+	rm *.o *.hex
