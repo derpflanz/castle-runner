@@ -44,7 +44,11 @@ int main() {
                 continue;
             }
 
-            start_song();
+            if (io_state.reg_select == REG_CTRL) {
+                if (io_state.data == CMD_STARTSONG) {
+                    start_song();
+                }
+            }
         }
 
         prev_rw = io_state.rw;

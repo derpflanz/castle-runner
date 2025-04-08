@@ -15,6 +15,8 @@
 #define REG_DATA    1
 #define REG_CTRL    2
 
+#define CMD_STARTSONG   2
+
 struct state {
     uint8_t rw;
     uint8_t dr;

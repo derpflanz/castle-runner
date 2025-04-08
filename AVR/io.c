@@ -18,7 +18,7 @@ void init_io() {
         // Set D0-5 as INPUTs (no pullup)
         (1 << DDC0) | (1 << DDC1) | (1 << DDC2) | 
         (1 << DDC3) | (1 << DDC4) | (1 << DDC5) 
-    )
+    );
 }
 
 uint8_t rw() {
@@ -51,7 +51,7 @@ struct state read_state() {
     io_state.dr = dr();
     io_state.cr = cr();
     io_state.data = data();
-    
+
     io_state.reg_select = REG_NONE;
 
     if (io_state.dr == 1 && io_state.cr == 0) {
