@@ -19,6 +19,7 @@ struct state {
     uint8_t rw;
     uint8_t dr;
     uint8_t cr;
+    uint8_t data;
 
     uint8_t reg_select;
 };
