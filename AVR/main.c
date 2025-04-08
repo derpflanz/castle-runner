@@ -40,7 +40,7 @@ int main() {
         if (io_state.rw == 0 && prev_rw == 1) {
             // we edged down, the MCU is writing
             // check which register to load
-            if (io_state.reg_select = REG_NONE) {
+            if (io_state.reg_select == REG_NONE) {
                 continue;
             }
 
