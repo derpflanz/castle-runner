@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "io.h": "c",
-        "delay.h": "c",
-        "compare": "c",
-        "interrupt.h": "c"
-    }
-}
