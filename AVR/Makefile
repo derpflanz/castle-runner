@@ -1,6 +1,6 @@
-CFILES=cr002_sound.c
-HEXFILE=test.hex
-BINARY=test.o
+CFILES=main.c sound.c io.c
+HEXFILE=sound.hex
+BINARY=sound.o
 
 CC=avr-gcc
 CFLAGS=-O1 -Wall -mmcu=atmega328 -Werror
@@ -22,3 +22,6 @@ $(HEXFILE): $(BINARY)
 
 program: $(HEXFILE)
 	$(PROGR) -p$(TARGET) -c$(PROGTYPE) -P$(PORT) -U flash:w:$(HEXFILE) $(PROGFLAGS)
+
+clean:
+	rm *.o *.hex
