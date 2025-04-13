@@ -3,9 +3,21 @@
 
 .orig $8000
 
+cur_row = $C0
+cur_col = $C1
+steps = $C2
+gold = $C3
+joy_shadow = $D0
+joystick = $D1
+level_ptr = $E0
+
+par1 = $80
+par2 = $81
+
+joy_status_pos = $0229
+
 ; DATA
-splash = "123456789ABCDEF0123456789"       ; 13 characters, X=3 to middle it
-copyright = "2023"
+copyright = "2024"
 gameover = "Game Over!"
 
 ; init
@@ -32,28 +44,28 @@ CLI             ; Enable interrupts
 ; ======================= INITIALISATION ==================================
 ; initialise location of our runner
 LDA #$0F
-STA $C0
+STA cur_row
 LDA #$14
-STA $C1
+STA cur_col
 
 LDA #$10
-STA $C2
+STA steps
 
 LDA $4000       ; Joystick shadow
-STA $D0
+STA joy_shadow
 
 ; ======================= GAME LOOP ==================================
 GameLoop:
 ; Read joystick value and store in temp
 LDA $4000
-STA $D1
+STA joystick
 
 ; Read joystick value and output to screen (for debug)
-LDA #$29
-STA $80
-LDA #$02
-STA $81
-LDA $D1
+LDA <joy_status_pos
+STA par1
+LDA >joy_status_pos
+STA par2
+LDA joystick
 JSR Dec2Ascii
 
 ; Print steps

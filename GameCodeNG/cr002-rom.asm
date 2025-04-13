@@ -27,7 +27,6 @@
 display_data =  $4000
 display_ctrl =  $4001
 
-
 VIO_ResetDisplay:
     ; To reset, we pull de /RES pin low for at least 3ms
     LDA #$01        ; WR=1, RS=0, RES=0

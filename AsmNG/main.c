@@ -6,6 +6,7 @@
 #include <argp.h>
 #include <string.h>
 #include "options.h"
+#include "ignores.h"
 
 #define COL_WIDTH   30
 
@@ -99,13 +100,30 @@ void write_string(FILE *hex_output, FILE *user_output, struct node *node) {
     fprintf(user_output, "\n");
 }
 
-void write_opcode(FILE *hex_output, FILE *user_output, struct node *node) {
+void write_opcode(FILE *hex_output, FILE *user_output, struct node *node, char **ignores) {
     unsigned char opcode = 0x00;
     if (opcode_lookup(node->bytes, node->operand.addressing_mode, &opcode) == true) {
+        if (ignores_in_list(ignores, node->operand.str)) {
+            // when an ignore is found as label, we assume it to be a JMP
+            // so we replace this by three NOPs
+            unsigned char nop;
+            opcode_lookup("nop", "i", &nop);
+            fprintf(hex_output, "%c%c%c", nop, nop, nop);
+            fprintf(user_output, "%*s%02x %02x %02x", -COL_WIDTH, "nop nop nop", nop, nop, nop);
+            fprintf(user_output, " (%s ignored)\n", node->operand.str);
+            return;
+        }
+
         // output opcode byte
         fprintf(hex_output, "%c", opcode);
 
-        unsigned short operand = calculate_operand(node->operand);
+        unsigned short operand;
+        if (!strcmp(node->operand.addressing_mode, "r")) {
+            operand = calculate_relative_address(node->address, node->operand);
+        } else {
+            operand = calculate_operand(node->operand);
+        }
+
         int operand_len = get_operand_length(opcode);
 
         // when no operand, we are done
@@ -114,14 +132,31 @@ void write_opcode(FILE *hex_output, FILE *user_output, struct node *node) {
         }
 
         if (operand_len >= 1) {
+            char operbuf[256];
+            operbuf[0] = '\0';
+            if (node->operand.operation != 0) {
+                snprintf(operbuf + strlen(operbuf), 256, "%c", node->operand.operation);
+            }
+            snprintf(operbuf + strlen(operbuf), 256, "%s", node->operand.str);
+
+            if (node->operand.offset != 0) {
+                snprintf(operbuf + strlen(operbuf), 256, "%+d", node->operand.offset);
+            }
+
             fprintf(hex_output, "%c", operand & 0x00ff);
             fprintf(user_output, "%s %*s%02x %02x", 
-                node->bytes, -COL_WIDTH+4, node->operand.str, opcode, operand & 0x00ff);
+                node->bytes, -COL_WIDTH+4, operbuf, opcode, operand & 0x00ff);
         }
 
         if (operand_len == 2) {
             fprintf(hex_output, "%c", operand >> 8);
             fprintf(user_output, " %02x", operand >> 8);
+        }
+
+        if (node->operand.str[0] != '#' && node->operand.str[0] != '$') {
+            unsigned short orig_oper;
+            identifier_get(node->operand.str, &orig_oper);
+            fprintf(user_output, "%*s%s = $%0*x", 40-(3*operand_len), "", node->operand.str, 2, orig_oper);
         }
 
         fprintf(user_output, "\n");
@@ -136,6 +171,7 @@ int main(int argc, char **argv) {
     FILE *asm_input = stdin;
     FILE *hex_output = stdout;
     FILE *user_output = fopen("/dev/null", "w");
+    char **ignores = NULL;
 
     struct arguments arguments;
     if (!arguments_parse(argc, argv, &arguments)) {
@@ -150,6 +186,12 @@ int main(int argc, char **argv) {
         user_output = stdout;
     }
     
+    if (arguments.ignores != NULL) {
+        ignores = ignores_create(arguments.ignores);
+        printf("Going to ignore calls to the following labels:\n");
+        ignores_print(ignores);
+    }
+
     // Parse!
     yyin = asm_input;
     yyparse();
@@ -179,7 +221,7 @@ int main(int argc, char **argv) {
                 write_string(hex_output, user_output, node);
             break;
             case t_opcode:
-                write_opcode(hex_output, user_output, node);
+                write_opcode(hex_output, user_output, node, ignores);
             break;
         }
 
@@ -190,6 +232,8 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Processing failed with %d error(s).\n", errors + lexerrorcounter);
         return E_PROCESS;
     }
+
+    ignores_free(ignores);
 
     return E_OK;
 }

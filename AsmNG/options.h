@@ -5,10 +5,11 @@ const char *argp_program_version = "1.0";
 static char doc[] = "AsmNG - a re-written CastleRunner assembler";
 static char args_doc[] = "-o OUTPUT -i INPUT";
 static struct argp_option options[] = {
-    {"output", 'o', "FILE", 0, "Write to FILE instead of standard output" },
-    {"input", 'i', "FILE", 0, "Read from FILE instead of standard input" },
-    {"add_vectors", 'a', NULL, OPTION_ARG_OPTIONAL, "Add RESB and IRQ vectors to hex file"},
-    {"show_result", 's', NULL, OPTION_ARG_OPTIONAL, "Show resulting bytes"},
+    {"output",      'o', "FILE",    0,                      "Write to FILE instead of standard output" },
+    {"input",       'i', "FILE",    0,                      "Read from FILE instead of standard input" },
+    {"add_vectors", 'a', NULL,      OPTION_ARG_OPTIONAL,    "Add RESB and IRQ vectors to hex file"},
+    {"show_result", 's', NULL,      OPTION_ARG_OPTIONAL,    "Show resulting bytes"},
+    {"ignore",      'g', "STRING",  OPTION_ARG_OPTIONAL,    "Comma separated list of labels to ignore."},
     { 0 }
 };
 
@@ -18,6 +19,7 @@ struct arguments {
     char *input_file;
     int add_vectors;
     int show_result;
+    char *ignores;
 };
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
@@ -36,6 +38,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         case 's':
             arguments->show_result = 1;
             break;
+        case 'g':
+            arguments->ignores = arg;
+            break;
         default:
             return ARGP_ERR_UNKNOWN;
     }
@@ -48,6 +53,9 @@ static struct argp argp = { options, parse_opt, args_doc, doc };
 bool arguments_parse(int argc, char **argv, struct arguments *arguments) {
     arguments->output_file = NULL;
     arguments->input_file = NULL;
+    arguments->ignores = NULL;
+    arguments->add_vectors = 0;
+    arguments->show_result = 0;
 
     argp_parse(&argp, argc, argv, 0, 0, arguments);
 

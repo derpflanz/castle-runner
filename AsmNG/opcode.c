@@ -110,6 +110,21 @@ int get_operand_length(const unsigned char opcode) {
     return operand_length[opcode];
 }
 
+unsigned short calculate_relative_address(const unsigned short from_address, const struct operand operand) {
+    unsigned short target_address;
+
+    if (!identifier_get(operand.str, &target_address)) {
+        return 0x0000;
+    }
+
+    unsigned short result = target_address - from_address - 2;
+    if (result < 0) {
+        result += 256;
+    }
+
+    return result;
+}
+
 unsigned short calculate_operand(const struct operand operand) {
     unsigned short address = 0x0000;
 
