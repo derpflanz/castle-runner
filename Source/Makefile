@@ -4,7 +4,7 @@ ASM=../Tools/AsmNG/as6502
 HEX_OUT=./generated/castlerunner.hex
 
 # eeprom stuff
-PROG_BASE=../EepromProgrammer/
+PROG_BASE=../Tools/EepromProgrammer/
 PROGRAMMER=python $(PROG_BASE)eeprom-program.py 
 BOARD=arduino:megaavr:nona4809
 PORT=$(shell arduino-cli board list | grep $(BOARD) | awk '{ print $$1; }')
