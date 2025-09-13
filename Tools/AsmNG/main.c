@@ -128,7 +128,8 @@ void write_opcode(FILE *hex_output, FILE *user_output, struct node *node, char *
 
         // when no operand, we are done
         if (operand_len == 0) {
-            fprintf(user_output, "%*s%02x", -COL_WIDTH, node->bytes, opcode);
+            fprintf(user_output, "%*s%02x\n", -COL_WIDTH, node->bytes, opcode);
+            return;
         }
 
         if (operand_len >= 1) {
