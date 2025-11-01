@@ -1,4 +1,5 @@
 #include "io.h"
+#include <avr/io.h>
 
 // PD2 => INT0 => Address select (low active)
 // PC0-PC5,PD0-PD1 = DATA
@@ -23,22 +24,7 @@ void init_io() {
     EICRA &= ~(1 << ISC00);
 
     EIMSK |= (1 << INT0);
-
-    // led
-    DDRB = 0x00;        // portB is OUT
 }
-
-// uint8_t rw() {
-//     return (PIND & (1 << PD4) ? 1 : 0);
-// }
-
-// uint8_t dr() {
-//     return (PIND & (1 << PD2) ? 1 : 0);
-// }
-
-// uint8_t cr() {
-//     return (PIND & (1 << PD3) ? 1 : 0);
-// }
 
 uint8_t data() {
     uint8_t d = 0;
@@ -50,24 +36,3 @@ uint8_t data() {
 
     return d;
 }
-
-// struct state read_state() {
-//     struct state io_state;
-
-//     io_state.rw = rw();
-//     io_state.dr = dr();
-//     io_state.cr = cr();
-//     io_state.data = data();
-
-//     io_state.reg_select = REG_NONE;
-
-//     if (io_state.dr == 0 && io_state.cr == 1) {
-//         io_state.reg_select = REG_DATA;
-//     }
-
-//     if (io_state.dr == 1 && io_state.cr == 0) {
-//         io_state.reg_select = REG_CTRL;
-//     }
-
-//     return io_state;
-// }
