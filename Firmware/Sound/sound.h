@@ -38,4 +38,6 @@ void start_song();
 extern uint8_t sine[];
 extern uint8_t triangle[];
 
+extern uint8_t *waveform;
+
 #endif

@@ -1,12 +1,15 @@
 #include <avr/io.h>
 #include "sound.h"
 #include <avr/interrupt.h>
+#include <stdlib.h>
 
 // Used in both interrupt handlers
 uint16_t amplitude;
 uint16_t frequency = END;
 struct note *current_song;
 int note_counter = -1;
+
+uint8_t *waveform = NULL;
 
 // waveform values (0-255)
 uint8_t sine[] = {
@@ -118,7 +121,10 @@ ISR(TIMER0_OVF_vect) {
 
     cli();   
     uint8_t n = sawtooth(frequency);
-    n = sine[n];
+
+    if (waveform != NULL) {
+        n = waveform[n];
+    }
     
     uint16_t n_large = n * (amplitude / 256);
     n = n_large / 256;

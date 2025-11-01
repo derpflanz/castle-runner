@@ -18,8 +18,9 @@
 
 // Control bitmasks
 #define CTRL_PLAY       1
-#define CTRL_SLOW       2
-#define CTRL_FAST       4
+#define CTRL_SAWT       2
+#define CTRL_SINE       4
+#define CTRL_TRNG       8
 
 struct note happy_birthday[] = {
     { O4_C, 10, 10,  10, 10 },
@@ -63,6 +64,9 @@ ISR(INT0_vect) {
         case REG_CTRL:
             current_register = &ctrl_reg;
         break;
+        case REG_FREQ_8BIT:
+            current_register = &(current_note[0].frequency);
+            break;
         case REG_ATTK_8BIT:
             current_register = &(current_note[0].attack);
         break;
@@ -88,6 +92,13 @@ ISR(INT1_vect) {
     *current_register = d;
 
     if (ctrl_reg != 0) {
+        waveform = NULL;            // sawtooth is default
+        if (ctrl_reg & CTRL_TRNG) {
+            waveform = triangle;
+        }
+        if (ctrl_reg & CTRL_SINE)  {
+            waveform = sine;
+        }
         if (ctrl_reg & CTRL_PLAY) {
             start_song();
         }
@@ -102,10 +113,11 @@ int main() {
     init_duration_timer();
     load_song(current_note);
     set_speed(1000);
+    waveform = sine;
     init_io();
 
     sei();
 
-    // everything is interrupt based, so no loop needed
+    // everything is interrupt based, so no futher code needed
     while (1);
 }
