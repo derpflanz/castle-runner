@@ -19,8 +19,27 @@ struct note song[] = {
     { END,   1,  1,   1,  1 }
 };
 
+// The chip works with a register selector and a data channel
+// Interrupt 0 selects the register to use (0-255)
+// Interrupt 1 reads the data and writes it into the selected register
+
 ISR(INT0_vect) {
-    start_song();
+    // Select register (0-255)
+    uint8_t reg = data();
+
+    if (reg == 0) {
+        set_speed(2000);
+        start_song();
+    }
+
+    if (reg == 1) {
+        set_speed(500);
+        start_song();
+    }
+}
+
+ISR(INT1_vect) {
+
 }
 
 int main() {
