@@ -20,10 +20,23 @@ void init_io() {
     );
 
     // Configure INT0 (PD2) for a falling edge trigger
-    EICRA |= (1 << ISC01);
-    EICRA &= ~(1 << ISC00);
 
-    EIMSK |= (1 << INT0);
+    // EICRA = External Interrupt Control Register A
+    // ISC0n = Interrupt Sense Control 0 Bit n
+    // ISC0 = (1,0) => The falling edge of INT0 generates an interrupt request
+    EICRA |= (1 << ISC01);          // SET   ISC01
+    EICRA &= ~(1 << ISC00);         // CLEAR ISC00
+
+    // ISC1n = Interrupt Sense Control 1 Bit n
+    // ISC1 = (1,0) => The falling edge of INT1 generates an interrupt request
+    EICRA |= (1 << ISC11);          // SET   ISC11
+    EICRA &= ~(1 << ISC10);         // CLEAR ISC10
+
+    // EIMSK = External Interrupt Mask Register
+    // INT0 = Enable INT0
+    // INT1 = Enable INT1
+    EIMSK |= (1 << INT0);           // SET   INT0
+    EIMSK |= (1 << INT1);           // SET   INT1
 }
 
 uint8_t data() {
