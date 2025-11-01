@@ -19,10 +19,14 @@ struct note song[] = {
     { END,   1,  1,   1,  1 }
 };
 
+ISR(INT0_vect) {
+    start_song();
+}
+
 int main() {
     cli();
 
-    uint8_t prev_rw = 1;
+    //uint8_t prev_rw = 1;
 
     // initialise sound system
     init_freq_timer();
@@ -34,23 +38,48 @@ int main() {
 
     sei();
 
-    while (1) {
-        struct state io_state = read_state();
+    start_song();
 
-        if (io_state.rw == 0 && prev_rw == 1) {
-            // we edged down, the MCU is writing
-            // check which register to load
-            if (io_state.reg_select == REG_NONE) {
-                continue;
-            }
+    while (1)
+      {
+        //  _delay_ms(1000);
+         PORTB = 0xFF;
+        //  _delay_ms(1000);
+         PORTB = 0x00;
 
-            if (io_state.reg_select == REG_CTRL) {
-                if (io_state.data == CMD_STARTSONG) {
-                    start_song();
-                }
-            }
-        }
+        // register uint8_t p = 1;
+        // register uint8_t c = 1;
+        // do
+        // {
+        //     p = c;
+        //     c = (PIND & (1 << PD3) ? 1 : 0);
+        // } while (!(c ==0 && p == 1));
+        
+        // start_song();
 
-        prev_rw = io_state.rw;
+        // if (io_state.rw == 0 && prev_rw == 1) {
+        //     //start_song();
+        //     if (io_state.dr == 1 && io_state.cr == 0) {
+        //         start_song();
+        //     }
+        // }
+        // prev_rw = io_state.rw;
+
+        // if (io_state.rw == 0 && prev_rw == 1) {
+        //     //start_song();
+
+        //     // we edged down, the MCU is writing
+        //     // check which register to load
+        //     if (io_state.reg_select == REG_NONE) {
+        //         continue;
+        //     }
+
+        //     if (io_state.reg_select == REG_DATA) {
+        //         start_song();
+        //         if (io_state.data == CMD_STARTSONG) {
+        //         }
+        //     }
+        // }
+
     }
 }
