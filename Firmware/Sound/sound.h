@@ -28,7 +28,8 @@ struct note {
     uint16_t release;
 };
 
-void init_freq_timer();
+void init_freq_timer_voice_1();
+void init_freq_timer_voice_2();
 void init_duration_timer();
 uint8_t sawtooth(uint16_t frequency);
 void load_song(struct note *song);

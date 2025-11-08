@@ -109,14 +109,17 @@ int main() {
     cli();
 
     // initialise sound system
-    init_freq_timer();
+    init_freq_timer_voice_1();
+    init_freq_timer_voice_2();
     init_duration_timer();
-    load_song(current_note);
-    set_speed(1000);
+    load_song(happy_birthday);
+    set_speed(500);
     waveform = sine;
     init_io();
 
     sei();
+    
+    start_song();
 
     // everything is interrupt based, so no futher code needed
     while (1);
