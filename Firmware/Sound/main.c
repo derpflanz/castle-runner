@@ -37,6 +37,21 @@ struct note happy_birthday[] = {
     { END,   1,  1,   1,  1 }
 };
 
+struct note happy_birthday2[] = {
+    { O4_C, 10, 10,  10, 10 },
+    { REST,  1,  1,  10,  1 },
+    { O4_C, 10, 10,  10, 10 },
+    { REST,  1,  1,  10,  1 },
+    { O4_D, 10, 10,  80, 10 },
+    { REST,  1,  1,  10,  1 },
+    { O4_C, 10, 10,  80, 10 },
+    { REST,  1,  1,  10,  1 },
+    { O4_F, 10, 10,  80, 10 },
+    { REST,  1,  1,  10,  1 },
+    { O4_E, 10, 10, 160, 10 },
+    { END,   1,  1,   1,  1 }
+};
+
 struct note current_note[] = 
 {
     { O4_C, 10, 10, 10, 10 },
@@ -113,7 +128,7 @@ int main() {
     init_freq_timer_voice_2();
     init_duration_timer();
     load_song_voice1(happy_birthday);
-    load_song_voice2(happy_birthday);
+    load_song_voice2(happy_birthday2);
     set_speed(500);
     waveform_voice1 = sine;
     waveform_voice2 = NULL;
@@ -122,7 +137,7 @@ int main() {
     sei();
     
     start_song_voice1();
-    //start_song_voice2();
+    start_song_voice2();
 
     // everything is interrupt based, so no futher code needed
     while (1);

@@ -115,7 +115,18 @@ void set_speed(uint16_t speed) {
 // This sawtooth function is used to calculate a uint8_t value from the, 
 // uint16_t frequency, giving us more fine grained frequency steps (0-32768)
 // The return value can then be used in another waveform (e.g. sine[])
-uint8_t sawtooth(uint16_t frequency) {
+uint8_t sawtooth_voice1(uint16_t frequency) {
+    static uint16_t wvalue = 0;
+    wvalue += frequency;
+
+    if (wvalue > 32768) {
+        wvalue = 0;
+    }
+    
+    return (uint8_t) (wvalue / 128);
+}
+
+uint8_t sawtooth_voice2(uint16_t frequency) {
     static uint16_t wvalue = 0;
     wvalue += frequency;
 
@@ -153,8 +164,7 @@ void stop_song_voice2() {
 ISR(TIMER0_OVF_vect) {
     if (note_counter_voice1 < 0) return;
 
-    cli();   
-    uint8_t n = sawtooth(frequency_voice1);
+    uint8_t n = sawtooth_voice1(frequency_voice1);
 
     if (waveform_voice1 != NULL) {
         n = waveform_voice1[n];
@@ -164,14 +174,12 @@ ISR(TIMER0_OVF_vect) {
     n = n_large / 256;
     
     OCR0A = n;
-    sei();
 }
 
 ISR(TIMER2_OVF_vect) {
     if (note_counter_voice2 < 0) return;
 
-    cli();   
-    uint8_t n = sawtooth(frequency_voice2);
+    uint8_t n = sawtooth_voice2(frequency_voice2);
 
     if (waveform_voice2 != NULL) {
         n = waveform_voice2[n];
@@ -181,7 +189,6 @@ ISR(TIMER2_OVF_vect) {
     n = n_large / 256;
     
     OCR2A = n;
-    sei();    
 }
 
 void time_voice1() {
@@ -192,8 +199,6 @@ void time_voice1() {
     static uint16_t slice = 0;
     static struct note current_note;
     
-    cli();
-
     if (slice < end_of_release) {        
         if (slice < end_of_attack) amplitude_voice1 += attack_step; // attack
         if (slice > end_of_attack && slice < end_of_decay) amplitude_voice1 -= decay_step; // decay
@@ -224,8 +229,6 @@ void time_voice1() {
         end_of_sustain = end_of_decay + current_note.sustain;
         end_of_release = end_of_sustain + current_note.release;
     }
-
-    sei();
 }
 
 void time_voice2() {
@@ -236,8 +239,6 @@ void time_voice2() {
     static uint16_t slice = 0;
     static struct note current_note;
     
-    cli();
-
     if (slice < end_of_release) {        
         if (slice < end_of_attack) amplitude_voice2 += attack_step; // attack
         if (slice > end_of_attack && slice < end_of_decay) amplitude_voice2 -= decay_step; // decay
@@ -268,8 +269,6 @@ void time_voice2() {
         end_of_sustain = end_of_decay + current_note.sustain;
         end_of_release = end_of_sustain + current_note.release;
     }
-
-    sei();
 }
 
 ISR(TIMER1_COMPA_vect) {
