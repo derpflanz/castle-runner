@@ -13,7 +13,7 @@ uint8_t *waveform_voice1 = NULL;
 // voice 2 registers
 struct note *current_song_voice2;
 uint16_t amplitude_voice2;
-uint16_t frequency_voice1 = END;
+uint16_t frequency_voice2 = END;
 int note_counter_voice2 = -1;
 uint8_t *waveform_voice2 = NULL;
 
@@ -126,16 +126,28 @@ uint8_t sawtooth(uint16_t frequency) {
     return (uint8_t) (wvalue / 128);
 }
 
-void load_song(struct note *song) {
+void load_song_voice1(struct note *song) {
     current_song_voice1 = song;
 }
 
-void start_song() {
+void start_song_voice1() {
     note_counter_voice1 = 0;
 }
 
-void stop_song() {
+void stop_song_voice1() {
     note_counter_voice1 = -1;
+}
+
+void load_song_voice2(struct note *song) {
+    current_song_voice2 = song;
+}
+
+void start_song_voice2() {
+    note_counter_voice2 = 0;
+}
+
+void stop_song_voice2() {
+    note_counter_voice2 = -1;
 }
 
 ISR(TIMER0_OVF_vect) {
@@ -172,7 +184,7 @@ ISR(TIMER2_OVF_vect) {
     sei();    
 }
 
-ISR(TIMER1_COMPA_vect) {
+void time_voice1() {
     if (note_counter_voice1 < 0) return;
 
     static uint16_t attack_step, decay_step, release_step;
@@ -193,7 +205,7 @@ ISR(TIMER1_COMPA_vect) {
         current_note = current_song_voice1[note_counter_voice1++];
 
         if (current_note.frequency == END) {
-            stop_song();
+            stop_song_voice1();
         }
 
         // reset slice and amplitude
@@ -214,4 +226,53 @@ ISR(TIMER1_COMPA_vect) {
     }
 
     sei();
+}
+
+void time_voice2() {
+    if (note_counter_voice2 < 0) return;
+
+    static uint16_t attack_step, decay_step, release_step;
+    static uint16_t end_of_attack, end_of_decay, end_of_sustain, end_of_release;    
+    static uint16_t slice = 0;
+    static struct note current_note;
+    
+    cli();
+
+    if (slice < end_of_release) {        
+        if (slice < end_of_attack) amplitude_voice2 += attack_step; // attack
+        if (slice > end_of_attack && slice < end_of_decay) amplitude_voice2 -= decay_step; // decay
+        // sustain is just that, nothing changes
+        if (slice > end_of_sustain) amplitude_voice2 -= release_step; // release
+
+        slice++;
+    } else {
+        current_note = current_song_voice2[note_counter_voice2++];
+
+        if (current_note.frequency == END) {
+            stop_song_voice2();
+        }
+
+        // reset slice and amplitude
+        slice = 0;
+        amplitude_voice2 = 0;
+        frequency_voice2 = current_note.frequency;
+
+        // calculate envelope steps
+        attack_step = 65535 / current_note.attack;
+        decay_step = 32767 / current_note.decay;
+        release_step = 32767 / current_note.release;
+
+        // calculate envelope times
+        end_of_attack = current_note.attack;
+        end_of_decay = end_of_attack + current_note.decay;
+        end_of_sustain = end_of_decay + current_note.sustain;
+        end_of_release = end_of_sustain + current_note.release;
+    }
+
+    sei();
+}
+
+ISR(TIMER1_COMPA_vect) {
+    time_voice1();
+    time_voice2();
 }

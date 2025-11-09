@@ -100,7 +100,7 @@ ISR(INT1_vect) {
             waveform_voice1 = sine;
         }
         if (ctrl_reg & CTRL_PLAY) {
-            start_song();
+            start_song_voice1();
         }
     }
 }
@@ -112,14 +112,17 @@ int main() {
     init_freq_timer_voice_1();
     init_freq_timer_voice_2();
     init_duration_timer();
-    load_song(happy_birthday);
+    load_song_voice1(happy_birthday);
+    load_song_voice2(happy_birthday);
     set_speed(500);
     waveform_voice1 = sine;
+    waveform_voice2 = NULL;
     init_io();
 
     sei();
     
-    start_song();
+    start_song_voice1();
+    //start_song_voice2();
 
     // everything is interrupt based, so no futher code needed
     while (1);
