@@ -3,13 +3,19 @@
 #include <avr/interrupt.h>
 #include <stdlib.h>
 
-// Used in both interrupt handlers
-uint16_t amplitude;
-uint16_t frequency = END;
-struct note *current_song;
-int note_counter = -1;
+// voice 1 registers
+struct note *current_song_voice1;
+uint16_t amplitude_voice1;
+uint16_t frequency_voice1 = END;
+int note_counter_voice1 = -1;
+uint8_t *waveform_voice1 = NULL;
 
-uint8_t *waveform = NULL;
+// voice 2 registers
+struct note *current_song_voice2;
+uint16_t amplitude_voice2;
+uint16_t frequency_voice1 = END;
+int note_counter_voice2 = -1;
+uint8_t *waveform_voice2 = NULL;
 
 // waveform values (0-255)
 uint8_t sine[] = {
@@ -121,45 +127,45 @@ uint8_t sawtooth(uint16_t frequency) {
 }
 
 void load_song(struct note *song) {
-    current_song = song;
+    current_song_voice1 = song;
 }
 
 void start_song() {
-    note_counter = 0;
+    note_counter_voice1 = 0;
 }
 
 void stop_song() {
-    note_counter = -1;
+    note_counter_voice1 = -1;
 }
 
 ISR(TIMER0_OVF_vect) {
-    // if (note_counter < 0) return;
+    if (note_counter_voice1 < 0) return;
 
-    // cli();   
-    // uint8_t n = sawtooth(frequency);
+    cli();   
+    uint8_t n = sawtooth(frequency_voice1);
 
-    // if (waveform != NULL) {
-    //     n = waveform[n];
-    // }
+    if (waveform_voice1 != NULL) {
+        n = waveform_voice1[n];
+    }
     
-    // uint16_t n_large = n * (amplitude / 256);
-    // n = n_large / 256;
+    uint16_t n_large = n * (amplitude_voice1 / 256);
+    n = n_large / 256;
     
-    // OCR0A = n;
-    // sei();
+    OCR0A = n;
+    sei();
 }
 
 ISR(TIMER2_OVF_vect) {
-    if (note_counter < 0) return;
+    if (note_counter_voice2 < 0) return;
 
     cli();   
-    uint8_t n = sawtooth(frequency);
+    uint8_t n = sawtooth(frequency_voice2);
 
-    if (waveform != NULL) {
-        n = waveform[n];
+    if (waveform_voice2 != NULL) {
+        n = waveform_voice2[n];
     }
     
-    uint16_t n_large = n * (amplitude / 256);
+    uint16_t n_large = n * (amplitude_voice2 / 256);
     n = n_large / 256;
     
     OCR2A = n;
@@ -167,7 +173,7 @@ ISR(TIMER2_OVF_vect) {
 }
 
 ISR(TIMER1_COMPA_vect) {
-    if (note_counter < 0) return;
+    if (note_counter_voice1 < 0) return;
 
     static uint16_t attack_step, decay_step, release_step;
     static uint16_t end_of_attack, end_of_decay, end_of_sustain, end_of_release;    
@@ -177,14 +183,14 @@ ISR(TIMER1_COMPA_vect) {
     cli();
 
     if (slice < end_of_release) {        
-        if (slice < end_of_attack) amplitude += attack_step; // attack
-        if (slice > end_of_attack && slice < end_of_decay) amplitude -= decay_step; // decay
+        if (slice < end_of_attack) amplitude_voice1 += attack_step; // attack
+        if (slice > end_of_attack && slice < end_of_decay) amplitude_voice1 -= decay_step; // decay
         // sustain is just that, nothing changes
-        if (slice > end_of_sustain) amplitude -= release_step; // release
+        if (slice > end_of_sustain) amplitude_voice1 -= release_step; // release
 
         slice++;
     } else {
-        current_note = current_song[note_counter++];
+        current_note = current_song_voice1[note_counter_voice1++];
 
         if (current_note.frequency == END) {
             stop_song();
@@ -192,8 +198,8 @@ ISR(TIMER1_COMPA_vect) {
 
         // reset slice and amplitude
         slice = 0;
-        amplitude = 0;
-        frequency = current_note.frequency;
+        amplitude_voice1 = 0;
+        frequency_voice1 = current_note.frequency;
 
         // calculate envelope steps
         attack_step = 65535 / current_note.attack;

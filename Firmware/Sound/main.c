@@ -92,12 +92,12 @@ ISR(INT1_vect) {
     *current_register = d;
 
     if (ctrl_reg != 0) {
-        waveform = NULL;            // sawtooth is default
+        waveform_voice1 = NULL;            // sawtooth is default
         if (ctrl_reg & CTRL_TRNG) {
-            waveform = triangle;
+            waveform_voice1 = triangle;
         }
         if (ctrl_reg & CTRL_SINE)  {
-            waveform = sine;
+            waveform_voice1 = sine;
         }
         if (ctrl_reg & CTRL_PLAY) {
             start_song();
@@ -114,7 +114,7 @@ int main() {
     init_duration_timer();
     load_song(happy_birthday);
     set_speed(500);
-    waveform = sine;
+    waveform_voice1 = sine;
     init_io();
 
     sei();
