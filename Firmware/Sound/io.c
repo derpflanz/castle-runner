@@ -1,14 +1,13 @@
 #include "io.h"
+#include <avr/io.h>
 
-// PD4 = ~R/W
-// PD5 = CTRL_REG
-// PD6 = DATA_REG
+// PD2 => INT0 => Address select (low active)
 // PC0-PC5,PD0-PD1 = DATA
 
 void init_io() {
     DDRD &= ~(
         // Set R/!W, DR and CR as INPUTs (no pullup resistor)
-        (1 << DDD2) | (1 << DDD3) | (1 << DDD4) | 
+        (1 << DDD2) | //(1 << DDD3) | (1 << DDD4) | 
 
         // Set D6 and D7 as INPUTs (no pullup)
         (1 << DDD0) | (1 << DDD1)
@@ -19,48 +18,34 @@ void init_io() {
         (1 << DDC0) | (1 << DDC1) | (1 << DDC2) | 
         (1 << DDC3) | (1 << DDC4) | (1 << DDC5) 
     );
-}
 
-uint8_t rw() {
-    return (PIND & (1 << PD4) ? 1 : 0);
-}
+    // Configure INT0 (PD2) for a falling edge trigger
 
-uint8_t dr() {
-    return (PIND & (1 << PD2) ? 1 : 0);
-}
+    // EICRA = External Interrupt Control Register A
+    // ISC0n = Interrupt Sense Control 0 Bit n
+    // ISC0 = (1,0) => The falling edge of INT0 generates an interrupt request
+    EICRA |= (1 << ISC01);          // SET   ISC01
+    EICRA &= ~(1 << ISC00);         // CLEAR ISC00
 
-uint8_t cr() {
-    return (PIND & (1 << PD3) ? 1 : 0);
+    // ISC1n = Interrupt Sense Control 1 Bit n
+    // ISC1 = (1,0) => The falling edge of INT1 generates an interrupt request
+    EICRA |= (1 << ISC11);          // SET   ISC11
+    EICRA &= ~(1 << ISC10);         // CLEAR ISC10
+
+    // EIMSK = External Interrupt Mask Register
+    // INT0 = Enable INT0
+    // INT1 = Enable INT1
+    EIMSK |= (1 << INT0);           // SET   INT0
+    EIMSK |= (1 << INT1);           // SET   INT1
 }
 
 uint8_t data() {
     uint8_t d = 0;
 
     // read PC0-5
-    d |= (PINC & 0b00111111);
+    d |=  (PINC & 0b00111111);
     // read PD0-1
     d |= ((PIND & 0b00000011) << 6);
 
     return d;
-}
-
-struct state read_state() {
-    struct state io_state;
-
-    io_state.rw = rw();
-    io_state.dr = dr();
-    io_state.cr = cr();
-    io_state.data = data();
-
-    io_state.reg_select = REG_NONE;
-
-    if (io_state.dr == 1 && io_state.cr == 0) {
-        io_state.reg_select = REG_DATA;
-    }
-
-    if (io_state.dr == 0 && io_state.cr == 1) {
-        io_state.reg_select = REG_CTRL;
-    }
-
-    return io_state;
 }

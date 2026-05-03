@@ -1,10 +1,10 @@
 ASM_FILES=castlerunner.asm cr002-rom.asm
 ASM_TEMP=./generated/castlerunner_combined.asm
-ASM=../AsmNG/as6502
+ASM=../Tools/AsmNG/as6502
 HEX_OUT=./generated/castlerunner.hex
 
 # eeprom stuff
-PROG_BASE=../EepromProgrammer/
+PROG_BASE=../Tools/EepromProgrammer/
 PROGRAMMER=python $(PROG_BASE)eeprom-program.py 
 BOARD=arduino:megaavr:nona4809
 PORT=$(shell arduino-cli board list | grep $(BOARD) | awk '{ print $$1; }')

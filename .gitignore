@@ -3,3 +3,5 @@ Documentation/
 Misc/
 *.hex
 .vscode/
+
+*.o

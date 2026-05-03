@@ -28,14 +28,20 @@ struct note {
     uint16_t release;
 };
 
-void init_freq_timer();
+void init_freq_timer_voice_1();
+void init_freq_timer_voice_2();
 void init_duration_timer();
-uint8_t sawtooth(uint16_t frequency);
-void load_song(struct note *song);
+uint8_t sawtooth_voice1(uint16_t frequency);
+void load_song_voice1(struct note *song);
+void load_song_voice2(struct note *song);
 void set_speed(uint16_t speed);
-void start_song();
+void start_song_voice1();
+void start_song_voice2();
 
 extern uint8_t sine[];
 extern uint8_t triangle[];
+
+extern uint8_t *waveform_voice1;
+extern uint8_t *waveform_voice2;
 
 #endif

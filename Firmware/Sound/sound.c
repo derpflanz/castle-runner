@@ -1,12 +1,21 @@
 #include <avr/io.h>
 #include "sound.h"
 #include <avr/interrupt.h>
+#include <stdlib.h>
 
-// Used in both interrupt handlers
-uint16_t amplitude;
-uint16_t frequency = END;
-struct note *current_song;
-int note_counter = -1;
+// voice 1 registers
+struct note *current_song_voice1;
+uint16_t amplitude_voice1;
+uint16_t frequency_voice1 = END;
+int note_counter_voice1 = -1;
+uint8_t *waveform_voice1 = NULL;
+
+// voice 2 registers
+struct note *current_song_voice2;
+uint16_t amplitude_voice2;
+uint16_t frequency_voice2 = END;
+int note_counter_voice2 = -1;
+uint8_t *waveform_voice2 = NULL;
 
 // waveform values (0-255)
 uint8_t sine[] = {
@@ -45,28 +54,44 @@ uint8_t triangle[] = {
     20, 18, 16, 14, 12, 10, 8, 6, 4, 2, 0, 
 };
 
-void init_freq_timer() {
+void init_freq_timer_voice_1() {
     // OC0A as output, this is our signal output
-    // future work could introduce OC0B as a second voice
     DDRD |= (1 << DDD6);        
 
-    // timer 0 parameters
-    // COM0A1 = Clear OC0A on compare match, set at BOTTOM (=0)
-    // This controls the *output* pin, not the timer itself    
+    // Connect OC0A: Clear on Compare match, set on BOTTOM
     TCCR0A |= (1 << COM0A1);
 
     // Fast PWM mode; Runs always from 0x00 to 0xFF
-    // TOV is always set at TOP (=0xFF), meaning TIMER0_OVF_vect is called
     TCCR0A |= (1 << WGM00) | (1 << WGM01);
 
     // Clock Select; CS2:0 = 001 -> No prescaling: runs at 16MHz
     TCCR0B |= (1 << CS00);
 
-    // Enable the timer 0 overflow interupr (causes TIMER0_OVF_vect) to actually be called
+    // Enable the timer 0 overflow interrupt, causes TIMER0_OVF_vect to actually be called
     TIMSK0 |= (1 << TOIE0);
 
     // Init compare register
     OCR0A = 0;
+}
+
+void init_freq_timer_voice_2() {
+    // OC2A as output, this is our signal output
+    DDRB |= (1 << DDB3);        
+
+    // Connect OC2A: Clear on Compare match, set on BOTTOM
+    TCCR2A |= (1 << COM2A1);
+
+    // Fast PWM mode; Runs always from 0x00 to 0xFF
+    TCCR2A |= (1 << WGM20) | (1 << WGM21);
+
+    // Clock Select; CS2:0 = 001 -> No prescaling: runs at 16MHz
+    TCCR2B |= (1 << CS20);
+
+    // Enable the timer 0 overflow interrupt, causes TIMER0_OVF_vect to actually be called
+    TIMSK2 |= (1 << TOIE2);
+
+    // Init compare register
+    OCR2A = 0;
 }
 
 void init_duration_timer() {
@@ -90,7 +115,7 @@ void set_speed(uint16_t speed) {
 // This sawtooth function is used to calculate a uint8_t value from the, 
 // uint16_t frequency, giving us more fine grained frequency steps (0-32768)
 // The return value can then be used in another waveform (e.g. sine[])
-uint8_t sawtooth(uint16_t frequency) {
+uint8_t sawtooth_voice1(uint16_t frequency) {
     static uint16_t wvalue = 0;
     wvalue += frequency;
 
@@ -101,60 +126,97 @@ uint8_t sawtooth(uint16_t frequency) {
     return (uint8_t) (wvalue / 128);
 }
 
-void load_song(struct note *song) {
-    current_song = song;
+uint8_t sawtooth_voice2(uint16_t frequency) {
+    static uint16_t wvalue = 0;
+    wvalue += frequency;
+
+    if (wvalue > 32768) {
+        wvalue = 0;
+    }
+    
+    return (uint8_t) (wvalue / 128);
 }
 
-void start_song() {
-    note_counter = 0;
+void load_song_voice1(struct note *song) {
+    current_song_voice1 = song;
 }
 
-void stop_song() {
-    note_counter = -1;
+void start_song_voice1() {
+    note_counter_voice1 = 0;
+}
+
+void stop_song_voice1() {
+    note_counter_voice1 = -1;
+}
+
+void load_song_voice2(struct note *song) {
+    current_song_voice2 = song;
+}
+
+void start_song_voice2() {
+    note_counter_voice2 = 0;
+}
+
+void stop_song_voice2() {
+    note_counter_voice2 = -1;
 }
 
 ISR(TIMER0_OVF_vect) {
-    if (note_counter < 0) return;
+    if (note_counter_voice1 < 0) return;
 
-    cli();   
-    uint8_t n = sawtooth(frequency);
-    n = sine[n];
+    uint8_t n = sawtooth_voice1(frequency_voice1);
+
+    if (waveform_voice1 != NULL) {
+        n = waveform_voice1[n];
+    }
     
-    uint16_t n_large = n * (amplitude / 256);
+    uint16_t n_large = n * (amplitude_voice1 / 256);
     n = n_large / 256;
     
     OCR0A = n;
-    sei();
 }
 
-ISR(TIMER1_COMPA_vect) {
-    if (note_counter < 0) return;
+ISR(TIMER2_OVF_vect) {
+    if (note_counter_voice2 < 0) return;
+
+    uint8_t n = sawtooth_voice2(frequency_voice2);
+
+    if (waveform_voice2 != NULL) {
+        n = waveform_voice2[n];
+    }
+    
+    uint16_t n_large = n * (amplitude_voice2 / 256);
+    n = n_large / 256;
+    
+    OCR2A = n;
+}
+
+void time_voice1() {
+    if (note_counter_voice1 < 0) return;
 
     static uint16_t attack_step, decay_step, release_step;
     static uint16_t end_of_attack, end_of_decay, end_of_sustain, end_of_release;    
     static uint16_t slice = 0;
     static struct note current_note;
     
-    cli();
-
     if (slice < end_of_release) {        
-        if (slice < end_of_attack) amplitude += attack_step; // attack
-        if (slice > end_of_attack && slice < end_of_decay) amplitude -= decay_step; // decay
+        if (slice < end_of_attack) amplitude_voice1 += attack_step; // attack
+        if (slice > end_of_attack && slice < end_of_decay) amplitude_voice1 -= decay_step; // decay
         // sustain is just that, nothing changes
-        if (slice > end_of_sustain) amplitude -= release_step; // release
+        if (slice > end_of_sustain) amplitude_voice1 -= release_step; // release
 
         slice++;
     } else {
-        current_note = current_song[note_counter++];
+        current_note = current_song_voice1[note_counter_voice1++];
 
         if (current_note.frequency == END) {
-            stop_song();
+            stop_song_voice1();
         }
 
         // reset slice and amplitude
         slice = 0;
-        amplitude = 0;
-        frequency = current_note.frequency;
+        amplitude_voice1 = 0;
+        frequency_voice1 = current_note.frequency;
 
         // calculate envelope steps
         attack_step = 65535 / current_note.attack;
@@ -167,6 +229,49 @@ ISR(TIMER1_COMPA_vect) {
         end_of_sustain = end_of_decay + current_note.sustain;
         end_of_release = end_of_sustain + current_note.release;
     }
+}
 
-    sei();
+void time_voice2() {
+    if (note_counter_voice2 < 0) return;
+
+    static uint16_t attack_step, decay_step, release_step;
+    static uint16_t end_of_attack, end_of_decay, end_of_sustain, end_of_release;    
+    static uint16_t slice = 0;
+    static struct note current_note;
+    
+    if (slice < end_of_release) {        
+        if (slice < end_of_attack) amplitude_voice2 += attack_step; // attack
+        if (slice > end_of_attack && slice < end_of_decay) amplitude_voice2 -= decay_step; // decay
+        // sustain is just that, nothing changes
+        if (slice > end_of_sustain) amplitude_voice2 -= release_step; // release
+
+        slice++;
+    } else {
+        current_note = current_song_voice2[note_counter_voice2++];
+
+        if (current_note.frequency == END) {
+            stop_song_voice2();
+        }
+
+        // reset slice and amplitude
+        slice = 0;
+        amplitude_voice2 = 0;
+        frequency_voice2 = current_note.frequency;
+
+        // calculate envelope steps
+        attack_step = 65535 / current_note.attack;
+        decay_step = 32767 / current_note.decay;
+        release_step = 32767 / current_note.release;
+
+        // calculate envelope times
+        end_of_attack = current_note.attack;
+        end_of_decay = end_of_attack + current_note.decay;
+        end_of_sustain = end_of_decay + current_note.sustain;
+        end_of_release = end_of_sustain + current_note.release;
+    }
+}
+
+ISR(TIMER1_COMPA_vect) {
+    time_voice1();
+    time_voice2();
 }

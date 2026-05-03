@@ -61,9 +61,9 @@ LDA $4000
 STA joystick
 
 ; Read joystick value and output to screen (for debug)
-LDA <joy_status_pos
+LDA #<joy_status_pos
 STA par1
-LDA >joy_status_pos
+LDA #>joy_status_pos
 STA par2
 LDA joystick
 JSR Dec2Ascii
@@ -73,7 +73,7 @@ LDA #$4E
 STA $80
 LDA #$06
 STA $81
-LDA $C2
+LDA steps
 JSR Dec2Ascii
 
 ; Read joystick and change XY for character
@@ -99,36 +99,55 @@ JSR WriteChar
 LDA $D1
 AND #$02            ; UP
 BNE Joy1
-DEC $C0
+DEC cur_row
 Joy1:
 LDA $D1
 AND #$04            ; DOWN
 BNE Joy2
-INC $C0
+INC cur_row
 Joy2:
 LDA $D1
 AND #$08            ; LEFT
 BNE Joy3
-DEC $C1
+DEC cur_col
 Joy3:
 LDA $D1
 AND #$10            ; RIGHT
 BNE Joy4
-INC $C1
+INC cur_col
 Joy4:
 
-LDA $C0             ; Write new Runner
+LDA cur_row             ; Write new Runner
 STA $94
-LDA $C1
+LDA cur_col
 STA $95
 JSR CalcCharPtr
 LDA 'X'
 JSR WriteChar
 
-DEC $C2
+DEC steps
+BNE still_alive
+LDA #$00
+STA $4007           ; play sound
+LDA #$0A            ; row 10
+STA $94
+LDA #$05            ; col 5
+STA $95
+JSR CalcCharPtr
+LDA #<gameover
+STA par1
+LDA #>gameover
+STA par2
+JSR WriteString
+JSR VIO_WriteCharScreen
+JMP dead
 
+still_alive:
 JSR VIO_WriteCharScreen
 JMP GameLoop
+
+dead:
+JMP dead
 
 LoadBackdrop:
     ; Data starting in $C000 is our game backdrop
