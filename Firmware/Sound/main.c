@@ -38,7 +38,7 @@ struct note happy_birthday[] = {
 };
 
 struct note happy_birthday2[] = {
-    { O4_C, 10, 10,  10, 10 },
+    { REST,  1,  1,  10,  1 },
     { REST,  1,  1,  10,  1 },
     { O4_C, 10, 10,  10, 10 },
     { REST,  1,  1,  10,  1 },
