@@ -1,6 +1,8 @@
 import argparse, os, sys
 from eeprom import eeprom
 
+PORT_SPEED = 57600
+
 parser = argparse.ArgumentParser(description='EEPROM Programmer')
 parser.add_argument('action', type=str, help='Action to do', choices=['read','write-code', 'write-data', 'verify'])
 parser.add_argument('-f', '--file', dest='file', help='Filename of file to write to EEPROM, read contents into or verify against (HEX)')
@@ -33,7 +35,7 @@ if args.action == 'read' and args.length is None:
 if args.action == 'read':
     print(f"Going to read {args.length} bytes into {args.file}, using {args.port}")
 
-    eeprom_reader = eeprom.Eeprom(args.port, 9600)
+    eeprom_reader = eeprom.Eeprom(args.port, PORT_SPEED)
     data = eeprom_reader.read(args.start_address, args.length)
     with open(args.file, "wb") as file:
         file.write(data)
@@ -45,8 +47,8 @@ elif args.action == 'verify':
     length = len(file_bytes)
     print(f"Checking first {length} bytes of EEPROM against {args.file}")
 
-    eeprom_reader = eeprom.Eeprom(args.port, 9600)
-    data = eeprom_reader.read(args.start_address, length)
+    eeprom_reader = eeprom.Eeprom(args.port, PORT_SPEED)
+    data = eeprom_reader.read(args.start_address, length, verbose = False)
 
     i = 0
     errors = 0
@@ -75,7 +77,7 @@ elif args.action == 'write-code' or args.action == 'write-data':
     if (args.action == "write-data"):
         type = eeprom.WRITE_DATA
 
-    eeprom_writer = eeprom.Eeprom(args.port, 9600)
+    eeprom_writer = eeprom.Eeprom(args.port, PORT_SPEED)
     eeprom_writer.write(args.start_address, data, type)
 
     print(f"Wrote {len(data)} bytes ({len(data) - 4} data, 4 bytes vectors)")

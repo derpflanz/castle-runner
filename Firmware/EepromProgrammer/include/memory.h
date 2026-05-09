@@ -24,7 +24,8 @@ class EepromMemory {
     void SetAddress(unsigned int address);
     void SetData(int data);
     byte GetData();
-    void programPage();  // issue the page write command
+    void ProgramPage();  // issue the page write command
+    bool VerifyPage();
 
     // Page write buffer
     byte writeBuffer[PAGE_SIZE];

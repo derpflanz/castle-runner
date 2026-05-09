@@ -22,3 +22,6 @@ emulate: $(ASM_FILES)
 
 program:
 	$(PROGRAMMER) write-code -f $(HEX_OUT) -p $(PORT)
+
+	echo "Verifying..."
+	$(PROGRAMMER) verify -f $(HEX_OUT) -p $(PORT)

@@ -98,9 +98,11 @@ class Eeprom:
                 self._print("")
                 self._print(f"{start_address} ", end='')
                 self._print_ctr = int(start_address, 16)
+                i = 1
                 for b in _bytes[start_offset_in_file:]:
                     ser.write(bytes([b]))
-                    self._printByte(bytes([b]))
+                    self._printProgress(i, len(_bytes) - start_offset_in_file)
+                    i += 1
 
                 ser.write(ETX)
 
@@ -110,6 +112,10 @@ class Eeprom:
     _print_ctr = 0
     _print_line = b''
     _print_spc = None
+
+    def _printProgress(self, b, total):
+        print(f"\r{b}/{total} bytes sent", end='')
+
     def _printByte(self, b):
         if self._print_spc is None:
             self._print_spc = self._print_ctr
@@ -148,7 +154,8 @@ class Eeprom:
                     while recv_bytes < length:
                         received = ser.read()
                         received_data += received
-                        self._printByte(received)
+                        if verbose:
+                            self._printByte(received)
                         recv_bytes += 1
 
                     if ser.read() == ETX:
