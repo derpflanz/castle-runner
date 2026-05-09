@@ -88,12 +88,11 @@ void receive_data(uint16_t start_address, unsigned long data_length) {
     recv = Communication.receiveByte();
     Memory.writeByte(address, recv);
 
-    // send data back, to check
-    byte data = Memory.readByte(address);
-    Communication.sendByte(data);
-
     address++;
   }
+
+  // Flush any remaining buffered data
+  Memory.flushPageBuffer();
 
   do {
     recv = Communication.receiveByte();
@@ -107,6 +106,7 @@ void write_vector(uint16_t vector, uint16_t address) {
 
   Memory.writeByte(address, vector_lo);
   Memory.writeByte(address + 1, vector_hi);
+  Memory.flushPageBuffer();
 }
 
 void send_data(uint16_t start_addresss, unsigned int data_length) {
@@ -138,6 +138,6 @@ void loop() {
     // when writing plain data, we do not touch the RESB and IRQ vectors
     receive_data(the_header.start_address, the_header.length);
   }
-
+  
   Communication.sendByte(EOT);
 }

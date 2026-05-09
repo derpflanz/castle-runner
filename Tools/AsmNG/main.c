@@ -154,12 +154,6 @@ void write_opcode(FILE *hex_output, FILE *user_output, struct node *node, char *
             fprintf(user_output, " %02x", operand >> 8);
         }
 
-        if (node->operand.str[0] != '#' && node->operand.str[0] != '$') {
-            unsigned short orig_oper;
-            identifier_get(node->operand.str, &orig_oper);
-            fprintf(user_output, "%*s%s = $%0*x", 40-(3*operand_len), "", node->operand.str, 2, orig_oper);
-        }
-
         fprintf(user_output, "\n");
     } else {
         errors++;
