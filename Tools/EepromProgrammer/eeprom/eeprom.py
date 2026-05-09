@@ -106,8 +106,10 @@ class Eeprom:
 
                 ser.write(ETX)
 
+                self._print("\nData sent, waiting for EOT from programmer...")
                 if ser.read() == EOT:
                     self._print("\n\nProgrammer received all data. Done.")
+                
 
     _print_ctr = 0
     _print_line = b''

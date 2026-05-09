@@ -25,7 +25,6 @@ class EepromMemory {
     void SetData(int data);
     byte GetData();
     void ProgramPage();  // issue the page write command
-    bool VerifyPage();
 
     // Page write buffer
     byte writeBuffer[PAGE_SIZE];

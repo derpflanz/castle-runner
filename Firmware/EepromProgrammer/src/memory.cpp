@@ -1,8 +1,6 @@
 #include "memory.h"
 #include <Arduino.h>
 
-static const int MAX_PROGRAM_RETRIES = 3;
-
 // Address pins (A0 - A7; A8 - A15 are connected to GND now)
 const char ADDR[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
 const char DATA[] = { 8, 9, 10, 11, 12, 13, 14, 15 };
@@ -81,7 +79,6 @@ void EepromMemory::writeByte(unsigned int address, byte value) {
   // If we're switching to a new page, program the current buffer first
   if (bufferPageAddr != 0xFFFF && currentPageAddr != bufferPageAddr) {
     ProgramPage();
-    delay(5);  // settle time between page transitions
   }
 
   // Start a new page buffer if needed
@@ -100,74 +97,52 @@ void EepromMemory::writeByte(unsigned int address, byte value) {
   }
 }
 
-bool EepromMemory::VerifyPage() {
-  for (int i = 0; i < bufferCount; i++) {
-    unsigned int address = bufferPageAddr + i;
-    if (readByte(address) != writeBuffer[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
 void EepromMemory::ProgramPage() {
   if (bufferCount == 0) return;  // nothing to program
 
-  for (int attempt = 0; attempt < MAX_PROGRAM_RETRIES; attempt++) {
-    digitalWrite(OE, HIGH);
-    digitalWrite(WE, HIGH);
-    digitalWrite(CE, HIGH);
+  digitalWrite(OE, HIGH);
+  digitalWrite(WE, HIGH);
+  digitalWrite(CE, HIGH);
 
-    // Load all buffered bytes into the chip's internal buffer
-    for (int i = 0; i < bufferCount; i++) {
-      unsigned int address = bufferPageAddr + i;
-      
-      SetAddress(address);
-      SetDataToOutput();
-      SetData(writeBuffer[i]);
-      
-      delayMicroseconds(1);   // setup time
-      
-      digitalWrite(CE, LOW);
-      delayMicroseconds(1);
-      
-      // Pulse WE to latch byte into chip's buffer
-      digitalWrite(WE, LOW);
-      delayMicroseconds(1);    // WE pulse width
-      digitalWrite(WE, HIGH);
-      delayMicroseconds(1);
-      
-      digitalWrite(CE, HIGH);
-      delayMicroseconds(1);
-    }
-
-    // Now program the entire page with final WE pulse
+  // Load all buffered bytes into the chip's internal buffer
+  for (int i = 0; i < bufferCount; i++) {
+    unsigned int address = bufferPageAddr + i;
+    
+    SetAddress(address);
+    SetDataToOutput();
+    SetData(writeBuffer[i]);
+    
+    delayMicroseconds(1);   // setup time
+    
     digitalWrite(CE, LOW);
     delayMicroseconds(1);
     
+    // Pulse WE to latch byte into chip's buffer
     digitalWrite(WE, LOW);
-    delayMicroseconds(1);
-    
+    delayMicroseconds(1);    // WE pulse width
     digitalWrite(WE, HIGH);
     delayMicroseconds(1);
     
     digitalWrite(CE, HIGH);
-    
-    // Wait for page programming to complete
-    delay(10);
-
-    if (VerifyPage()) {
-      break;
-    }
-
-    if (attempt + 1 < MAX_PROGRAM_RETRIES) {
-      delay(20);
-    }
+    delayMicroseconds(1);
   }
 
-  // Reset buffer regardless of success so that the next page starts clean
+  // Now program the entire page with final WE pulse
+  digitalWrite(CE, LOW);
+  delayMicroseconds(1);
+  
+  digitalWrite(WE, LOW);
+  delayMicroseconds(1);
+  
+  digitalWrite(WE, HIGH);
+  delayMicroseconds(1);
+  
+  digitalWrite(CE, HIGH);
+    
   bufferPageAddr = 0xFFFF;
   bufferCount = 0;
+  
+  delay(10);
 }
 
 void EepromMemory::flushPageBuffer() {
