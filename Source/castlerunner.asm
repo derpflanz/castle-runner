@@ -11,20 +11,33 @@ joy_shadow = $D0
 joystick = $D1
 level_ptr = $E0
 
+led_blinker = $D2
+
 par1 = $80
 par2 = $81
 
 joy_status_pos = $0229
 
 ; DATA
-copyright = "2024"
+copyright = "2026"
 gameover = "Game Over!"
+
+; I/O
+ddra = $4307
+ora_ = $4107
 
 ; init
 SEI             ; Disable interrupts
 CLD             ; Clear "D" flag: use binary mode (instead of BCD)
 LDX #$ff        ; Initialise stack on 0x01ff
 TXS
+
+; init 6522
+LDA #$ff
+STA ddra
+LDA #$00
+STA ora_
+STA led_blinker
 
 ; init lcd
 JSR VIO_ResetDisplay
@@ -143,6 +156,12 @@ JSR VIO_WriteCharScreen
 JMP dead
 
 still_alive:
+
+LDA led_blinker
+EOR #$01
+STA ora_
+STA led_blinker
+
 JSR VIO_WriteCharScreen
 JMP GameLoop
 

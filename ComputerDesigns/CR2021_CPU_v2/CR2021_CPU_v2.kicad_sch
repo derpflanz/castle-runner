@@ -7538,6 +7538,16 @@
 		)
 		(uuid "052b679a-e70c-4a2b-9f2f-5df89caa8dd5")
 	)
+	(text "Do not use $4007\nthe VIA chips are mapped here"
+		(exclude_from_sim no)
+		(at 265.938 155.702 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "307871f4-226f-43dc-b96f-9e59d87cfb9f")
+	)
 	(text "Possibly add pulldown/up resistors here?\nMake it a \"JOYSTICK PORT\""
 		(exclude_from_sim no)
 		(at 356.87 158.75 90)
@@ -8302,6 +8312,14 @@
 	(no_connect
 		(at 189.23 58.42)
 		(uuid "44bae787-2862-4921-83c2-129328a37142")
+	)
+	(no_connect
+		(at 260.35 186.69)
+		(uuid "6ec17f87-24a5-4b20-b223-89beb882b1a5")
+	)
+	(no_connect
+		(at 260.35 144.78)
+		(uuid "6ef81ad8-1921-4ad8-abc0-13e42258f830")
 	)
 	(no_connect
 		(at 156.21 66.04)
@@ -18143,7 +18161,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 308.737 111.0742 0)
+			(at 311.15 106.426 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20021,7 +20039,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 308.483 109.7788 90)
+			(at 309.626 114.808 0)
 			(effects
 				(font
 					(size 1.27 1.27)

@@ -39,7 +39,7 @@ if args.action == 'read':
         file.write(data)
 elif args.action == 'verify':
     with open(args.file, "rb") as f:
-        f.seek(4)           # skip the RESB and IRQB vectors
+        f.seek(4)           # skip the RES and IRQ vectors
         file_bytes = f.read()
 
     length = len(file_bytes)
