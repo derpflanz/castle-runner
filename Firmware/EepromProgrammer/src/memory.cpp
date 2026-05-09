@@ -81,6 +81,7 @@ void EepromMemory::writeByte(unsigned int address, byte value) {
   // If we're switching to a new page, program the current buffer first
   if (bufferPageAddr != 0xFFFF && currentPageAddr != bufferPageAddr) {
     ProgramPage();
+    delay(5);  // settle time between page transitions
   }
 
   // Start a new page buffer if needed

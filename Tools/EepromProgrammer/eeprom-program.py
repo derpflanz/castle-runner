@@ -1,7 +1,7 @@
 import argparse, os, sys
 from eeprom import eeprom
 
-PORT_SPEED = 57600
+PORT_SPEED = 9600
 
 parser = argparse.ArgumentParser(description='EEPROM Programmer')
 parser.add_argument('action', type=str, help='Action to do', choices=['read','write-code', 'write-data', 'verify'])
