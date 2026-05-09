@@ -100,9 +100,7 @@ class Eeprom:
                 self._print_ctr = int(start_address, 16)
                 for b in _bytes[start_offset_in_file:]:
                     ser.write(bytes([b]))
-
-                    byte_read = ser.read()
-                    self._printByte(byte_read)
+                    self._printByte(bytes([b]))
 
                 ser.write(ETX)
 

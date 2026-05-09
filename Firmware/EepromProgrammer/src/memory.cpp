@@ -73,30 +73,82 @@ void EepromMemory::SetData(int data) {
 }
 
 void EepromMemory::writeByte(unsigned int address, byte value) {
+  unsigned int currentPageAddr = address & 0xFFC0;  // page address (A6-A14)
+  unsigned int offsetInPage = address & 0x003F;     // offset within page (A0-A5)
+
+  // If we're switching to a new page, program the current buffer first
+  if (bufferPageAddr != 0xFFFF && currentPageAddr != bufferPageAddr) {
+    programPage();
+  }
+
+  // Start a new page buffer if needed
+  if (bufferPageAddr != currentPageAddr) {
+    bufferPageAddr = currentPageAddr;
+    bufferCount = 0;
+  }
+
+  // Add byte to buffer
+  writeBuffer[offsetInPage] = value;
+  bufferCount++;
+
+  // Auto-flush if buffer is full (all 64 bytes of page written)
+  if (bufferCount == PAGE_SIZE) {
+    programPage();
+  }
+}
+
+void EepromMemory::programPage() {
+  if (bufferCount == 0) return;  // nothing to program
+
   digitalWrite(OE, HIGH);
   digitalWrite(WE, HIGH);
   digitalWrite(CE, HIGH);
 
-  // setup address and data
-  SetAddress(address);
-  SetDataToOutput();
-  SetData(value);
-  
-  delayMicroseconds(1);   // T_oes
-  
-  digitalWrite(CE, LOW);
-  delayMicroseconds(1);   // T_cs
+  // Load all buffered bytes into the chip's internal buffer
+  for (int i = 0; i < bufferCount; i++) {
+    unsigned int address = bufferPageAddr + i;
+    
+    SetAddress(address);
+    SetDataToOutput();
+    SetData(writeBuffer[i]);
+    
+    delayMicroseconds(1);   // setup time
+    
+    digitalWrite(CE, LOW);
+    delayMicroseconds(1);
+    
+    // Pulse WE to latch byte into chip's buffer
+    digitalWrite(WE, LOW);
+    delayMicroseconds(1);    // WE pulse width
+    digitalWrite(WE, HIGH);
+    delayMicroseconds(1);
+    
+    digitalWrite(CE, HIGH);
+    delayMicroseconds(1);
+  }
 
-  // Write the data to the memory by pulling !WE LOW for at least 55ns (haha!)
+  // Now program the entire page with final WE pulse
+  digitalWrite(CE, LOW);
+  delayMicroseconds(1);
+  
   digitalWrite(WE, LOW);
-  delayMicroseconds(1);    // T_wp
+  delayMicroseconds(1);
   
   digitalWrite(WE, HIGH);
-  delayMicroseconds(1);    // T_ch
+  delayMicroseconds(1);
+  
   digitalWrite(CE, HIGH);
   
-//  delayMicroseconds(100);  // wait until write done
+  // Wait for page programming to complete
   delay(10);
+  
+  // Reset buffer
+  bufferPageAddr = 0xFFFF;
+  bufferCount = 0;
+}
+
+void EepromMemory::flushPageBuffer() {
+  programPage();
 }
 
 byte EepromMemory::readByte(unsigned int address) {

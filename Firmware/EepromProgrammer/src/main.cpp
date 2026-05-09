@@ -88,10 +88,6 @@ void receive_data(uint16_t start_address, unsigned long data_length) {
     recv = Communication.receiveByte();
     Memory.writeByte(address, recv);
 
-    // send data back, to check
-    byte data = Memory.readByte(address);
-    Communication.sendByte(data);
-
     address++;
   }
 
