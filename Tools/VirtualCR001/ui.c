@@ -10,7 +10,7 @@
 
 WINDOW *memory_log, *io_log;
 WINDOW *lcd;
-WINDOW *memory_win, *rom_win, *stack_win, *video_win;
+WINDOW *memory_win, *rom_win, *stack_win, *video_win, *io_win;
 
 WINDOW *_create_newwin(int height, int width, int starty, int startx)
 {	
@@ -101,6 +101,18 @@ void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highl
     }  
 }
 
+void _ui_print_io_register(int row, int col, const char *name, uint16_t address, uint8_t *memory) {
+    mvwprintw(io_win, row, col, "%s = %02x %08b", name, memory[address], memory[address]);
+}
+
+void _ui_io_registers(uint8_t *memory) {    
+    _ui_print_io_register(1, 1, "DDRA", DDRA, memory);
+    _ui_print_io_register(2, 1, "DDRB", DDRB, memory);
+
+    _ui_print_io_register(1, 40, "PORTA", PORTA, memory);
+    _ui_print_io_register(2, 40, "PORTB", PORTB, memory);
+}
+
 void _init_io_log() {
     io_log = _create_newwin(LINES - 10, COLS / 4, 1, COLS / 4);
     scrollok(io_log, TRUE);
@@ -118,13 +130,14 @@ void _init_memory_log() {
 }
 
 void _init_memory_windows() {
-    int video_height = 25, stack_height = 5;
-    int rom_height = 10;
+    int video_height = 10, stack_height = 5;
+    int rom_height = 10, io_height = 5;
 
-    memory_win = _create_newwin(LINES - 2 - rom_height - stack_height - video_height, COLS / 2, 1, COLS / 2);
-    rom_win = _create_newwin(rom_height, COLS / 2, LINES - 1 - stack_height - rom_height - video_height, COLS / 2);
-    stack_win = _create_newwin(stack_height, COLS / 2, LINES - 1 - stack_height - video_height, COLS / 2);
-    video_win = _create_newwin(video_height, COLS / 2, LINES - 1 - video_height, COLS / 2);
+    memory_win = _create_newwin(LINES - 2 - rom_height - stack_height - video_height - io_height, COLS / 2, 1, COLS / 2);
+    rom_win = _create_newwin(rom_height, COLS / 2, LINES - 1 - stack_height - rom_height - video_height - io_height, COLS / 2);
+    stack_win = _create_newwin(stack_height, COLS / 2, LINES - 1 - stack_height - video_height - io_height, COLS / 2);
+    video_win = _create_newwin(video_height, COLS / 2, LINES - 1 - video_height - io_height, COLS / 2);
+    io_win = _create_newwin(io_height, COLS / 2, LINES - 1 - io_height, COLS / 2);
 }
 
 void ui_print_lcd(char character, int row, int column) {
@@ -154,7 +167,7 @@ void ui_init() {
 
     _init_memory_log();
     _init_io_log();
-    _init_memory_windows();
+    _init_memory_windows();    
 }
 
 void ui_clear_log(int target) {
@@ -205,4 +218,9 @@ void ui_update_ram(uint16_t video_base) {
     box(video_win, 0, 0);
     mvwprintw(video_win, 0, 0, "[VIDEO]");
     wrefresh(video_win);
+
+    box(io_win, 0, 0);
+    mvwprintw(io_win, 0, 0, "[6522 Registers]");
+    _ui_io_registers(ram);
+    wrefresh(io_win);    
 }
