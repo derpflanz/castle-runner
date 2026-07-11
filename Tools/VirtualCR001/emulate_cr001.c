@@ -46,10 +46,13 @@ int main(int argc, char **argv) {
             running = !running;
             break;
         case KEY_F(6):
+            ui_clear_log(IOLOG);
+            ui_clear_log(MEMLOG);
             mem_readfile(argv[1], V_QUIET);
             reset6502();
             ui_update_ram(video_base);
-            ui_clear_log(IOLOG);
+            
+            ui_writelog(MEMLOG, "Reloaded %s\n", argv[1]);
             break;
         case KEY_F(7):
             irq6502();

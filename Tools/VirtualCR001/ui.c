@@ -160,7 +160,8 @@ void ui_init() {
 void ui_clear_log(int target) {
     WINDOW *win = target == IOLOG?io_log:memory_log;
 
-    
+    wclear(win);
+    box(win, 0, 0);
     wrefresh(win);
 }
 
