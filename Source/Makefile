@@ -1,4 +1,6 @@
-ASM_FILES=castlerunner.asm cr002-rom.asm
+CR_FILES=castlerunner.asm cr002-rom.asm
+KB_FILES=keyboard.asm cr002-rom.asm
+
 ASM_TEMP=./generated/castlerunner_combined.asm
 ASM=../Tools/AsmNG/as6502
 HEX_OUT=./generated/castlerunner.hex
@@ -12,12 +14,20 @@ PORT=$(shell arduino-cli board list | grep $(BOARD) | awk '{ print $$1; }')
 # emulator
 IGNORES=VIO_ResetDisplay,VIO_InitDisplay,VIO_ClearDisplay,InitVideoRam,LoadBackdrop,VIO_WriteGraphScreen,VIO_WriteCharScreen
 
-all: $(ASM_FILES)
-	cat $(ASM_FILES) > $(ASM_TEMP)
+cr: $(CR_FILES)
+	cat $(CR_FILES) > $(ASM_TEMP)
 	$(ASM) -i $(ASM_TEMP) -o $(HEX_OUT) -a -s
 
-emulate: $(ASM_FILES)
-	cat $(ASM_FILES) > $(ASM_TEMP)
+emulate-cr: $(CR_FILES)
+	cat $(CR_FILES) > $(ASM_TEMP)
+	$(ASM) -i $(ASM_TEMP) -o $(HEX_OUT) -a -s --ignore=$(IGNORES)
+
+kb:
+	cat $(KB_FILES) > $(ASM_TEMP)
+	$(ASM) -i $(ASM_TEMP) -o $(HEX_OUT) -a -s
+
+kb-emulate:
+	cat $(KB_FILES) > $(ASM_TEMP)
 	$(ASM) -i $(ASM_TEMP) -o $(HEX_OUT) -a -s --ignore=$(IGNORES)
 
 program:
