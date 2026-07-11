@@ -14,7 +14,9 @@ porta = $4107
 ddrb = $4207
 portb = $4007
 
+; program vars
 welcome = "Keyboard Test Program"
+scanmask = $c0
 
 ; init
 SEI             ; disable interrupts for startup
@@ -49,9 +51,24 @@ LDA #>welcome
 STA par2
 JSR WriteString
 
+BRK
+
+LDA #$fe
+STA scanmask    ; initialise mask
+
+
 program_loop:
+LDA scanmask
 
+SEC                     ; rotate left with a one
+ROL
+CMP #$ff                ; if ACC == $ff
+BNE _endif_acc_is_ff
+LDA #$fe                ; reset to $fe
+_endif_acc_is_ff:
 
+STA scanmask            ; store new mask
+STA porta
 
 JSR VIO_WriteCharScreen     ; write out video ram to screen
 JMP program_loop
