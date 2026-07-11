@@ -175,6 +175,7 @@ void ui_clear_log(int target) {
 
     wclear(win);
     box(win, 0, 0);
+    wmove(win, 1, 0);
     wrefresh(win);
 }
 

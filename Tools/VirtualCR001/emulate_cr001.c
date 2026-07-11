@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
             reset6502();
             ui_update_ram(video_base);
             
-            ui_writelog(MEMLOG, "Reloaded %s\n", argv[1]);
+            ui_writelog(IOLOG, "Reloaded %s\n", argv[1]);
             break;
         case KEY_F(7):
             irq6502();
