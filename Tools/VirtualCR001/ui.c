@@ -101,16 +101,16 @@ void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highl
     }  
 }
 
-void _ui_print_io_register(int row, int col, const char *name, uint16_t address, uint8_t *memory) {
-    mvwprintw(io_win, row, col, "%s = %02x %08b", name, memory[address], memory[address]);
+void _ui_print_io_register(int row, int col, const char *name, uint16_t address, uint8_t *memory, const char * extra) {
+    mvwprintw(io_win, row, col, "%s = %02x %08b %s", name, memory[address], memory[address], extra);
 }
 
 void _ui_io_registers(uint8_t *memory) {    
-    _ui_print_io_register(1, 1, "DDRA", DDRA, memory);
-    _ui_print_io_register(2, 1, "DDRB", DDRB, memory);
+    _ui_print_io_register(1, 1, "DDRA", DDRA, memory, "1=OUT, 0=IN");
+    _ui_print_io_register(2, 1, "DDRB", DDRB, memory, "1=OUT, 0=IN");
 
-    _ui_print_io_register(1, 40, "PORTA", PORTA, memory);
-    _ui_print_io_register(2, 40, "PORTB", PORTB, memory);
+    _ui_print_io_register(1, 40, "PORTA", PORTA, memory, "");
+    _ui_print_io_register(2, 40, "PORTB", PORTB, memory, "");
 }
 
 void _init_io_log() {
