@@ -157,6 +157,13 @@ void ui_init() {
     _init_memory_windows();
 }
 
+void ui_clear_log(int target) {
+    WINDOW *win = target == IOLOG?io_log:memory_log;
+
+    
+    wrefresh(win);
+}
+
 void ui_writelog(int target, const char *format, ...) {
     WINDOW *win = target == IOLOG?io_log:memory_log;
 

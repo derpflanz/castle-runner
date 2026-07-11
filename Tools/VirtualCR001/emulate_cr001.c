@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
 
     mem_init();
 
-    if (mem_readfile(argv[1]) != 0) {
+    if (mem_readfile(argv[1], V_PRINTF) != 0) {
         return -1;
     }
 
@@ -46,8 +46,10 @@ int main(int argc, char **argv) {
             running = !running;
             break;
         case KEY_F(6):
+            mem_readfile(argv[1], V_QUIET);
             reset6502();
             ui_update_ram(video_base);
+            ui_clear_log(IOLOG);
             break;
         case KEY_F(7):
             irq6502();

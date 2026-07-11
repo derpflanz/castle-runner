@@ -12,6 +12,7 @@ void ui_init_lcd();
 void ui_update_ram(uint16_t base_address);
 void ui_writelog(int target, const char *fmt, ...);
 void ui_print_lcd(char character, int row, int column);
+void ui_clear_log(int target);
 
 extern uint8_t *ram;
 

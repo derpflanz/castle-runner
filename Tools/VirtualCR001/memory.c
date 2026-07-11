@@ -54,7 +54,7 @@ void mem_show(uint16_t base_address, uint16_t length) {
     printf("\n");
 }
 
-int mem_readfile(const char *hexfilename) {
+int mem_readfile(const char *hexfilename, int verbose) {
     FILE *f = fopen(hexfilename, "rb");
     long image_size = _getsize(f) - 2;           // minus 2 to accomodate for the RESB vector the image starts with
     uint16_t reset_vector = _getvector(f);
@@ -66,12 +66,17 @@ int mem_readfile(const char *hexfilename) {
     long available_size = _64K - base_address;
 
     if (available_size < image_size) {
-        printf("FATAL: Size of %s (image size %ld bytes) is larger than available memory area (%ld bytes; %x - %x)\n", 
-            hexfilename, image_size, available_size, base_address, _64K-1);
+        if (verbose == V_PRINTF) {
+            printf("FATAL: Size of %s (image size %ld bytes) is larger than available memory area (%ld bytes; %x - %x)\n", 
+                hexfilename, image_size, available_size, base_address, _64K-1);
+        }
         return 1;
     }     
 
-    printf("Reading %s (%ld bytes) into memory, starting at address %x\n", hexfilename, image_size, base_address);
+    if (verbose == V_PRINTF) {
+        printf("Reading %s (%ld bytes) into memory, starting at address %x\n", hexfilename, image_size, base_address);
+    }
+
     fread(ram + base_address, 1, image_size, f);
     fclose(f);
 
