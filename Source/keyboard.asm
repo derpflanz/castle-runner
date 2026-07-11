@@ -58,17 +58,20 @@ STA scanmask    ; initialise mask
 
 
 program_loop:
-LDA scanmask
 
-SEC                     ; rotate left with a one
-ROL
-CMP #$ff                ; if ACC == $ff
-BNE _endif_acc_is_ff
-LDA #$fe                ; reset to $fe
-_endif_acc_is_ff:
+keyb_loop:
+    LDA scanmask
+    SEC                     ; rotate left with a one
+    ROL
+    CMP #$ff                ; if ACC == $ff
+    BNE _endif_acc_is_ff
+    LDA #$fe                ; reset to $fe
+    _endif_acc_is_ff:
+    STA scanmask            ; store new mask
+    STA porta
+end_keyb_loop:
 
-STA scanmask            ; store new mask
-STA porta
+
 
 JSR VIO_WriteCharScreen     ; write out video ram to screen
 JMP program_loop
