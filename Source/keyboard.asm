@@ -4,6 +4,10 @@
 par1 = $80
 par2 = $81
 
+; video, character mode addresses
+vchar_row = $94
+vchar_col = $95
+
 ; 6522 registers
 ddra = $4307
 porta = $4107
@@ -13,18 +17,17 @@ portb = $4007
 welcome = "Keyboard Test Program"
 
 ; init
-SEI
-CLD
-LDX #$ff
+SEI             ; disable interrupts for startup
+CLD             ; set CPU in decimal mode
+LDX #$ff        ; initialise stack
 TXS
 
 ; init 6522
 LDA #$ff
-STA ddra        ; porta as output
+STA ddra        ; porta as output (1=out)
 STA porta       ; set all bits to 1: we scan active low
 LDA #$00
 STA ddrb        ; portb as input
-
 
 ; init lcd
 JSR VIO_ResetDisplay
@@ -32,20 +35,15 @@ JSR VIO_InitDisplay
 JSR VIO_ClearDisplay
 JSR InitVideoRam
 
-
-
-LDA #$00
-STA $0200
-
-CLI
+CLI             ; enable interrupts again: startup is done
 
 program_init:
-LDA #$01
-STA $94
-STA $95
+LDA #$01        ; set_cursor(1,1)
+STA vchar_col
+STA vchar_row
 JSR CalcCharPtr
 
-LDA #<welcome
+LDA #<welcome   ; print_string(welcome)
 STA par1
 LDA #>welcome
 STA par2
@@ -55,6 +53,5 @@ program_loop:
 
 
 
-; write out video ram to screen
-JSR VIO_WriteCharScreen
+JSR VIO_WriteCharScreen     ; write out video ram to screen
 JMP program_loop
