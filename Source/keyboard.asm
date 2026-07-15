@@ -17,6 +17,8 @@ portb = $4007
 ; program vars
 welcome = "Keyboard Test Program"
 scanmask = $c0
+scancode_hi = $c1
+scancode_lo = $c2
 
 ; init
 SEI             ; disable interrupts for startup
@@ -53,23 +55,56 @@ JSR WriteString
 
 BRK
 
-LDA #$fe
-STA scanmask    ; initialise mask
-
-
 program_loop:
 
+keyb_start:
+LDA #$fe
+STA scanmask    ; initialise mask
+LDX #$01
+
 keyb_loop:
+    ; keyboard loop uses X for out, Y for in
+
     LDA scanmask
+    STA porta               ; write out scanline
     SEC                     ; rotate left with a one
     ROL
     CMP #$ff                ; if ACC == $ff
-    BNE _endif_acc_is_ff
-    LDA #$fe                ; reset to $fe
-    _endif_acc_is_ff:
+    BEQ keyb_done           ; -> we are done
     STA scanmask            ; store new mask
-    STA porta
-end_keyb_loop:
+
+    LDY #$08
+    LDA portb
+    keyb_read_loop:
+        CLC                 ; rotate left with a zero
+        ROL
+        BCC key_pressed     ; if a zero 'falls out' we have a key pressed
+
+        DEY
+        BEQ keyb_loop       ; inner loop done
+        JMP keyb_read_loop
+    end_keyb_read_loop:    
+
+    INX
+    JMP keyb_loop
+key_pressed:
+    STX scancode_lo
+    STY scancode_hi
+
+    LDA #$02                ; set_cursor(2,1)
+    STA vchar_row
+    LDA #$01        
+    STA vchar_col
+    JSR CalcCharPtr
+
+    LDA scancode_lo
+    ADC '0'
+    JSR WriteChar
+    LDA scancode_hi
+    ADC '0'
+    JSR WriteChar
+
+keyb_done:
 
 
 JSR VIO_WriteCharScreen     ; write out video ram to screen
