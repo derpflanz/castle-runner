@@ -42,6 +42,10 @@ int main(int argc, char **argv) {
             step6502();
             ui_update_ram(video_base);
             break;
+        case KEY_F(4):
+            ui_set_ram("PORTB", PORTB);
+            ui_update_ram(video_base);
+            break;
         case KEY_F(5):
             running = !running;
             break;

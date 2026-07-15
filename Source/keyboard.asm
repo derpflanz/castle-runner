@@ -72,6 +72,5 @@ keyb_loop:
 end_keyb_loop:
 
 
-
 JSR VIO_WriteCharScreen     ; write out video ram to screen
 JMP program_loop

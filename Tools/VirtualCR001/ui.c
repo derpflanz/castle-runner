@@ -7,6 +7,7 @@
 #include "fake6502.h"
 #include "memory.h"
 #include <ctype.h>
+#include <string.h>
 
 WINDOW *memory_log, *io_log;
 WINDOW *lcd;
@@ -162,7 +163,7 @@ void ui_init() {
     nodelay(stdscr, TRUE);
     keypad(stdscr, TRUE);
 
-    printw("F5: start/stop; F6: reset; F7: IRQ; F8: exit; F10: step");
+    printw("F4: Set PORTB; F5: start/stop; F6: reset; F7: IRQ; F8: exit; F10: step");
     refresh();
 
     _init_memory_log();
@@ -224,4 +225,41 @@ void ui_update_ram(uint16_t video_base) {
     mvwprintw(io_win, 0, 0, "[6522 Registers]");
     _ui_io_registers(ram);
     wrefresh(io_win);    
+}
+
+void _custom_prompt(const char *msg, char *buf, int max_len) {
+    // Create centered prompt window (height 3, width 50)
+    WINDOW *win = newwin(5, 50, (LINES - 3) / 2, (COLS - 50) / 2);
+    box(win, 0, 0);
+    mvwprintw(win, 2, 3, "%s", msg);
+    wrefresh(win);
+    
+    echo();                      // Show typed characters
+    curs_set(1);                 // Show cursor
+    wgetnstr(win, buf, max_len); // Read input into buf
+    noecho();                    // Hide typed characters
+    curs_set(0);                 // Hide cursor
+    
+    delwin(win);
+    redrawwin(stdscr);
+    refresh();
+}
+
+void ui_set_ram(const char *name, uint16_t address) {
+    char msg_buf[1024];
+    unsigned char value = 0x00;
+    snprintf(msg_buf, 1024, "Give new value for %s: ", name);
+
+    char buf[1024];
+    _custom_prompt(msg_buf, buf, 10);
+
+    if (strlen(buf) == 8) {
+        value = strtoul(buf, NULL, 2);
+    } else {
+        value = strtoul(buf, NULL, 16);
+    }
+
+    ram[address] = value;
+
+    ui_writelog(IOLOG, "Set value of %s to %s (%02x)\n", name, buf, value);
 }
