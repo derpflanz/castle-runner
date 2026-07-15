@@ -163,7 +163,7 @@ void ui_init() {
     nodelay(stdscr, TRUE);
     keypad(stdscr, TRUE);
 
-    printw("F4: Set PORTB; F5: start/stop; F6: reset; F7: IRQ; F8: exit; F10: step");
+    printw("F4: Set PORTB; F5: start/stop; F6: reset; F7: IRQ; F8: exit; F10: step; F9: toggle speed");
     refresh();
 
     _init_memory_log();

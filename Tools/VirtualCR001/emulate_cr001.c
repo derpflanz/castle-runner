@@ -36,11 +36,16 @@ int main(int argc, char **argv) {
 
     int ch;
     int running = FALSE;
+    int speed = 1;
     while ((ch = getch()) != KEY_F(8)) {
         switch (ch) {
         case KEY_F(10):
             step6502();
             ui_update_ram(video_base);
+            break;
+        case KEY_F(9):
+            speed = (speed==1?250:1);
+            ui_writelog(IOLOG, "Speed set to %d\n", speed);
             break;
         case KEY_F(4):
             ui_set_ram("PORTB", PORTB);
@@ -90,7 +95,7 @@ int main(int argc, char **argv) {
             if (array_contains(pc, breakpoints)) {
                 breakpoint_hit = TRUE;
             }
-            napms(1);
+            napms(speed);
             ui_update_ram(video_base);
 
             if (breakpoint_hit == TRUE) {
