@@ -266,6 +266,7 @@ RTS             ; WriteString
 ; Result: The character screen pointer at ($90) is set to (row,col)
 ; Display is 40 character wide, 30 high
 ; Works in the video ram
+; Destroys Y
 CalcCharPtr:
     LDA #$00        ; ($90) = $0200 = char base 
     STA $90
