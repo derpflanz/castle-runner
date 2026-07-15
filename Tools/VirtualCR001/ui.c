@@ -207,8 +207,8 @@ void ui_update_ram(uint16_t video_base) {
 
     _mem_wshow(rom_win, ram, 0x8000, pc, breakpoints, 0, 0);
     box(rom_win, 0, 0);
-    mvwprintw(rom_win, 0, 0, "[ROM PC=%04x A=%02x X=%02x Y=%02x STATUS=%s #=%d TICKS=%d]", 
-        pc, a, x, y, _flags(status), instructions, clockticks6502);
+    mvwprintw(rom_win, 0, 0, "[ROM PC=%04x A=%02x %08b X=%02x Y=%02x STATUS=%s #=%d TICKS=%d]", 
+        pc, a, a, x, y, _flags(status), instructions, clockticks6502);
     wrefresh(rom_win);
 
     _mem_wshow(stack_win, ram, 0x01ff, (0x0100 | sp), NULL, 1, 0);
