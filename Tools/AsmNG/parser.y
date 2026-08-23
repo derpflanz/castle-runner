@@ -163,7 +163,12 @@ array:
 
 array_elements:
     array_element
-|   array_elements ',' array_element
+|   array_elements opt_newlines ',' opt_newlines array_element
+;
+
+opt_newlines:
+    %empty 
+|   opt_newlines '\n'
 ;
 
 array_element:

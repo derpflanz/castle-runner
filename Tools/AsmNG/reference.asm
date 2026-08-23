@@ -11,6 +11,8 @@
 
 ; An array can be defined with hex numbers or ASCII characters
 array = [ $12, $34, 'A', 'z' ]
+array_with_newlines = [ $00, $01, $02, 
+                        $03, $04, $05 ]
 
 ; Create a variable with a name. Can be used as (zeropage) address or number
 value = $bf
