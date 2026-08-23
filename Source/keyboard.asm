@@ -65,13 +65,8 @@ LDX #$01
 keyb_loop:
     ; keyboard loop uses X for out, Y for in
 
-    LDA scanmask
-    STA porta               ; write out scanline
-    SEC                     ; rotate left with a one
-    ROL
-    CMP #$ff                ; if ACC == $ff
-    BEQ keyb_done           ; -> we are done
-    STA scanmask            ; store new mask
+    LDA scanmask            ; porta = scanmask
+    STA porta
 
     LDY #$08
     LDA portb
@@ -86,7 +81,17 @@ keyb_loop:
     end_keyb_read_loop:    
 
     INX
+
+    LDA scanmask            ; ACC = scanmask << 1
+    SEC                     
+    ROL
+
+    CMP #$ff                ; if ACC == $ff
+    BEQ keyb_done           ; -> we are done
+
+    STA scanmask            ; else: scanmask = ACC
     JMP keyb_loop
+    
 key_pressed:
     STX scancode_lo
     STY scancode_hi
