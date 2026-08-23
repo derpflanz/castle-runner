@@ -125,6 +125,7 @@ void identifier(char *ident, unsigned short addr) {
 %type<ao> abs_identifier
 %type<ao> abs
 %type<ao> zp
+%type<number> array
 %type<ao> ident
 %type<ao> ident_oper
 %type<ao> ch
@@ -135,7 +136,7 @@ program:
     program expression '\n' { linecounter++; }
 |   program '\n'            { linecounter++; }
 |	program error '\n'		{ yyerrok; }
-|   /* NOTHING */
+|   %empty
 ;
 
 expression:
@@ -154,12 +155,12 @@ expression:
 |   IDENTIFIER '=' zp_abs                   { identifier($1, strtol(($3.str)+1, NULL, 16)); }
 |   IDENTIFIER '=' STRING                   { identifier($1, current_address); string($3); }
 |   IDENTIFIER ':'                          { identifier($1, current_address); }
-|   IDENTIFIER '=' array                    { identifier($1, current_address); }
+|   IDENTIFIER '=' array                    { identifier($1, $3); }
 |   DIRECTIVE zp_abs                        { directive($1, $2); }
 ;
 
 array:
-    '[' array_elements ']'
+    '[' { $<number>$ = current_address; } array_elements ']' { $$ = $<number>2; }
 ;
 
 array_elements:
@@ -168,8 +169,8 @@ array_elements:
 ;
 
 array_element:
-    ZEROPAGE
-|   CHAR
+    ZEROPAGE    { tree_add_byte(current_address++, $1); free($1); }
+|   CHAR        { tree_add_byte(current_address++, $1); free($1); }
 ;
 
 x: 'X' | 'x' ;
