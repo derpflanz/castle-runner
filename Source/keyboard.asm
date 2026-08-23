@@ -60,7 +60,7 @@ program_loop:
 keyb_start:
 LDA #$fe
 STA scanmask    ; initialise mask
-LDX #$01
+LDX #$00
 
 keyb_loop:
     ; keyboard loop uses X for out, Y for in
@@ -91,7 +91,7 @@ keyb_loop:
 
     STA scanmask            ; else: scanmask = ACC
     JMP keyb_loop
-    
+
 key_pressed:
     STX scancode_lo
     STY scancode_hi
