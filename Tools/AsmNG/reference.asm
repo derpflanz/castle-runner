@@ -8,6 +8,9 @@
 ; .orig onwards as a sort of simple array
 .byte $10
 
+; An array can be defined with hex numbers or ASCII characters
+array = [ $12, $34, 'A', 'z' ]
+
 ; Create a variable with a name. Can be used as (zeropage) address or number
 value = $bf
 zeropage = $99

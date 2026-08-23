@@ -64,7 +64,7 @@ int lexerrorcounter = 0;
 	return OPERATION;
 }
 
-[\(\)=Aa#XxYy,:\+\-] {
+[\(\)=Aa#XxYy,:\+\-\[\]] {
 	yylval.str = strdup("");
 	return *yytext;
 }
