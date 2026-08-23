@@ -20,18 +20,14 @@ unsigned short current_address = 0x0000;
 char error_msg[ERRBUFLEN];
 struct operand NULL_ADDR = { NULL, 0, '\0' };
 
-void directive(char *directive, struct operand operand) {
-    if (!strncmp("orig", directive, 4)) {
-        current_address = strtol((operand.str)+1, NULL, 16);
-    }
+void orig(struct operand operand) {
+    current_address = strtol((operand.str)+1, NULL, 16);
+}
 
-    if (!strncmp("byte", directive, 4)) {
-        tree_add_byte(current_address, operand.str);
-        free(operand.str);
-        current_address++;
-    }
-
-    free(directive);
+void rawbyte(struct operand operand) {
+    tree_add_byte(current_address, operand.str);
+    free(operand.str);
+    current_address++;
 }
 
 void statement(char *mnemonic, struct operand operand, const char *addressing_mode) {
@@ -95,7 +91,8 @@ void identifier(char *ident, unsigned short addr) {
 %token BRANCH_MNEMONIC
 %token ABSOLUTE
 %token IDENTIFIER
-%token DIRECTIVE
+%token ORIG
+%token BYTE
 %token ZEROPAGE
 %token NUMBER
 %token OPERATION
@@ -111,7 +108,6 @@ void identifier(char *ident, unsigned short addr) {
 
 %type<str> MNEMONIC
 %type<str> BRANCH_MNEMONIC
-%type<str> DIRECTIVE
 %type<str> IDENTIFIER
 %type<str> ABSOLUTE
 %type<str> ZEROPAGE
@@ -156,7 +152,9 @@ expression:
 |   IDENTIFIER '=' STRING                   { identifier($1, current_address); string($3); }
 |   IDENTIFIER ':'                          { identifier($1, current_address); }
 |   IDENTIFIER '=' array                    { identifier($1, $3); }
-|   DIRECTIVE zp_abs                        { directive($1, $2); }
+|   ORIG abs                                { orig($2); }
+|   BYTE zp                                 { rawbyte($2); }
+|   BYTE ch                                 { rawbyte($2); }
 ;
 
 array:

@@ -7,6 +7,7 @@
 ; Add a verbatim byte; when placed at the top, they can be addressed from
 ; .orig onwards as a sort of simple array
 .byte $10
+.byte 'A'
 
 ; An array can be defined with hex numbers or ASCII characters
 array = [ $12, $34, 'A', 'z' ]
