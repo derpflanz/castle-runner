@@ -80,6 +80,6 @@ int lexerrorcounter = 0;
 }
 
 ;.*$ 			;
-[ \t]+          ;
+[ \t\r]+        ;
 
-.    printf("Lexer error %d: invalid token on line %d: %s (%d)\n", ++lexerrorcounter, lexlinecounter, yytext);
+.    printf("Lexer error %d: invalid token on line %d: %s (%d)\n", ++lexerrorcounter, lexlinecounter, yytext, yytext[0]);

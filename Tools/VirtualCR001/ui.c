@@ -7,10 +7,11 @@
 #include "fake6502.h"
 #include "memory.h"
 #include <ctype.h>
+#include <string.h>
 
 WINDOW *memory_log, *io_log;
 WINDOW *lcd;
-WINDOW *memory_win, *rom_win, *stack_win, *video_win;
+WINDOW *memory_win, *rom_win, *stack_win, *video_win, *io_win;
 
 WINDOW *_create_newwin(int height, int width, int starty, int startx)
 {	
@@ -101,6 +102,18 @@ void _mem_wshow(WINDOW *win, uint8_t *mem, uint16_t base_address, uint16_t highl
     }  
 }
 
+void _ui_print_io_register(int row, int col, const char *name, uint16_t address, uint8_t *memory, const char * extra) {
+    mvwprintw(io_win, row, col, "%s = %02x %08b %s", name, memory[address], memory[address], extra);
+}
+
+void _ui_io_registers(uint8_t *memory) {    
+    _ui_print_io_register(1, 1, "DDRA", DDRA, memory, "1=OUT, 0=IN");
+    _ui_print_io_register(2, 1, "DDRB", DDRB, memory, "1=OUT, 0=IN");
+
+    _ui_print_io_register(1, 40, "PORTA", PORTA, memory, "");
+    _ui_print_io_register(2, 40, "PORTB", PORTB, memory, "");
+}
+
 void _init_io_log() {
     io_log = _create_newwin(LINES - 10, COLS / 4, 1, COLS / 4);
     scrollok(io_log, TRUE);
@@ -118,13 +131,14 @@ void _init_memory_log() {
 }
 
 void _init_memory_windows() {
-    int video_height = 25, stack_height = 5;
-    int rom_height = 10;
+    int video_height = 10, stack_height = 5;
+    int rom_height = 10, io_height = 5;
 
-    memory_win = _create_newwin(LINES - 2 - rom_height - stack_height - video_height, COLS / 2, 1, COLS / 2);
-    rom_win = _create_newwin(rom_height, COLS / 2, LINES - 1 - stack_height - rom_height - video_height, COLS / 2);
-    stack_win = _create_newwin(stack_height, COLS / 2, LINES - 1 - stack_height - video_height, COLS / 2);
-    video_win = _create_newwin(video_height, COLS / 2, LINES - 1 - video_height, COLS / 2);
+    memory_win = _create_newwin(LINES - 2 - rom_height - stack_height - video_height - io_height, COLS / 2, 1, COLS / 2);
+    rom_win = _create_newwin(rom_height, COLS / 2, LINES - 1 - stack_height - rom_height - video_height - io_height, COLS / 2);
+    stack_win = _create_newwin(stack_height, COLS / 2, LINES - 1 - stack_height - video_height - io_height, COLS / 2);
+    video_win = _create_newwin(video_height, COLS / 2, LINES - 1 - video_height - io_height, COLS / 2);
+    io_win = _create_newwin(io_height, COLS / 2, LINES - 1 - io_height, COLS / 2);
 }
 
 void ui_print_lcd(char character, int row, int column) {
@@ -149,12 +163,21 @@ void ui_init() {
     nodelay(stdscr, TRUE);
     keypad(stdscr, TRUE);
 
-    printw("F5: start/stop; F6: reset; F7: IRQ; F8: exit; F10: step");
+    printw("F4: Set PORTB; F5: start/stop; F6: reset; F7: IRQ; F8: exit; F10: step; F9: toggle speed");
     refresh();
 
     _init_memory_log();
     _init_io_log();
-    _init_memory_windows();
+    _init_memory_windows();    
+}
+
+void ui_clear_log(int target) {
+    WINDOW *win = target == IOLOG?io_log:memory_log;
+
+    wclear(win);
+    box(win, 0, 0);
+    wmove(win, 1, 0);
+    wrefresh(win);
 }
 
 void ui_writelog(int target, const char *format, ...) {
@@ -184,8 +207,8 @@ void ui_update_ram(uint16_t video_base) {
 
     _mem_wshow(rom_win, ram, 0x8000, pc, breakpoints, 0, 0);
     box(rom_win, 0, 0);
-    mvwprintw(rom_win, 0, 0, "[ROM PC=%04x A=%02x X=%02x Y=%02x STATUS=%s #=%d TICKS=%d]", 
-        pc, a, x, y, _flags(status), instructions, clockticks6502);
+    mvwprintw(rom_win, 0, 0, "[ROM PC=%04x A=%02x %08b X=%02x Y=%02x STATUS=%s #=%d TICKS=%d]", 
+        pc, a, a, x, y, _flags(status), instructions, clockticks6502);
     wrefresh(rom_win);
 
     _mem_wshow(stack_win, ram, 0x01ff, (0x0100 | sp), NULL, 1, 0);
@@ -197,4 +220,46 @@ void ui_update_ram(uint16_t video_base) {
     box(video_win, 0, 0);
     mvwprintw(video_win, 0, 0, "[VIDEO]");
     wrefresh(video_win);
+
+    box(io_win, 0, 0);
+    mvwprintw(io_win, 0, 0, "[6522 Registers]");
+    _ui_io_registers(ram);
+    wrefresh(io_win);    
+}
+
+void _custom_prompt(const char *msg, char *buf, int max_len) {
+    // Create centered prompt window (height 3, width 50)
+    WINDOW *win = newwin(5, 50, (LINES - 3) / 2, (COLS - 50) / 2);
+    box(win, 0, 0);
+    mvwprintw(win, 2, 3, "%s", msg);
+    wrefresh(win);
+    
+    echo();                      // Show typed characters
+    curs_set(1);                 // Show cursor
+    wgetnstr(win, buf, max_len); // Read input into buf
+    noecho();                    // Hide typed characters
+    curs_set(0);                 // Hide cursor
+    
+    delwin(win);
+    redrawwin(stdscr);
+    refresh();
+}
+
+void ui_set_ram(const char *name, uint16_t address) {
+    char msg_buf[1024];
+    unsigned char value = 0x00;
+    snprintf(msg_buf, 1024, "Give new value for %s: ", name);
+
+    char buf[1024];
+    _custom_prompt(msg_buf, buf, 10);
+
+    if (strlen(buf) == 8) {
+        value = strtoul(buf, NULL, 2);
+    } else {
+        value = strtoul(buf, NULL, 16);
+    }
+
+    ram[address] = value;
+
+    ui_writelog(IOLOG, "Set value of %s to %s (%02x)\n", name, buf, value);
 }

@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
 
     mem_init();
 
-    if (mem_readfile(argv[1]) != 0) {
+    if (mem_readfile(argv[1], V_PRINTF) != 0) {
         return -1;
     }
 
@@ -36,18 +36,32 @@ int main(int argc, char **argv) {
 
     int ch;
     int running = FALSE;
+    int speed = 1;
     while ((ch = getch()) != KEY_F(8)) {
         switch (ch) {
         case KEY_F(10):
             step6502();
             ui_update_ram(video_base);
             break;
+        case KEY_F(9):
+            speed = (speed==1?250:1);
+            ui_writelog(IOLOG, "Speed set to %d\n", speed);
+            break;
+        case KEY_F(4):
+            ui_set_ram("PORTB", PORTB);
+            ui_update_ram(video_base);
+            break;
         case KEY_F(5):
             running = !running;
             break;
         case KEY_F(6):
+            ui_clear_log(IOLOG);
+            ui_clear_log(MEMLOG);
+            mem_readfile(argv[1], V_QUIET);
             reset6502();
             ui_update_ram(video_base);
+            
+            ui_writelog(IOLOG, "Reloaded %s\n", argv[1]);
             break;
         case KEY_F(7):
             irq6502();
@@ -81,7 +95,7 @@ int main(int argc, char **argv) {
             if (array_contains(pc, breakpoints)) {
                 breakpoint_hit = TRUE;
             }
-            napms(1);
+            napms(speed);
             ui_update_ram(video_base);
 
             if (breakpoint_hit == TRUE) {
