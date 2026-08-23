@@ -81,7 +81,7 @@ keyb_loop:
         BCC key_pressed     ; if a zero 'falls out' we have a key pressed
 
         DEY
-        BEQ keyb_loop       ; inner loop done
+        BEQ end_keyb_read_loop    ; inner loop done
         JMP keyb_read_loop
     end_keyb_read_loop:    
 
@@ -97,10 +97,12 @@ key_pressed:
     STA vchar_col
     JSR CalcCharPtr
 
-    LDA scancode_lo
+    LDA scancode_lo         ; print("%d", scancode_lo)
+    CLC
     ADC '0'
     JSR WriteChar
-    LDA scancode_hi
+    LDA scancode_hi         ; print("%d", scancode_lo)
+    CLC
     ADC '0'
     JSR WriteChar
 
