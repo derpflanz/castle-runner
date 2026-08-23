@@ -92,8 +92,7 @@ keyb_loop:
     LDY #$08
     LDA portb
     keyb_read_loop:
-        CLC                 ; rotate left with a zero
-        ROL
+        ASL                 ; rotate left with a zero
         BCC key_pressed     ; if a zero 'falls out' we have a key pressed
 
         DEY
