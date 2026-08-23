@@ -13,7 +13,7 @@
 #define ERRBUFLEN 1024
 
 int yylex(void);
-void yyerror(char *);
+void yyerror(const char *);
 
 int linecounter = 1;
 unsigned short current_address = 0x0000;
@@ -128,6 +128,7 @@ void identifier(char *ident, unsigned short addr) {
 %type<ao> ident
 %type<ao> ident_oper
 %type<ao> ch
+%define parse.error verbose
 %%
 
 program:
