@@ -13,25 +13,21 @@
 #define ERRBUFLEN 1024
 
 int yylex(void);
-void yyerror(char *);
+void yyerror(const char *);
 
 int linecounter = 1;
 unsigned short current_address = 0x0000;
 char error_msg[ERRBUFLEN];
 struct operand NULL_ADDR = { NULL, 0, '\0' };
 
-void directive(char *directive, struct operand operand) {
-    if (!strncmp("orig", directive, 4)) {
-        current_address = strtol((operand.str)+1, NULL, 16);
-    }
+void orig(struct operand operand) {
+    current_address = strtol((operand.str)+1, NULL, 16);
+}
 
-    if (!strncmp("byte", directive, 4)) {
-        tree_add_byte(current_address, operand.str);
-        free(operand.str);
-        current_address++;
-    }
-
-    free(directive);
+void rawbyte(struct operand operand) {
+    tree_add_byte(current_address, operand.str);
+    free(operand.str);
+    current_address++;
 }
 
 void statement(char *mnemonic, struct operand operand, const char *addressing_mode) {
@@ -95,7 +91,8 @@ void identifier(char *ident, unsigned short addr) {
 %token BRANCH_MNEMONIC
 %token ABSOLUTE
 %token IDENTIFIER
-%token DIRECTIVE
+%token ORIG
+%token BYTE
 %token ZEROPAGE
 %token NUMBER
 %token OPERATION
@@ -111,7 +108,6 @@ void identifier(char *ident, unsigned short addr) {
 
 %type<str> MNEMONIC
 %type<str> BRANCH_MNEMONIC
-%type<str> DIRECTIVE
 %type<str> IDENTIFIER
 %type<str> ABSOLUTE
 %type<str> ZEROPAGE
@@ -125,16 +121,18 @@ void identifier(char *ident, unsigned short addr) {
 %type<ao> abs_identifier
 %type<ao> abs
 %type<ao> zp
+%type<number> array
 %type<ao> ident
 %type<ao> ident_oper
 %type<ao> ch
+%define parse.error verbose
 %%
 
 program:
     program expression '\n' { linecounter++; }
 |   program '\n'            { linecounter++; }
 |	program error '\n'		{ yyerrok; }
-|   /* NOTHING */
+|   %empty
 ;
 
 expression:
@@ -153,7 +151,24 @@ expression:
 |   IDENTIFIER '=' zp_abs                   { identifier($1, strtol(($3.str)+1, NULL, 16)); }
 |   IDENTIFIER '=' STRING                   { identifier($1, current_address); string($3); }
 |   IDENTIFIER ':'                          { identifier($1, current_address); }
-|   DIRECTIVE zp_abs                        { directive($1, $2); }
+|   IDENTIFIER '=' array                    { identifier($1, $3); }
+|   ORIG abs                                { orig($2); }
+|   BYTE zp                                 { rawbyte($2); }
+|   BYTE ch                                 { rawbyte($2); }
+;
+
+array:
+    '[' { $<number>$ = current_address; } array_elements ']' { $$ = $<number>2; }
+;
+
+array_elements:
+    array_element
+|   array_elements ',' array_element
+;
+
+array_element:
+    ZEROPAGE    { tree_add_byte(current_address++, $1); free($1); }
+|   CHAR        { tree_add_byte(current_address++, $1); free($1); }
 ;
 
 x: 'X' | 'x' ;

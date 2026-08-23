@@ -87,8 +87,16 @@ bool write_vectors(FILE *hex_output) {
 }
 
 void write_byte(FILE *hex_output, FILE *user_output, struct node *node) {
-    // ptr->bytes holds "$xx"
-    unsigned char value = (unsigned char)strtol((node->bytes)+1, NULL, 16);
+    // ptr->bytes holds "$xx" or "'A'"
+    unsigned char value = 0x00;
+    if (node->bytes[0] == '$') {
+        value = (unsigned char)strtol((node->bytes)+1, NULL, 16);
+    }
+    
+    if (node->bytes[0] == '\'') {
+        value = node->bytes[1];
+    }
+
     fprintf(hex_output, "%c", value);
     fprintf(user_output, ".byte %*s%x\n", -COL_WIDTH+6, node->bytes, value);
 }

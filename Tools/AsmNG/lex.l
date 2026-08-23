@@ -34,9 +34,14 @@ int lexerrorcounter = 0;
 	return IDENTIFIER;
 }
 
-\.(orig|byte) {
+\.(orig) {
 	yylval.str = strdup(yytext+1);
-	return DIRECTIVE;
+	return ORIG;
+}
+
+\.(byte) {
+	yylval.str = strdup(yytext+1);
+	return BYTE;
 }
 
 \$[0-9a-fA-F]{4} {
@@ -64,7 +69,7 @@ int lexerrorcounter = 0;
 	return OPERATION;
 }
 
-[\(\)=Aa#XxYy,:\+\-] {
+[\(\)=Aa#XxYy,:\+\-\[\]] {
 	yylval.str = strdup("");
 	return *yytext;
 }
