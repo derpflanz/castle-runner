@@ -158,7 +158,7 @@ expression:
 ;
 
 array:
-    '[' { $<number>$ = current_address; } array_elements ']' { $$ = $<number>2; }
+    '[' opt_newlines { $<number>$ = current_address; } array_elements opt_newlines ']' { $$ = $<number>3; }
 ;
 
 array_elements:
